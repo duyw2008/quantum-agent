@@ -1,0 +1,35 @@
+# ============================================================
+# Quantum Agent Configuration
+# ============================================================
+
+# Physical constants (atomic units: ℏ = 1, m_e = 1, e = 1)
+hbar: 1.0          # Reduced Planck constant
+mass: 1.0          # Particle mass (electron mass in a.u.)
+
+# Numerical defaults
+numerics:
+  x_range: [-10.0, 10.0]   # Spatial domain (a.u.)
+  n_points: 1024            # Grid resolution (power of 2 for FFT)
+  dt: 0.001                 # Time step (a.u.)
+  t_max: 5.0                # Total evolution time (a.u.)
+  boundary: "absorbing"     # absorbing | periodic | reflecting
+
+# Visualization defaults
+visualization:
+  fps: 30
+  dpi: 150
+  colormap_prob: "plasma"   # Colormap for probability density
+  colormap_phase: "hsv"     # Colormap for phase
+  figsize: [12, 6]
+
+# Output paths
+output:
+  animation_dir: "output/animations"
+  figure_dir: "output/figures"
+  data_dir: "output/data"
+
+# Agent settings
+agent:
+  welcome_message: "欢迎来到 Quantum Agent | 量子力学智能体"
+  history_size: 1000
+  default_precision: 1e-10

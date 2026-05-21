@@ -1,0 +1,542 @@
+#!/usr/bin/env python3
+"""
+Quantum Agent — 量子力学智能体
+
+交互式量子力学计算和可视化平台。
+
+用法:
+    python agent.py                    # 交互模式
+    python agent.py --demo well        # 运行指定 demo
+    python agent.py --demo all         # 运行所有 demo
+    python agent.py --list             # 列出所有可用 demo
+
+命令 (交互模式):
+    evolve <potential> [params]  — 演化波函数
+    matrix                       — 矩阵力学计算
+    eigenstates <potential>      — 计算本征态
+    plot <type>                  — 绘图
+    animate <type>               — 动画
+    demo <name>                  — 运行 demo
+    help                         — 帮助
+    quit / exit                  — 退出
+"""
+
+import sys
+import os
+import numpy as np
+import argparse
+import yaml
+
+# 添加项目根目录到 Python 路径
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from src.core import (
+    Grid, WaveFunction, create_potential, PotentialType,
+    create_solver,
+)
+from src.matrix import MatrixMechanics
+from src.viz import (
+    plot_potential, plot_wavefunction, plot_eigenstates,
+    plot_energy_levels, plot_matrix_element, plot_phase_space,
+    animate_evolution,
+)
+
+
+def load_config(path: str = None) -> dict:
+    """加载配置文件"""
+    if path is None:
+        path = os.path.join(os.path.dirname(__file__), 'config.yaml')
+    if os.path.exists(path):
+        with open(path, 'r') as f:
+            return yaml.safe_load(f)
+    return {}
+
+
+class QuantumAgent:
+    """量子力学智能体"""
+
+    def __init__(self, config_path: str = None):
+        self.config = load_config(config_path)
+
+        # 默认参数
+        self.hbar = self.config.get('hbar', 1.0)
+        self.mass = self.config.get('mass', 1.0)
+
+        numerics = self.config.get('numerics', {})
+        self.default_x_range = numerics.get('x_range', [-10.0, 10.0])
+        self.default_n_points = numerics.get('n_points', 1024)
+        self.default_dt = numerics.get('dt', 0.001)
+        self.default_t_max = numerics.get('t_max', 5.0)
+
+        self.output_dir = os.path.join(os.path.dirname(__file__), 'output')
+        os.makedirs(self.output_dir, exist_ok=True)
+        os.makedirs(os.path.join(self.output_dir, 'animations'), exist_ok=True)
+        os.makedirs(os.path.join(self.output_dir, 'figures'), exist_ok=True)
+
+        self.history = []
+
+        # 当前状态 (可被命令修改)
+        self.current_grid = None
+        self.current_potential = None
+        self.current_wf = None
+        self.current_result = None
+        self.current_matrix = None
+
+        print(self._welcome())
+
+    def _welcome(self) -> str:
+        msg = self.config.get('agent', {}).get('welcome_message',
+                                                 'Welcome to Quantum Agent')
+        return f"""
+╔══════════════════════════════════════════════════════╗
+║        {msg}         ║
+║        v0.1.0 — 一维量子力学计算与可视化              ║
+╚══════════════════════════════════════════════════════╝
+Type 'help' for commands, 'demo all' to see examples.
+"""
+
+    # ============================================================
+    # 命令处理
+    # ============================================================
+
+    def _parse_potential(self, pot_str: str):
+        """解析势函数字符串
+
+        示例:
+            harmonic,omega=2.0
+            infinite_well,width=3.0
+            barrier,height=5.0,width=1.0
+            double_well,separation=3.0,depth=8.0
+        """
+        parts = pot_str.split(',')
+        ptype_str = parts[0].strip().lower()
+        params = {}
+
+        # 类型映射
+        type_map = {
+            'harmonic': PotentialType.HARMONIC,
+            'ho': PotentialType.HARMONIC,
+            'well': PotentialType.INFINITE_WELL,
+            'infinite_well': PotentialType.INFINITE_WELL,
+            'barrier': PotentialType.POTENTIAL_BARRIER,
+            'potential_barrier': PotentialType.POTENTIAL_BARRIER,
+            'finite_well': PotentialType.FINITE_WELL,
+            'double_well': PotentialType.DOUBLE_WELL,
+            'dw': PotentialType.DOUBLE_WELL,
+            'morse': PotentialType.MORSE,
+            'coulomb': PotentialType.COUlOMB_1D,
+            'periodic': PotentialType.PERIODIC,
+            'step': PotentialType.STEP,
+            'zero': PotentialType.ZERO,
+            'free': PotentialType.ZERO,
+        }
+
+        if ptype_str not in type_map:
+            raise ValueError(f"未知势函数类型: {ptype_str}。支持: {list(type_map.keys())}")
+
+        ptype = type_map[ptype_str]
+
+        # 解析参数
+        for part in parts[1:]:
+            if '=' in part:
+                key, val = part.split('=')
+                key = key.strip()
+                try:
+                    params[key] = float(val)
+                except ValueError:
+                    params[key] = val.strip()
+
+        return ptype, params
+
+    def cmd_evolve(self, args: list):
+        """演化波函数: evolve <potential> [options]
+
+        选项:
+            x0=0.0    初始位置
+            p0=5.0    初始动量
+            sigma=0.5 波包宽度
+            dt=0.001  时间步长
+            t_max=5.0 总时间
+            n=1024    网格点数
+            x_min=-10 空间下限
+            x_max=10  空间上限
+            method=ssfm  数值方法 (ssfm/cn)
+            save=1    是否保存动画
+        """
+        if not args:
+            print("用法: evolve <potential> [x0=X] [p0=X] [sigma=X] [dt=X] [t_max=X] [method=ssfm|cn]")
+            print("示例: evolve harmonic,omega=2.0 x0=1.0 p0=3.0 t_max=10")
+            return
+
+        pot_str = args[0]
+        kwargs = {'x0': 0.0, 'p0': 5.0, 'sigma': 0.5,
+                  'dt': self.default_dt, 't_max': self.default_t_max,
+                  'n': self.default_n_points, 'x_min': self.default_x_range[0],
+                  'x_max': self.default_x_range[1], 'method': 'ssfm',
+                  'save': True}
+
+        for arg in args[1:]:
+            if '=' in arg:
+                k, v = arg.split('=', 1)
+                try:
+                    kwargs[k] = float(v) if '.' in v or v.lstrip('-').isdigit() else v
+                except ValueError:
+                    kwargs[k] = v
+
+        ptype, params = self._parse_potential(pot_str)
+        V = create_potential(ptype, **params)
+
+        grid = Grid(kwargs['x_min'], kwargs['x_max'], int(kwargs['n']))
+        wf = WaveFunction(grid)
+        wf.set_gaussian(x0=kwargs['x0'], p0=kwargs['p0'], sigma=kwargs['sigma'])
+
+        print(f"\n⚛  Initializing evolution...")
+        print(f"   Potential: {V.label}")
+        print(f"   Grid: {grid}")
+        print(f"   Wavepacket: x₀={kwargs['x0']}, p₀={kwargs['p0']}, σ={kwargs['sigma']}")
+        print(f"   Method: {kwargs['method']}, dt={kwargs['dt']}, t_max={kwargs['t_max']}")
+        print(f"   Initial ⟨x⟩={wf.expectation_x():.4f}, ⟨p⟩={wf.expectation_p():.4f}")
+
+        solver = create_solver(kwargs['method'], grid, V, self.hbar, self.mass)
+        result = solver.evolve(wf, kwargs['t_max'], kwargs['dt'],
+                               snapshot_interval=max(1, int(kwargs['t_max'] / kwargs['dt'] / 200)))
+
+        # 输出统计
+        print(f"\n✓ Evolution complete: {len(result.times)} snapshots")
+        print(f"  Final ⟨x⟩ = {result.expectation_x[-1]:.4f}")
+        print(f"  Final ⟨p⟩ = {result.expectation_p[-1]:.4f}")
+        print(f"  Energy conservation: σ_E/Ē = {result.energy.std()/result.energy.mean():.2e}")
+        print(f"  Norm conservation: max|1-norm| = {abs(result.norm_history - 1).max():.2e}")
+
+        # 保存动画
+        if kwargs.get('save', True):
+            save_path = os.path.join(
+                self.output_dir, 'animations',
+                f"{ptype.value}_{kwargs['method']}.mp4"
+            )
+            print(f"  Generating animation → {save_path} ...")
+            animate_evolution(result, V, save_path=save_path, fps=30, dark=True)
+            print(f"  ✓ Saved to {save_path}")
+
+        self.current_grid = grid
+        self.current_potential = V
+        self.current_wf = wf
+        self.current_result = result
+        self.history.append(('evolve', pot_str))
+
+    def cmd_matrix(self, args: list):
+        """矩阵力学计算: matrix [command]
+
+        命令:
+            report      — 打印算符关系报告
+            x           — 坐标算符矩阵
+            p           — 动量算符矩阵
+            a / a_dag   — 产生/湮灭算符
+            H [omega=N] — 哈密顿量
+            eigen [k=N] — 本征值/本征态
+            comm A B    — 对易子 [A, B]
+        """
+        if not self.current_matrix:
+            self.current_matrix = MatrixMechanics(
+                n_basis=50, hbar=self.hbar, mass=self.mass, omega=1.0
+            )
+
+        mm = self.current_matrix
+
+        if not args or args[0] == 'report':
+            print(mm.report())
+            return
+
+        cmd = args[0]
+
+        if cmd == 'x':
+            print("Coordinate operator x̂ (first 8×8):")
+            print(mm.x[:8, :8].real)
+
+        elif cmd == 'p':
+            print("Momentum operator p̂ (first 8×8):")
+            print(mm.p[:8, :8].real)
+
+        elif cmd == 'a':
+            print("Annihilation operator â (first 8×8):")
+            print(mm.a[:8, :8])
+
+        elif cmd == 'a_dag':
+            print("Creation operator â† (first 8×8):")
+            print(mm.a_dag[:8, :8])
+
+        elif cmd == 'H':
+            omega = float(args[1]) if len(args) > 1 else 1.0
+            eigs, states = mm.eigensolve(k=10)
+            print(f"Harmonic oscillator energies (ω={omega}):")
+            for n, E in enumerate(eigs[:10]):
+                expected = omega * (n + 0.5)
+                print(f"  E[{n}] = {E:.6f}  (expected: {expected:.6f})")
+
+        elif cmd == 'eigen':
+            k = int(args[1]) if len(args) > 1 else 5
+            eigs, states = mm.eigensolve(k=k)
+            print(f"First {k} eigenvalues:")
+            for i, E in enumerate(eigs):
+                print(f"  E[{i}] = {E:.6f}")
+
+        elif cmd == 'comm':
+            if len(args) < 3:
+                print("用法: matrix comm <A> <B>  (e.g., matrix comm x p)")
+                return
+            op_map = {'x': mm.x, 'p': mm.p, 'a': mm.a, 'a_dag': mm.a_dag}
+            A = op_map.get(args[1])
+            B = op_map.get(args[2])
+            if A is None or B is None:
+                print(f"未知算符。可用: {list(op_map.keys())}")
+                return
+            C = mm.commutator(A, B)
+            result = mm.check_commutation(A, B)
+            print(f"[{args[1]}, {args[2]}] Frobenius norm: {result['frobenius_norm']:.6e}")
+            if args[2] == 'p' and args[1] == 'x':
+                print(f"Expected: iℏI (should be near {self.hbar} * √N = {self.hbar*np.sqrt(mm._N):.4f})")
+
+        else:
+            print(f"未知矩阵命令: {cmd}")
+            print("可用: report, x, p, a, a_dag, H, eigen, comm")
+
+    def cmd_eigenstates(self, args: list):
+        """计算本征态: eigenstates <potential> [n_states=5]"""
+        if not args:
+            print("用法: eigenstates <potential> [n_states=5]")
+            print("示例: eigenstates harmonic,omega=2.0 5")
+            return
+
+        pot_str = args[0]
+        n_states = int(args[1]) if len(args) > 1 else 5
+
+        ptype, params = self._parse_potential(pot_str)
+        V = create_potential(ptype, **params)
+
+        grid = Grid(self.default_x_range[0], self.default_x_range[1],
+                    self.default_n_points)
+
+        save_path = os.path.join(self.output_dir, 'figures',
+                                 f"eigenstates_{ptype.value}.png")
+        fig, eigvals, eigvecs = plot_eigenstates(grid, V, n_states,
+                                                  save_path=save_path)
+
+        print(f"\n✓ Eigenstates computed: {n_states} states")
+        print(f"  Energies:")
+        for n, E in enumerate(eigvals):
+            print(f"    E[{n}] = {E:.6f}")
+        print(f"  Saved to {save_path}")
+
+        self.current_grid = grid
+        self.current_potential = V
+
+    def cmd_plot(self, args: list):
+        """绘图: plot <type> [options]
+
+        类型: potential | wf | energy
+        """
+        if not args:
+            print("用法: plot <potential|wf|energy>")
+            return
+
+        cmd = args[0]
+        if cmd == 'potential' and self.current_potential:
+            save_path = os.path.join(self.output_dir, 'figures', 'potential.png')
+            plot_potential(self.current_potential, save_path=save_path)
+            print(f"✓ Saved to {save_path}")
+
+        elif cmd == 'wf' and self.current_wf:
+            save_path = os.path.join(self.output_dir, 'figures', 'wavefunction.png')
+            plot_wavefunction(self.current_wf, V=self.current_potential,
+                              save_path=save_path)
+            print(f"✓ Saved to {save_path}")
+
+        else:
+            print("请先运行 evolve 或 eigenstates。")
+
+    def cmd_animate(self, args: list):
+        """动画: animate <type>"""
+        if not args:
+            print("用法: animate <evolution>")
+            return
+
+        if args[0] == 'evolution' and self.current_result and self.current_potential:
+            save_path = os.path.join(self.output_dir, 'animations', 'manual_animate.mp4')
+            animate_evolution(self.current_result, self.current_potential,
+                              save_path=save_path)
+            print(f"✓ Saved to {save_path}")
+        else:
+            print("请先运行 evolve。")
+
+    def cmd_demo(self, args: list):
+        """运行 demo: demo <name|all>"""
+        demos = {
+            'harmonic': 'demos/harmonic_oscillator.py',
+            'well': 'demos/infinite_well.py',
+            'barrier': 'demos/potential_barrier.py',
+            'matrix': 'demos/matrix_mechanics.py',
+            'double_well': 'demos/double_well.py',
+        }
+
+        if not args or args[0] == 'all':
+            for name, path in demos.items():
+                print(f"\n{'='*50}")
+                print(f"  Running demo: {name}")
+                print(f"{'='*50}")
+                self._run_demo(path)
+            return
+
+        name = args[0]
+        if name in demos:
+            self._run_demo(demos[name])
+        else:
+            print(f"未知 demo: {name}")
+            print(f"可用: {list(demos.keys())}")
+
+    def _run_demo(self, path: str):
+        """执行 demo 脚本"""
+        full_path = os.path.join(os.path.dirname(__file__), path)
+        if os.path.exists(full_path):
+            exec(open(full_path).read(), {
+                '__name__': '__main__',
+                'np': np,
+                'Grid': Grid,
+                'WaveFunction': WaveFunction,
+                'create_potential': create_potential,
+                'PotentialType': PotentialType,
+                'create_solver': create_solver,
+                'MatrixMechanics': MatrixMechanics,
+                'animate_evolution': animate_evolution,
+                'plot_potential': plot_potential,
+                'plot_wavefunction': plot_wavefunction,
+                'plot_eigenstates': plot_eigenstates,
+                'output_dir': self.output_dir,
+            })
+        else:
+            print(f"Demo 文件不存在: {full_path}")
+
+    # ============================================================
+    # 交互循环
+    # ============================================================
+
+    def run_interactive(self):
+        """交互模式主循环"""
+        while True:
+            try:
+                cmd_line = input('\n⚛ > ').strip()
+            except (EOFError, KeyboardInterrupt):
+                print("\n👋 Goodbye!")
+                break
+
+            if not cmd_line:
+                continue
+
+            parts = cmd_line.split()
+            cmd = parts[0].lower()
+            args = parts[1:]
+
+            if cmd in ('quit', 'exit', 'q'):
+                print("👋 Goodbye!")
+                break
+
+            elif cmd == 'help':
+                self._print_help()
+
+            elif cmd == 'evolve':
+                self.cmd_evolve(args)
+
+            elif cmd == 'matrix':
+                self.cmd_matrix(args)
+
+            elif cmd == 'eigenstates':
+                self.cmd_eigenstates(args)
+
+            elif cmd == 'plot':
+                self.cmd_plot(args)
+
+            elif cmd == 'animate':
+                self.cmd_animate(args)
+
+            elif cmd == 'demo':
+                self.cmd_demo(args)
+
+            elif cmd == 'status':
+                self._print_status()
+
+            else:
+                print(f"未知命令: {cmd}。输入 'help' 查看帮助。")
+
+    def _print_help(self):
+        print("""
+╔══════════════════════════════════════════════════════════════╗
+║  Quantum Agent Commands                                      ║
+╠══════════════════════════════════════════════════════════════╣
+║  evolve <potential> [...]  — 演化波函数                       ║
+║    势函数: harmonic,infinite_well,barrier,double_well,morse  ║
+║    示例: evolve harmonic,omega=2.0 x0=1.0 p0=5.0 t_max=10   ║
+║                                                              ║
+║  matrix [cmd]             — 矩阵力学                          ║
+║    示例: matrix report / matrix eigen k=5 / matrix comm x p  ║
+║                                                              ║
+║  eigenstates <pot> [N]    — 计算本征态                        ║
+║    示例: eigenstates harmonic,omega=2.0 5                    ║
+║                                                              ║
+║  plot <type>              — 绘制图形                          ║
+║  animate <type>           — 生成动画                          ║
+║  demo <name|all>          — 运行 demo                        ║
+║  status                   — 当前状态                          ║
+║  help                     — 帮助                              ║
+║  quit                     — 退出                              ║
+╚══════════════════════════════════════════════════════════════╝
+""")
+
+    def _print_status(self):
+        """打印当前状态"""
+        print("\nCurrent state:")
+        if self.current_potential:
+            print(f"  Potential: {self.current_potential.label}")
+        else:
+            print("  Potential: (none)")
+        if self.current_grid:
+            print(f"  Grid: {self.current_grid}")
+        else:
+            print("  Grid: (none)")
+        if self.current_wf:
+            print(f"  Wavefunction: t={self.current_wf.t:.3f}, "
+                  f"⟨x⟩={self.current_wf.expectation_x():.4f}, "
+                  f"‖ψ‖={self.current_wf.norm:.6f}")
+        else:
+            print("  Wavefunction: (none)")
+        if self.current_result:
+            print(f"  Last evolution: {len(self.current_result.times)} snapshots, "
+                  f"method={self.current_result.method}")
+        print(f"  History: {len(self.history)} commands")
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Quantum Agent - 量子力学智能体')
+    parser.add_argument('--demo', type=str, help='Demo 名称 (或 "all")')
+    parser.add_argument('--list', action='store_true', help='列出所有 demo')
+    parser.add_argument('--config', type=str, help='配置文件路径')
+    args = parser.parse_args()
+
+    agent = QuantumAgent(config_path=args.config)
+
+    if args.list:
+        print("Available demos:")
+        print("  harmonic       - 谐振子波包演化")
+        print("  well           - 无限深势阱")
+        print("  barrier        - 势垒隧穿")
+        print("  matrix         - 矩阵力学")
+        print("  double_well    - 双势阱")
+        return
+
+    if args.demo:
+        agent.cmd_demo([args.demo])
+        return
+
+    agent.run_interactive()
+
+
+if __name__ == '__main__':
+    main()
