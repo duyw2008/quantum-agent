@@ -79,7 +79,7 @@ status                          — 查看当前状态
 help                            — 帮助
 ```
 
-## Demo 案例
+### Demo 案例
 
 | Demo | 说明 | 物理亮点 |
 |------|------|----------|
@@ -88,6 +88,8 @@ help                            — 帮助
 | potential_barrier | 势垒隧穿 | 量子隧穿、WKB 近似 |
 | matrix_mechanics | 矩阵力学 | [x̂,p̂]=iħ、能谱、自旋 |
 | double_well | 双势阱 | 隧穿振荡、能级劈裂 |
+| hydrogen_atom | 氢原子库仑势 | 本征态、能级、径向分布 |
+| hydrogen_animation | 库仑势演化 | 波包散射、量子动力学 |
 
 ## 测试
 
