@@ -508,12 +508,112 @@ Type 'help' for commands, 'demo all' to see examples.
             elif cmd == 'status':
                 self._print_status()
 
+            elif cmd in ('calc', 'eval', '='):
+                self.cmd_calc(' '.join(args))
+
             else:
                 print(f"未知命令: {cmd}。输入 'help' 查看帮助。")
 
+    def cmd_calc(self, expr: str):
+        """计算 Python 表达式: calc <expression>
+
+        可直接使用:
+            np          — numpy
+            x, p        — 当前矩阵力学坐标/动量算符
+            a, ad       — 湮灭/产生算符
+            H           — 谐振子哈密顿量
+            I           — 单位矩阵
+            wf          — 当前波函数 psi 数组
+            V           — 当前势函数
+            grid        — 当前网格
+
+        示例:
+            calc np.dot(x, p) - np.dot(p, x)    # [x̂, p̂]
+            calc np.trace(H)                     # Tr[Ĥ]
+            calc np.linalg.eigvalsh(H)[:5]       # 前5个本征值
+            calc np.abs(wf)**2                   # 概率密度
+        """
+        if not expr:
+            print("用法: calc <expression>")
+            print("示例: calc np.dot(x, p) - np.dot(p, x)")
+            print("      calc np.linalg.eigvalsh(H)[:5]")
+            print("      calc np.trace(a @ ad)")
+            return
+
+        # 准备命名空间
+        ns = {'np': np, '__builtins__': {}}
+
+        # 注入当前状态
+        if self.current_matrix is not None:
+            ns['x'] = self.current_matrix.x
+            ns['p'] = self.current_matrix.p
+            ns['a'] = self.current_matrix.a
+            ns['ad'] = self.current_matrix.a_dag
+            ns['H'] = self.current_matrix.H_harmonic
+            ns['I'] = np.eye(self.current_matrix._N)
+            ns['N'] = self.current_matrix._N
+        if self.current_wf is not None:
+            ns['wf'] = self.current_wf.psi
+            ns['wf_k'] = self.current_wf.psi_k
+        if self.current_potential is not None:
+            ns['V'] = self.current_potential
+        if self.current_grid is not None:
+            ns['grid'] = self.current_grid
+            ns['x_arr'] = self.current_grid.x
+            ns['k_arr'] = self.current_grid.k
+
+        try:
+            result = eval(expr, ns)
+            self._display_result(result, expr)
+        except Exception as e:
+            print(f"Error: {type(e).__name__}: {e}")
+
+    def _display_result(self, result, expr: str):
+        """格式化显示计算结果"""
+        if isinstance(result, np.ndarray):
+            shape = result.shape
+            if result.size == 1:
+                val = complex(result.item())
+                if abs(val.imag) < 1e-14:
+                    print(f"= {val.real:.10g}")
+                else:
+                    print(f"= {val.real:.10g} + {val.imag:.10g}i")
+            elif result.ndim == 2 and min(shape) <= 8:
+                # 小矩阵：完整显示
+                if np.allclose(result.imag, 0):
+                    print(np.array2string(result.real, precision=4, suppress_small=True,
+                                           max_line_width=100))
+                else:
+                    print("Real part:")
+                    print(np.array2string(result.real, precision=4, suppress_small=True,
+                                           max_line_width=100))
+                    print("Imag part:")
+                    print(np.array2string(result.imag, precision=4, suppress_small=True,
+                                           max_line_width=100))
+            else:
+                print(f"array(shape={shape}, dtype={result.dtype})")
+                if result.ndim <= 2:
+                    # 显示角落
+                    preview = result[:min(4, shape[0]), :min(4, shape[1])] if result.ndim == 2 else result[:8]
+                    if np.allclose(preview.imag, 0):
+                        print(f"  preview:\n{np.array2string(preview.real, precision=3, suppress_small=True)}")
+                    else:
+                        print(f"  preview (real):\n{np.array2string(preview.real, precision=3, suppress_small=True)}")
+                print(f"  (use calc with slice to inspect: calc x[:5,:5])")
+        elif isinstance(result, complex):
+            if abs(result.imag) < 1e-14:
+                print(f"= {result.real:.10g}")
+            else:
+                print(f"= {result.real:.10g} + {result.imag:.10g}i")
+        elif isinstance(result, (int, float)):
+            print(f"= {result:.10g}")
+        elif result is None:
+            pass
+        else:
+            print(repr(result))
+
     def _print_help(self):
         print("""
-╔══════════════════════════════════════════════════════════════╗
 ║  Quantum Agent Commands                                      ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  evolve <potential> [...]  — 演化波函数                       ║
@@ -529,6 +629,7 @@ Type 'help' for commands, 'demo all' to see examples.
 ║  plot <type>              — 绘制图形                          ║
 ║  animate <type>           — 生成动画                          ║
 ║  demo <name|all>          — 运行 demo                        ║
+║  calc <expression>        — Python 表达式/矩阵运算             ║
 ║  status                   — 当前状态                          ║
 ║  help                     — 帮助                              ║
 ║  quit                     — 退出                              ║
