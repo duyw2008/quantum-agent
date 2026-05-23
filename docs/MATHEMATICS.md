@@ -1,576 +1,373 @@
 # Quantum Agent — 数学模型
 
-本文档完整涵盖 quantum_agent 中使用的所有数学模型、数值方法和物理理论。
+> QuTiP 风格量子力学函数库的完整数学基础
 
 ---
 
 ## 目录
 
-1. [含时薛定谔方程 (TDSE)](#1-含时薛定谔方程-tdse)
-2. [Split-Step Fourier Method (SSFM)](#2-split-step-fourier-method-ssfm)
-3. [Crank-Nicolson Method (CN)](#3-crank-nicolson-method-cn)
-4. [空间离散化与 FFT](#4-空间离散化与-fft)
-5. [波函数与可观测量](#5-波函数与可观测量)
-6. [矩阵力学](#6-矩阵力学)
-7. [势函数](#7-势函数)
-8. [本征值问题](#8-本征值问题)
-9. [数值稳定性与误差分析](#9-数值稳定性与误差分析)
+1. [Fock 空间与算符](#1-fock-空间与算符)
+2. [量子态](#2-量子态)
+3. [算符代数与可观测量](#3-算符代数与可观测量)
+4. [光子统计](#4-光子统计)
+5. [时间演化](#5-时间演化)
+6. [相空间分布](#6-相空间分布)
+7. [数值实现](#7-数值实现)
 
 ---
 
-## 1. 含时薛定谔方程 (TDSE)
+## 1. Fock 空间与算符
 
-### 1.1 基本形式
+### 1.1 Fock 基
 
-一维含时薛定谔方程（原子单位 ℏ = mₑ = e = 1）：
+量子谐振子的本征态构成 Fock 空间的正交归一基：
 
-$$\boxed{i\frac{\partial}{\partial t}\psi(x,t) = \hat{H}\psi(x,t) = \left[-\frac{1}{2}\frac{\partial^2}{\partial x^2} + V(x)\right]\psi(x,t)}$$
+$$\boxed{\hat{N}|n\rangle = n|n\rangle, \quad n = 0,1,2,\ldots, N-1}$$
 
-在程序中还原了 ℏ 和 m 参数，通用形式为：
+在数值计算中截断到有限维 $N$（默认 $N=50$）。
 
-$$i\hbar\frac{\partial\psi}{\partial t} = -\frac{\hbar^2}{2m}\frac{\partial^2\psi}{\partial x^2} + V(x)\psi$$
-
-### 1.2 形式解
-
-对于不含时哈密顿量，形式解为：
-
-$$\psi(t) = e^{-i\hat{H}t/\hbar}\,\psi(0) = \hat{U}(t)\,\psi(0)$$
-
-其中 $\hat{U}(t) = e^{-i\hat{H}t/\hbar}$ 是幺正时间演化算符（$\hat{U}^\dagger\hat{U} = \hat{I}$）。
-
-### 1.3 守恒量
-
-- **概率守恒**: $\frac{d}{dt}\int|\psi|^2 dx = 0$，即 $\|\psi(t)\| = \|\psi(0)\|$
-- **能量守恒**: $\langle\hat{H}\rangle = \text{const}$（对于不含时 H）
-
----
-
-## 2. Split-Step Fourier Method (SSFM)
-
-### 2.1 Trotter-Suzuki 分解
-
-核心思想：将演化算符分解为动能和势能部分的乘积。
-
-$$\hat{U}(\Delta t) = e^{-i(\hat{T}+\hat{V})\Delta t/\hbar}$$
-
-一阶 Trotter 分解（误差 $\mathcal{O}(\Delta t^2)$）：
-
-$$e^{-i(\hat{T}+\hat{V})\Delta t/\hbar} = e^{-i\hat{V}\Delta t/\hbar}\,e^{-i\hat{T}\Delta t/\hbar} + \mathcal{O}(\Delta t^2)$$
-
-二阶对称 Trotter 分解（误差 $\mathcal{O}(\Delta t^3)$，程序使用此版本）：
-
-$$\boxed{e^{-i(\hat{T}+\hat{V})\Delta t/\hbar} = e^{-i\hat{V}\Delta t/2\hbar}\,e^{-i\hat{T}\Delta t/\hbar}\,e^{-i\hat{V}\Delta t/2\hbar} + \mathcal{O}(\Delta t^3)}$$
-
-### 2.2 算法步骤
-
-**Step 1** — 半步势能演化（坐标空间）：
-$$\psi_1(x) = \exp\left[-\frac{iV(x)\Delta t}{2\hbar}\right] \psi(x, t)$$
-
-这里的乘法是逐点（element-wise）的，因为 $\hat{V}$ 在坐标表象是对角的。
-
-**Step 2** — 傅里叶变换到动量空间：
-$$\tilde{\psi}_1(k) = \mathcal{F}[\psi_1(x)] = \int_{-\infty}^{\infty} \psi_1(x)\,e^{-ikx}\,dx$$
-
-数值实现使用 FFT：
-$$\tilde{\psi}_1[k] = \sum_{j=0}^{N-1} \psi_1[j]\,e^{-2\pi i j k / N}$$
-
-**Step 3** — 动能演化（动量空间）：
-$$\tilde{\psi}_2(k) = \exp\left[-\frac{i\hbar k^2\Delta t}{2m}\right] \tilde{\psi}_1(k)$$
-
-动量空间动能算符是对角的 $\hat{T}(k) = \hbar^2 k^2 / 2m$，这也是逐点乘法。
-
-**Step 4** — 逆傅里叶变换回坐标空间：
-$$\psi_2(x) = \mathcal{F}^{-1}[\tilde{\psi}_2(k)]$$
-
-**Step 5** — 半步势能演化：
-$$\psi(x, t + \Delta t) = \exp\left[-\frac{iV(x)\Delta t}{2\hbar}\right] \psi_2(x)$$
-
-### 2.3 复杂度
-
-每一步的复杂度由 FFT 主导：$\mathcal{O}(N\log N)$，其中 $N$ 是网格点数。
-
-### 2.4 适用范围
-
-- ✅ 光滑势函数（无奇点）
-- ✅ 长时间演化（误差积累可控）
-- ✅ 谱精度（指数收敛于空间导数）
-- ❌ 尖锐势边界（需要额外处理）
-- ❌ 势能含时（需要更高阶分解）
-
----
-
-## 3. Crank-Nicolson Method (CN)
-
-### 3.1 离散化
-
-对 TDSE 使用时间中心差分（Crank-Nicolson 格式）：
-
-$$i\hbar\frac{\psi^{n+1} - \psi^n}{\Delta t} = \hat{H}\frac{\psi^{n+1} + \psi^n}{2}$$
-
-其中 $\psi^n = \psi(x, t_n)$，$t_n = n\Delta t$。
-
-重写为矩阵形式：
-
-$$\boxed{\left(\hat{I} + \frac{i\Delta t}{2\hbar}\hat{H}\right)\psi^{n+1} = \left(\hat{I} - \frac{i\Delta t}{2\hbar}\hat{H}\right)\psi^n}$$
-
-### 3.2 空间离散化
-
-使用三点中心差分近似动能算符：
-
-$$\frac{\partial^2\psi}{\partial x^2}\bigg|_{x_j} \approx \frac{\psi_{j-1} - 2\psi_j + \psi_{j+1}}{\Delta x^2}$$
-
-因此哈密顿量矩阵是三对角的：
-
-$$\hat{H}\psi\big|_j = -\alpha\psi_{j-1} + (2\alpha + V_j)\psi_j - \alpha\psi_{j+1}$$
-
-其中 $\alpha = \frac{\hbar^2}{2m\Delta x^2}$，$V_j = V(x_j)$。
-
-### 3.3 矩阵结构
-
-左侧矩阵 $\hat{A} = \hat{I} + \frac{i\Delta t}{2\hbar}\hat{H}$ 的元素：
-
-$$\boxed{\begin{aligned}
-A_{jj} &= 1 + \frac{i\Delta t}{2\hbar}(2\alpha + V_j) \\
-A_{j,j+1} = A_{j+1,j} &= -\frac{i\Delta t}{2\hbar}\alpha
-\end{aligned}}$$
-
-### 3.4 Thomas 算法求解
-
-三对角系统 $\mathbf{A}\mathbf{x} = \mathbf{b}$ 通过 Thomas 算法以 $\mathcal{O}(N)$ 求解：
-
-**前向消元**：
-$$\begin{aligned}
-c'_0 &= c_0 / d_0 \\
-x'_0 &= b_0 / d_0 \\
-\text{for } i &= 1,\ldots,N-1: \\
-& d'_i = d_i - a_{i-1}c'_{i-1} \\
-& c'_i = c_i / d'_i \quad (i < N-1) \\
-& x'_i = (b_i - a_{i-1}x'_{i-1}) / d'_i
-\end{aligned}$$
-
-**回代**：
-$$\begin{aligned}
-x_{N-1} &= x'_{N-1} \\
-\text{for } i &= N-2,\ldots,0: \\
-& x_i = x'_i - c'_i x_{i+1}
-\end{aligned}$$
-
-程序中实现为 `_complex_tridiag_solve()`，直接处理复数运算。
-
-### 3.5 性质
-
-- **无条件稳定**: 任意 $\Delta t$ 都不导致指数增长
-- **二阶精度**: 截断误差 $\mathcal{O}(\Delta t^2 + \Delta x^2)$
-- **幺正性**: 近似保持概率守恒
-- **边界条件**: 默认 Dirichlet ($\psi = 0$ at boundary)
-
----
-
-## 4. 空间离散化与 FFT
-
-### 4.1 网格定义
-
-$$\boxed{\begin{aligned}
-x_j &= x_{\min} + j\Delta x, \quad j = 0,1,\ldots,N-1 \\
-\Delta x &= \frac{x_{\max} - x_{\min}}{N-1}
-\end{aligned}}$$
-
-### 4.2 动量空间网格
-
-FFT 自然定义动量空间网格：
-
-$$\boxed{k_n = \frac{2\pi n}{N\Delta x}, \quad n = -\frac{N}{2},\ldots,0,\ldots,\frac{N}{2}-1}$$
-
-用 `np.fft.fftfreq` 实现，频率间隔 $\Delta k = 2\pi/(N\Delta x)$。
-
-### 4.3 Nyquist 条件
-
-最大可分辨动量：$k_{\max} = \pi / \Delta x$
-
-对应的最大动能：$E_{\max} = \hbar^2 k_{\max}^2 / 2m = \hbar^2\pi^2/(2m\Delta x^2)$
-
-对于精确模拟，需确保 $\Delta x$ 足够小以满足 $E_{\max} \gg \max(V) + \text{typical kinetic energy}$。
-
-### 4.4 FFT 约定
-
-程序使用标准 `numpy.fft` 约定：
-
-$$\tilde{\psi}_k = \sum_{j=0}^{N-1} \psi_j\,e^{-2\pi i j k / N}$$
-
-$$\psi_j = \frac{1}{N} \sum_{k=0}^{N-1} \tilde{\psi}_k\,e^{2\pi i j k / N}$$
-
-归一化：`np.fft.fft` 无归一化因子，`np.fft.ifft` 除以 $N$。
-
----
-
-## 5. 波函数与可观测量
-
-### 5.1 波函数表示
-
-$$\psi(x) = |\psi(x)|\,e^{i\phi(x)}$$
-
-- 概率密度：$\rho(x) = |\psi(x)|^2$
-- 相位：$\phi(x) = \arg[\psi(x)]$
-
-### 5.2 归一化
-
-$$\|\psi\|^2 = \int_{-\infty}^{\infty} |\psi(x)|^2\,dx = 1$$
-
-数值积分使用梯形法则（$\texttt{np.trapezoid}$）：
-
-$$\int_a^b f(x)\,dx \approx \Delta x\left[\frac{f_0 + f_{N-1}}{2} + \sum_{j=1}^{N-2} f_j\right]$$
-
-### 5.3 内积
-
-$$\langle\phi|\psi\rangle = \int \phi^*(x)\,\psi(x)\,dx$$
-
-### 5.4 期望值
-
-位置期望值：
-$$\boxed{\langle x\rangle = \int x\,|\psi(x)|^2\,dx}$$
-
-动量期望值（动量空间计算）：
-$$\boxed{\langle p\rangle = \frac{\int k\,|\tilde{\psi}(k)|^2\,dk}{\int |\tilde{\psi}(k)|^2\,dk}}$$
-
-更高阶矩：
-$$\langle x^2\rangle = \int x^2\,|\psi|^2\,dx, \quad \langle p^2\rangle = \frac{\int k^2\,|\tilde{\psi}|^2\,dk}{\int |\tilde{\psi}|^2\,dk}$$
-
-### 5.5 不确定度
-
-$$\boxed{\Delta x = \sqrt{\langle x^2\rangle - \langle x\rangle^2}, \quad \Delta p = \sqrt{\langle p^2\rangle - \langle p\rangle^2}}$$
-
-海森堡不确定度原理：
-$$\boxed{\Delta x \cdot \Delta p \geq \frac{\hbar}{2}}$$
-
-高斯波包饱和此下界（最小不确定态）。
-
-### 5.6 能量期望值
-
-动能（动量空间计算，避免二阶导数）：
-$$\langle T\rangle = \frac{\hbar^2}{2m}\frac{\int k^2\,|\tilde{\psi}(k)|^2\,dk}{\int |\tilde{\psi}(k)|^2\,dk}$$
-
-势能：
-$$\langle V\rangle = \int V(x)\,|\psi(x)|^2\,dx$$
-
-总能量：
-$$E = \langle H\rangle = \langle T\rangle + \langle V\rangle$$
-
----
-
-## 6. 矩阵力学
-
-### 6.1 数态表象 (Fock Basis)
-
-选择谐振子数态 $|n\rangle$ 作为基：
+### 1.2 产生与湮灭算符
 
 $$\boxed{\begin{aligned}
 \hat{a}|n\rangle &= \sqrt{n}\,|n-1\rangle \\
-\hat{a}^\dagger|n\rangle &= \sqrt{n+1}\,|n+1\rangle \\
-\hat{N}|n\rangle &= n|n\rangle
+\hat{a}^\dagger|n\rangle &= \sqrt{n+1}\,|n+1\rangle
 \end{aligned}}$$
 
-矩阵元（N 维截断）：
-$$\boxed{\begin{aligned}
-\langle n|\hat{a}|m\rangle &= \sqrt{m}\,\delta_{n,m-1} \\
-\langle n|\hat{a}^\dagger|m\rangle &= \sqrt{m+1}\,\delta_{n,m+1}
-\end{aligned}}$$
+矩阵元（$N \times N$ 截断）：
 
-### 6.2 坐标与动量算符
+$$\boxed{\langle m|\hat{a}|n\rangle = \sqrt{n}\,\delta_{m,n-1}, \quad \langle m|\hat{a}^\dagger|n\rangle = \sqrt{n+1}\,\delta_{m,n+1}}$$
 
-$$\boxed{\begin{aligned}
-\hat{x} &= \sqrt{\frac{\hbar}{2m\omega}}\,(\hat{a} + \hat{a}^\dagger) \\
-\hat{p} &= i\sqrt{\frac{m\hbar\omega}{2}}\,(\hat{a}^\dagger - \hat{a})
-\end{aligned}}$$
+### 1.3 正则对易关系
 
-其中 $\omega$ 是参考频率，$x_0 = \sqrt{\hbar/m\omega}$ 是特征长度。
+$$\boxed{[\hat{a}, \hat{a}^\dagger] = \hat{I}, \quad [\hat{a}, \hat{a}] = [\hat{a}^\dagger, \hat{a}^\dagger] = 0}$$
 
-### 6.3 正则对易关系
+在 $N$ 维截断下，$[\hat{a}, \hat{a}^\dagger] = I - N|N-1\rangle\langle N-1|$，最后一个对角元有截断误差。
 
-$$\boxed{[\hat{x}, \hat{p}] = i\hbar\hat{I}, \quad [\hat{a}, \hat{a}^\dagger] = \hat{I}}$$
+### 1.4 坐标与动量算符
 
-> **注意**: 在 N 维截断基中，$[\hat{x}, \hat{p}] = i\hbar\hat{I}$ 仅在低能子空间 ($n \ll N$) 近似成立。最后一个基态因截断而偏离，程序测试中在前 $N-5$ 维子空间验证此关系。
-
-### 6.4 谐振子哈密顿量
-
-$$\boxed{\hat{H}_{\text{HO}} = \hbar\omega\left(\hat{a}^\dagger\hat{a} + \frac{1}{2}\right) = \hbar\omega\left(\hat{N} + \frac{1}{2}\right)}$$
-
-解析能级（在完整无穷维空间中）：
-$$\boxed{E_n = \hbar\omega\left(n + \frac{1}{2}\right), \quad n = 0, 1, 2, \ldots}$$
-
-### 6.5 一般势的哈密顿量
-
-$$\hat{H} = \frac{\hat{p}^2}{2m} + V(\hat{x})$$
-
-程序通过在坐标基对角化 $\hat{x}$ 构建 $V(\hat{x})$：
-1. 对角化 $\hat{x}$ (N×N 矩阵) → 本征值 $x_i$，本征矢 $U$
-2. $V(\hat{x}) = U \cdot \text{diag}[V(x_i)] \cdot U^\dagger$
-3. $\hat{H} = \hat{p}^2/2m + V(\hat{x})$
-
-### 6.6 时间演化 (矩阵形式)
-
-$$\boxed{|\psi(t)\rangle = e^{-i\hat{H}t/\hbar}\,|\psi(0)\rangle}$$
-
-通过对角化 $\hat{H}$ 计算矩阵指数：
-1. 对角化 $\hat{H} = U \cdot \text{diag}[E_i] \cdot U^\dagger$
-2. $e^{-i\hat{H}t/\hbar} = U \cdot \text{diag}[e^{-iE_i t/\hbar}] \cdot U^\dagger$
-
-海森堡绘景：
-$$\boxed{\hat{O}(t) = e^{i\hat{H}t/\hbar}\,\hat{O}\,e^{-i\hat{H}t/\hbar}}$$
-
-### 6.7 对易子与反对易子
+定义特征长度 $x_0 = \sqrt{\hbar/m\omega}$ 和特征动量 $p_0 = \sqrt{m\hbar\omega}$：
 
 $$\boxed{\begin{aligned}
-[\hat{A}, \hat{B}] &= \hat{A}\hat{B} - \hat{B}\hat{A} \\
-\{\hat{A}, \hat{B}\} &= \hat{A}\hat{B} + \hat{B}\hat{A}
+\hat{x} &= \frac{x_0}{\sqrt{2}}(\hat{a} + \hat{a}^\dagger) \\
+\hat{p} &= i\frac{p_0}{\sqrt{2}}(\hat{a}^\dagger - \hat{a})
 \end{aligned}}$$
 
----
+正则对易关系：
 
-## 7. 势函数
+$$\boxed{[\hat{x}, \hat{p}] = i\hbar\hat{I}}$$
 
-### 7.1 无限深势阱
+在低能子空间（$n \ll N$）精确成立。
 
-$$V_{\text{well}}(x) = \begin{cases}
-0 & |x| < a/2 \\
-V_{\max} & |x| \geq a/2
-\end{cases}$$
+### 1.5 数算符
 
-数值实现使用平滑 sigmoid 边界避免无穷大：
+$$\boxed{\hat{N} = \hat{a}^\dagger\hat{a}, \quad \hat{N}|n\rangle = n|n\rangle}$$
 
-$$V(x) = V_{\max}\left[\frac{1}{1+e^{s(x+a/2+\varepsilon)}} + \frac{1}{1+e^{-s(x-a/2-\varepsilon)}}\right]$$
+### 1.6 宇称算符
 
-其中 $s = 50/a$ 控制边界锐度，$\varepsilon = 0.001a$ 避免数值溢出。
+$$\boxed{\hat{\Pi} = (-1)^{\hat{N}}, \quad \hat{\Pi}|n\rangle = (-1)^n|n\rangle}$$
 
-**解析能级** (在精确无限深极限下)：
-$$\boxed{E_n = \frac{\pi^2\hbar^2 n^2}{2ma^2}, \quad n = 1,2,3,\ldots}$$
+在 Wigner 函数计算中起核心作用。
 
-**解析波函数**：
-$$\psi_n(x) = \sqrt{\frac{2}{a}} \times \begin{cases}
-\cos\left(\frac{n\pi x}{a}\right) & n\text{ odd} \\
-\sin\left(\frac{n\pi x}{a}\right) & n\text{ even}
-\end{cases}$$
+### 1.7 位移算符
 
-### 7.2 谐振子
+$$\boxed{\hat{D}(\alpha) = e^{\alpha\hat{a}^\dagger - \alpha^*\hat{a}}}$$
 
-$$\boxed{V_{\text{HO}}(x) = \frac{1}{2}m\omega^2 x^2}$$
+性质：
+- 幺正性：$\hat{D}^\dagger(\alpha)\hat{D}(\alpha) = \hat{I}$
+- 位移作用：$\hat{D}^\dagger(\alpha)\hat{a}\hat{D}(\alpha) = \hat{a} + \alpha$
+- 作用于真空产生相干态：$\hat{D}(\alpha)|0\rangle = |\alpha\rangle$
 
-特征长度：$a_{\text{HO}} = \sqrt{\hbar/m\omega}$
+数值上通过对角化 $X = \alpha\hat{a}^\dagger - \alpha^*\hat{a}$ 计算矩阵指数：
+$$\hat{D}(\alpha) = V\,\text{diag}[e^{\lambda_i}]\,V^{-1}$$
 
-**解析能级**：
-$$\boxed{E_n = \hbar\omega\left(n + \frac{1}{2}\right)}$$
-
-**解析波函数**：
-$$\psi_n(x) = \frac{1}{\sqrt{2^n n!}}\left(\frac{m\omega}{\pi\hbar}\right)^{1/4} H_n\!\left(\sqrt{\frac{m\omega}{\hbar}}x\right) e^{-m\omega x^2/2\hbar}$$
-
-其中 $H_n$ 是 Hermite 多项式。
-
-**相干态** (位移真空态，$|\alpha\rangle = \hat{D}(\alpha)|0\rangle$)：
-$$\psi_\alpha(x) = \left(\frac{m\omega}{\pi\hbar}\right)^{1/4} \exp\!\left[-\frac{m\omega}{2\hbar}\!\left(x - \sqrt{\frac{2\hbar}{m\omega}}\,\text{Re}(\alpha)\right)^2 + i\sqrt{\frac{2m\omega}{\hbar}}\,\text{Im}(\alpha)\,x\right]$$
-
-相干态在谐振子势中保持形状不变（不弥散），质心做经典谐振动：$\langle x\rangle(t) = x_0\cos(\omega t) + (p_0/m\omega)\sin(\omega t)$。
-
-### 7.3 矩形势垒
-
-$$\boxed{V_{\text{barrier}}(x) = \begin{cases}
-V_0 & |x| < w/2 \\
-0 & |x| \geq w/2
-\end{cases}}$$
-
-$V_0 > 0$ 为势垒，$V_0 < 0$ 为势阱。
-
-**经典转折点**: 若 $E < V_0$，经典粒子无法穿越。量子隧穿允许概率传输。
-
-**WKB 隧穿概率近似** (矩形势垒，$E < V_0$，$\kappa w \gg 1$)：
-$$\boxed{T_{\text{WKB}} \approx \exp\!\left[-2\kappa w\right], \quad \kappa = \frac{\sqrt{2m(V_0 - E)}}{\hbar}}$$
-
-程序中的势垒 demo 展示了超越 WKB 近似的精确数值隧穿。
-
-### 7.4 双势阱 (Quartic)
-
-$$\boxed{V_{\text{DW}}(x) = V_0\left[\left(\frac{2x}{a}\right)^2 - 1\right]^2 - V_0}$$
-
-极小值在 $x = \pm a/2$，阱底 $V_{\min} = -V_0$，中心势垒 $V(0) = 0$。
-
-**隧穿劈裂**：
-$$\boxed{\Delta E = E_1 - E_0}$$
-
-对称基态 $|g\rangle = (|L\rangle + |R\rangle)/\sqrt{2}$ 和反对称第一激发态 $|u\rangle = (|L\rangle - |R\rangle)/\sqrt{2}$ 之间的能差。
-
-**隧穿周期**：
-$$\boxed{T_{\text{tunnel}} = \frac{2\pi\hbar}{\Delta E}}$$
-
-初始局域在左阱的态会在 $T_{\text{tunnel}}/2$ 时间后隧穿到右阱。
-
-### 7.5 Morse 势
-
-$$\boxed{V_{\text{Morse}}(x) = D_e\left[1 - e^{-\alpha(x-x_0)}\right]^2}$$
-
-用于模拟双原子分子的非谐振动。
-
-**解析能级**：
-$$\boxed{E_n = \hbar\omega_0\!\left(n + \frac{1}{2}\right) - \frac{\left[\hbar\omega_0(n + \frac{1}{2})\right]^2}{4D_e}}$$
-
-其中 $\omega_0 = \alpha\sqrt{2D_e/m}$ 是等效谐振子频率。
-
-最大束缚态数：$n_{\max} = \lfloor 2D_e/\hbar\omega_0 - 1/2 \rfloor$
-
-### 7.6 软核库仑势 (1D)
-
-$$\boxed{V_{\text{Coulomb}}(x) = -\frac{Z}{\sqrt{x^2 + a^2}}}$$
-
-软化参数 $a > 0$ 避免 $x=0$ 处的奇点。$Z$ 是有效核电荷。
-
-> **注意**: 这是 1D 模型系统，不等价于 3D 氢原子的径向方程。3D 氢原子的解析能级为 $E_n = -Z^2/(2n^2)$，1D 模型只有有限个束缚态。
-
-### 7.7 周期势 (Kronig-Penney 型)
-
-$$\boxed{V_{\text{periodic}}(x) = A\cos(kx)}$$
-
-根据 Bloch 定理产生能带结构。$A$ 控制带隙宽度。
-
-### 7.8 阶梯势
-
-$$\boxed{V_{\text{step}}(x) = V_0\,\Theta(x - x_0) = \begin{cases}
-0 & x < x_0 \\
-V_0 & x > x_0
-\end{cases}}$$
-
-用于散射问题：反射系数 $R$ 和透射系数 $T$ 取决于入射能量 $E$ 与 $V_0$ 的关系。
-
-### 7.9 自由粒子
-
-$$V_{\text{free}}(x) = 0$$
-
-解析解：平面波 $\psi_k(x) = e^{ikx}/\sqrt{2\pi}$，连续谱 $E = \hbar^2 k^2/2m$。
-
-高斯波包的自由演化：
-$$\psi(x,t) = \frac{1}{(2\pi\sigma_t^2)^{1/4}}\exp\!\left[-\frac{(x - p_0 t/m)^2}{4\sigma_0\sigma_t} + i\frac{p_0}{\hbar}x - i\frac{p_0^2}{2m\hbar}t\right]$$
-
-其中 $\sigma_t = \sigma_0(1 + i\hbar t/2m\sigma_0^2)$，波包宽度 $\Delta x(t) = \sigma_0\sqrt{1 + (\hbar t/2m\sigma_0^2)^2}$ 随时间增长（量子弥散）。
+其中 $V$ 是 $X$ 的本征矢矩阵。
 
 ---
 
-## 8. 本征值问题
+## 2. 量子态
 
-### 8.1 定态薛定谔方程
+### 2.1 Fock 态
 
-$$\hat{H}\psi_n(x) = E_n\psi_n(x)$$
+$$\boxed{|n\rangle = (0,\ldots,0,1,0,\ldots,0)^T}$$
 
-对于不含时势，$\psi_n(x,t) = \psi_n(x)e^{-iE_n t/\hbar}$。
+密度矩阵：$\rho_n = |n\rangle\langle n|$
 
-### 8.2 数值对角化
+### 2.2 相干态
 
-程序使用两种方法：
+$$\boxed{|\alpha\rangle = e^{-|\alpha|^2/2}\sum_{n=0}^{N-1}\frac{\alpha^n}{\sqrt{n!}}|n\rangle}$$
 
-**三对角对角化** (适用于有限差分哈密顿量)：
-使用 `scipy.linalg.eigh_tridiagonal`，仅需对角线 $d_j$ 和次对角线 $e_j$：
+**性质**：
+- 位移真空态：$|\alpha\rangle = \hat{D}(\alpha)|0\rangle$
+- 湮灭算符的本征态：$\hat{a}|\alpha\rangle = \alpha|\alpha\rangle$
+- 最小不确定态：$\Delta x \cdot \Delta p = \hbar/2$
+- 光子数分布：Poisson $P(n) = e^{-|\alpha|^2}|\alpha|^{2n}/n!$
+- 平均光子数：$\langle\hat{N}\rangle = |\alpha|^2$
 
-$$\hat{H} = \begin{pmatrix}
-d_0 & e_0 & 0 & \cdots \\
-e_0 & d_1 & e_1 & \cdots \\
-0 & e_1 & d_2 & \cdots \\
-\vdots & \vdots & \vdots & \ddots
-\end{pmatrix}$$
+### 2.3 压缩真空态
 
-复杂度 $\mathcal{O}(N^2)$，但仅需要 $\mathcal{O}(N)$ 存储。
+$$\boxed{|\zeta\rangle = \hat{S}(\zeta)|0\rangle, \quad \hat{S}(\zeta) = e^{(\zeta^*\hat{a}^2 - \zeta\hat{a}^{\dagger 2})/2}}$$
 
-**满矩阵对角化** (用于一般势在数态基中的哈密顿量)：
-使用 `numpy.linalg.eigh`（厄米矩阵），复杂度 $\mathcal{O}(N^3)$。
+其中 $\zeta = re^{i\theta}$。
 
-### 8.3 虚时间演化 (基态搜索)
+**Fock 基展开**（仅偶光子数非零）：
 
-对于任意初始态 $|\psi_0\rangle$（要求 $\langle\psi_0|0\rangle \neq 0$），虚时间演化投影到基态：
+$$\boxed{|\zeta\rangle = \frac{1}{\sqrt{\cosh r}}\sum_{m=0}^{\lfloor N/2\rfloor} \frac{\sqrt{(2m)!}}{2^m m!}(-e^{i\theta}\tanh r)^m|2m\rangle}$$
 
-$$\boxed{|\psi(\tau)\rangle = \frac{e^{-\hat{H}\tau}|\psi_0\rangle}{\|e^{-\hat{H}\tau}|\psi_0\rangle\|} \xrightarrow{\tau\to\infty} |0\rangle}$$
+**性质**：
+- 压缩一个正交分量的量子噪声
+- 平均光子数：$\langle\hat{N}\rangle = \sinh^2 r$
+- $g^2(0) > 1$（光子聚束）
 
-在能量本征基中展开：
-$$|\psi_0\rangle = \sum_n c_n|n\rangle \implies |\psi(\tau)\rangle \propto \sum_n c_n e^{-E_n\tau}|n\rangle$$
+### 2.4 热态
 
-高能分量被指数压制，$\tau$ 足够大时只剩基态。程序实现：
-$$\text{for } k = 1,\ldots,K:\; |\psi\rangle \leftarrow e^{-\hat{H}\Delta\tau}|\psi\rangle,\; |\psi\rangle \leftarrow |\psi\rangle/\||\psi\rangle\|$$
+$$\boxed{\rho_{\text{th}} = \sum_{n=0}^{N-1}\frac{\bar{n}^n}{(\bar{n}+1)^{n+1}}|n\rangle\langle n|}$$
 
-其中 $\Delta\tau = \tau_{\text{total}} / K$。
+其中 $\bar{n} = \langle\hat{N}\rangle$ 是平均热光子数。
 
----
+**性质**：
+- Bose-Einstein 分布：$P(n) = \bar{n}^n / (\bar{n}+1)^{n+1}$
+- 最大熵态（对给定的平均光子数）
+- $g^2(0) = 2$（热光子聚束）
+- Mandel $Q = \bar{n}$
 
-## 9. 数值稳定性与误差分析
+### 2.5 薛定谔猫态
 
-### 9.1 SSFM 误差
+$$\boxed{|\psi_{\text{cat}}\rangle = \frac{|\alpha\rangle + e^{i\phi}|-\alpha\rangle}{\sqrt{2(1 + e^{-2|\alpha|^2}\cos\phi)}}}$$
 
-每步局部截断误差：$\mathcal{O}(\Delta t^3)$
+- $\phi = 0$：偶猫态（仅偶光子数）
+- $\phi = \pi$：奇猫态（仅奇光子数）
+- 宏观叠加态，$|\alpha| \gg 1$ 时两个分量在相空间几乎正交
 
-全局误差（$N_t = T/\Delta t$ 步）：$\mathcal{O}(\Delta t^2)$
+### 2.6 纯态诊断
 
-优势来源：动能算符在动量空间严格对角（谱精度），势能算符在坐标空间严格对角。
+**保真度**：
+$$\boxed{F(|\psi_1\rangle, |\psi_2\rangle) = |\langle\psi_1|\psi_2\rangle|^2 \in [0,1]}$$
 
-### 9.2 CN 误差
+**纯度**：
+$$\boxed{\gamma(\rho) = \text{Tr}[\rho^2] \in [1/N, 1]}$$
 
-时间离散：$\mathcal{O}(\Delta t^2)$
-空间离散（三点差分）：$\mathcal{O}(\Delta x^2)$
-
-无条件稳定意味着 $\Delta t$ 可以大于 CFL 条件限制，但精度要求 $\Delta t$ 和 $\Delta x$ 适当匹配。
-
-### 9.3 CFL 条件 (SSFM 的稳定性约束)
-
-虽然 SSFM 不是严格的 CFL 限制，但建议：
-
-$$\Delta t \lesssim \frac{\Delta x}{|v_{\max}|}$$
-
-其中 $v_{\max} = k_{\max}/m = \pi/(m\Delta x)$ 是最快动量分量对应的速度。
-
-### 9.4 网格分辨率要求
-
-**空间分辨率**：
-- 势的特征尺度：$\Delta x \ll \min(\text{potential width features})$
-- 波函数特征尺度：$\Delta x \ll \sigma$（波包宽度）
-- Nyquist 条件：$\Delta x < \pi/k_{\max}$
-
-**网格范围**：
-- 必须包含波函数的完整支集
-- 边界反射应可忽略（$\psi \approx 0$ at boundaries）
-- 对束缚态，$x_{\max} \gg$ 经典转折点
-
-### 9.5 范数与能量守恒
-
-程序监视两个守恒量：
-
-**范数守恒**：
-$$\delta_N = \max_t \big|1 - \|\psi(t)\|^2\big|$$
-
-SSFM 的范数精确守恒（幺正性），仅受浮点精度影响。CN 的范数 drift 与截断相关。
-
-**能量守恒**（不含时势）：
-$$\delta_E = \frac{\max_t E(t) - \min_t E(t)}{\bar{E}}$$
-
-SSFM 能量 drift 来源：
-- Trotter 分解误差 ($\propto \Delta t^2$)
-- 势的梯度大时，Trotter 分解精度下降
-- 谐振子外围（$\langle V\rangle$ 大）比阱底误差更大
-
-### 9.6 实践建议
-
-| 物理场景 | 推荐方法 | 推荐 $\Delta t$ | 推荐 $N$ |
-|----------|----------|:---:|:---:|
-| 自由粒子 | SSFM | 0.005–0.02 | 512–2048 |
-| 谐振子 | SSFM | 0.001–0.01 | 512–1024 |
-| 势垒隧穿 | SSFM | 0.001–0.005 | 1024–4096 |
-| 双势阱 | SSFM 或 CN | 0.001–0.005 | 1024–2048 |
-| 刚性势 (尖锐边界) | CN (精确守恒) | 0.01–0.05 | 256–512 |
-| 长时间 (数百周期) | CN (无条件稳定) | 0.01–0.05 | 256–512 |
+$\gamma = 1$ 纯态，$\gamma < 1$ 混合态。
 
 ---
 
-## 附录：符号表
+## 3. 算符代数与可观测量
 
-| 符号 | 含义 | 程序中的默认值 |
+### 3.1 对易子与反对易子
+
+$$\boxed{[\hat{A}, \hat{B}] = \hat{A}\hat{B} - \hat{B}\hat{A}, \quad \{\hat{A}, \hat{B}\} = \hat{A}\hat{B} + \hat{B}\hat{A}}$$
+
+### 3.2 期望值
+
+纯态：
+$$\boxed{\langle\hat{O}\rangle = \langle\psi|\hat{O}|\psi\rangle = \sum_{m,n} c_m^* c_n O_{mn}}$$
+
+混合态：
+$$\boxed{\langle\hat{O}\rangle = \text{Tr}[\rho\hat{O}]}$$
+
+### 3.3 方差
+
+$$\boxed{\text{Var}(\hat{O}) = \langle\hat{O}^2\rangle - \langle\hat{O}\rangle^2}$$
+
+不确定度：$\Delta O = \sqrt{\text{Var}(\hat{O})}$
+
+---
+
+## 4. 光子统计
+
+### 4.1 光子数分布
+
+$$P(n) = |\langle n|\psi\rangle|^2 \quad\text{(纯态)}, \quad P(n) = \rho_{nn} \quad\text{(密度矩阵)}$$
+
+### 4.2 平均光子数
+
+$$\boxed{\langle\hat{N}\rangle = \langle\hat{a}^\dagger\hat{a}\rangle = \sum_n n P(n)}$$
+
+### 4.3 二阶关联函数 $g^{(2)}(0)$
+
+$$\boxed{g^{(2)}(0) = \frac{\langle\hat{a}^\dagger\hat{a}^\dagger\hat{a}\hat{a}\rangle}{\langle\hat{a}^\dagger\hat{a}\rangle^2}}$$
+
+**物理意义**：
+
+| 值 | 含义 | 例子 |
+|:---:|------|------|
+| $g^{(2)} = 1$ | Poisson 统计，无关联 | 相干态 |
+| $g^{(2)} = 2$ | 热光子聚束 | 热态 |
+| $g^{(2)} < 1$ | 反聚束（非经典光） | Fock 态 $|n\rangle$，$g^{(2)} = 1 - 1/n$ |
+| $g^{(2)} = 0$ | 完美单光子 | $|1\rangle$ |
+| $g^{(2)} > 1$ | 光子聚束 | 压缩真空，热态 |
+
+### 4.4 Mandel Q 参数
+
+$$\boxed{Q = \frac{\langle\Delta\hat{N}^2\rangle - \langle\hat{N}\rangle}{\langle\hat{N}\rangle} = \langle\hat{N}\rangle(g^{(2)}(0) - 1)}$$
+
+| 值 | 统计性质 |
+|:---:|------|
+| $Q = 0$ | Poisson（相干态） |
+| $Q > 0$ | 超 Poisson / 经典 |
+| $Q < 0$ | 亚 Poisson / 量子 |
+
+---
+
+## 5. 时间演化
+
+### 5.1 Schrödinger 方程
+
+$$\boxed{i\hbar\frac{d}{dt}|\psi(t)\rangle = \hat{H}|\psi(t)\rangle}$$
+
+**形式解**（不含时 $\hat{H}$）：
+
+$$|\psi(t)\rangle = e^{-i\hat{H}t/\hbar}|\psi(0)\rangle$$
+
+数值实现：对角化 $\hat{H} = U\Lambda U^\dagger$，则
+
+$$\boxed{|\psi(t)\rangle = U\,\text{diag}[e^{-iE_k t/\hbar}]\,U^\dagger|\psi(0)\rangle}$$
+
+适用于小 $N$（$\lesssim 500$，对角化 $\mathcal{O}(N^3)$）。
+
+### 5.2 Lindblad 主方程
+
+开放量子系统的时间演化：
+
+$$\boxed{\frac{d\rho}{dt} = -\frac{i}{\hbar}[\hat{H}, \rho] + \sum_k \gamma_k\mathcal{D}[\hat{L}_k]\rho}$$
+
+其中 Lindblad 耗散超算符：
+
+$$\boxed{\mathcal{D}[\hat{L}]\rho = \hat{L}\rho\hat{L}^\dagger - \frac{1}{2}\{\hat{L}^\dagger\hat{L}, \rho\}}$$
+
+- $\hat{L}_k$：坍缩算符（如 $\hat{a}$ 表示光子衰减）
+- $\gamma_k$：衰减速率
+
+**物理过程示例**：
+
+| 坍缩算符 | 过程 |
+|----------|------|
+| $\hat{a}$ | 光子衰减（腔损耗） |
+| $\hat{N}$ | 纯退相（dephasing） |
+| $\hat{x}$ | 位置测量反作用 |
+| $\hat{a}^2$ | 双光子吸收 |
+
+**RK4 数值积分**：
+
+$$\begin{aligned}
+k_1 &= f(\rho_t) \\
+k_2 &= f(\rho_t + \tfrac{\Delta t}{2}k_1) \\
+k_3 &= f(\rho_t + \tfrac{\Delta t}{2}k_2) \\
+k_4 &= f(\rho_t + \Delta t\,k_3) \\
+\rho_{t+\Delta t} &= \rho_t + \frac{\Delta t}{6}(k_1 + 2k_2 + 2k_3 + k_4)
+\end{aligned}$$
+
+其中 $f(\rho)$ 是 Lindblad 方程右侧。
+
+### 5.3 稳态求解
+
+$$\frac{d\rho_{ss}}{dt} = 0$$
+
+将密度矩阵拉直为向量：$\text{vec}(\rho) \in \mathbb{C}^{N^2}$
+
+Liouville 超算符 $\mathcal{L}$ 满足：
+
+$$\frac{d}{dt}\text{vec}(\rho) = \mathcal{L}\,\text{vec}(\rho)$$
+
+$\mathcal{L}$ 的显式构造：
+
+$$\boxed{\mathcal{L} = -\frac{i}{\hbar}(\hat{H}\otimes\hat{I} - \hat{I}\otimes\hat{H}^T) + \sum_k\gamma_k\left[\hat{L}_k\otimes\hat{L}_k^* - \frac{1}{2}(\hat{L}_k^\dagger\hat{L}_k\otimes\hat{I} + \hat{I}\otimes(\hat{L}_k^\dagger\hat{L}_k)^T)\right]}$$
+
+稳态条件 $\mathcal{L}\,\text{vec}(\rho_{ss}) = 0$ + 迹约束 $\text{Tr}[\rho_{ss}]=1$，直接求解线性系统。
+
+---
+
+## 6. 相空间分布
+
+### 6.1 Wigner 函数
+
+Wigner 准概率分布是量子态在相空间 $(x,p)$ 中的表示：
+
+$$\boxed{W(x,p) = \frac{2}{\pi}\,\text{Tr}\!\left[\rho\,\hat{D}(\alpha)\,\hat{\Pi}\,\hat{D}(-\alpha)\right]}$$
+
+其中 $\alpha = (x + ip)/\sqrt{2}$，$\hat{\Pi} = (-1)^{\hat{N}}$ 是宇称算符。
+
+**性质**：
+- 实函数：$W(x,p) \in \mathbb{R}$
+- 归一化：$\iint W(x,p)\,dx\,dp = 1$
+- 边缘分布：$\int W(x,p)\,dp = |\psi(x)|^2$，$\int W(x,p)\,dx = |\tilde{\psi}(p)|^2$
+- **可取负值**（量子性的标志）
+- 高斯态的 Wigner 函数为正
+
+**典型 Wigner 函数**：
+
+| 态 | Wigner 函数特征 |
+|----|----------------|
+| 真空 $|0\rangle$ | 原点处的高斯峰 |
+| 相干态 $|\alpha\rangle$ | 位移的高斯峰（$\alpha$ 处） |
+| Fock 态 $|n\rangle$ | 环状结构，$n$ 个负值环 |
+| 薛定谔猫态 | 两个高斯峰 + 干涉条纹（负值） |
+| 压缩真空 | 压扁的高斯椭圆 |
+| 热态 | 展宽的高斯峰 |
+
+### 6.2 Husimi Q 函数
+
+$$\boxed{Q(\alpha) = \frac{1}{\pi}\langle\alpha|\rho|\alpha\rangle}$$
+
+- 恒为非负：$Q(\alpha) \geq 0$
+- 与 Wigner 的关系：$Q$ 是 $W$ 的高斯平滑
+- 相干态 $|\beta\rangle$ 的 Q 函数：$Q(\alpha) = \frac{1}{\pi}e^{-|\alpha-\beta|^2}$
+
+---
+
+## 7. 数值实现
+
+### 7.1 截断维度选择
+
+Fock 空间截断 $N$ 决定了计算的精确度。
+
+| 物理场景 | 推荐 $N$ |
+|----------|:---:|
+| 低激发（$\langle\hat{N}\rangle < 2$） | 10-20 |
+| 中等激发（$\langle\hat{N}\rangle < 10$） | 30-50 |
+| 强场（$\langle\hat{N}\rangle < 50$） | 100-200 |
+| 猫态（$|\alpha| < 3$） | 30-50 |
+
+截断误差 $\propto P(N-1)$，即最高 Fock 态的概率。
+
+### 7.2 矩阵指数
+
+$\hat{D}(\alpha) = \exp(X)$ 通过对角化 $X$ 计算：
+
+$$X = V\Lambda V^{-1} \implies e^X = V\,\text{diag}[e^{\lambda_i}]\,V^{-1}$$
+
+对于非正规矩阵 $X$（如位移算符的生成元），使用 `np.linalg.eig` 而非 `eigh`。
+
+### 7.3 稳态求解的稳定性
+
+Liouville 超算符 $\mathcal{L}$ 是奇异矩阵（有一个零本征值对应稳态）。添加迹归一化约束后求解：
+
+$$\begin{pmatrix} \mathcal{L}_{1:N^2-1} \\ \text{vec}(\hat{I})^T \end{pmatrix} \text{vec}(\rho) = \begin{pmatrix} 0 \\ 1 \end{pmatrix}$$
+
+求解后做后处理确保 $\rho$ 的物理性（厄米、正定、迹为 1）。
+
+### 7.4 对易子截断效应
+
+在 $N$ 维截断 Fock 空间中，$[\hat{x}, \hat{p}] = i\hbar\hat{I}$ 仅在 $n \ll N$ 的子空间精确成立。测试中在 $N-5$ 维子空间验证：
+
+$$\|[\hat{x}, \hat{p}]_{\text{sub}} - i\hbar I_{\text{sub}}\|_F < 10^{-14}$$
+
+---
+
+## 附录：符号速查
+
+| 符号 | 含义 | 程序中 |
 |------|------|:---:|
-| $\hbar$ | 约化普朗克常数 | 1.0 (a.u.) |
-| $m$ | 粒子质量 | 1.0 (a.u.) |
-| $\Delta t$ | 时间步长 | 0.001 |
-| $\Delta x$ | 空间步长 | $(x_{\max}-x_{\min})/(N-1)$ |
-| $N$ | 网格点数 | 1024 |
-| $x_{\min}, x_{\max}$ | 空间范围 | [-10, 10] |
-| $N$ (矩阵) | 数态基截断 | 50 |
-| $\omega$ | 谐振子频率 | 1.0 |
-| $a_{\text{HO}}$ | 特征长度 | $\sqrt{\hbar/m\omega}$ |
-| $\alpha$ | CN 常数 | $\hbar^2/(2m\Delta x^2)$ |
+| $\hat{a}, \hat{a}^\dagger$ | 湮灭/产生算符 | `fb.a`, `fb.a_dag` |
+| $\hat{x}, \hat{p}$ | 坐标/动量 | `fb.x`, `fb.p` |
+| $\hat{N}$ | 数算符 | `fb.n_op` |
+| $\hat{\Pi}$ | 宇称算符 | `fb.parity` |
+| $\hat{D}(\alpha)$ | 位移算符 | `fb.displacement(alpha)` |
+| $\hat{H}_{\text{HO}}$ | 谐振子哈密顿量 | `fb.hamiltonian()` |
+| $N$ | Fock 空间截断 | `FockBasis(N)` |
+| $\alpha$ | 相干态振幅 | `coherent(N, alpha)` |
+| $\zeta = re^{i\theta}$ | 压缩参数 | `squeezed(N, zeta)` |
+| $\bar{n}$ | 平均热光子数 | `thermal_dm(N, n_th)` |
+| $g^{(2)}(0)$ | 二阶关联 | `g2(state, fb)` |
+| $Q$ | Mandel 参数 | `mandel_q(state, fb)` |
+| $W(x,p)$ | Wigner 函数 | `wigner(state)` |
+| $Q(\alpha)$ | Husimi Q 函数 | `qfunc(state)` |
