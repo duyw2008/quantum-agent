@@ -540,8 +540,22 @@ Type 'help' for commands, 'demo all' to see examples.
             print("      calc np.trace(a @ ad)")
             return
 
-        # 准备命名空间
-        ns = {'np': np, '__builtins__': {}}
+        # 准备命名空间 — 常用模块已预加载，无需 import
+        ns = {
+            'np': np,
+            'numpy': np,
+            '__builtins__': {},  # 安全沙箱，禁止 import / exec 等
+        }
+
+        # scipy 可选
+        try:
+            import scipy
+            import scipy.linalg
+            import scipy.integrate
+            ns['sp'] = scipy
+            ns['scipy'] = scipy
+        except ImportError:
+            pass
 
         # 注入当前状态
         if self.current_matrix is not None:
