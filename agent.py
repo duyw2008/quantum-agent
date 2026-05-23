@@ -54,6 +54,17 @@ from src.viz import (
     animate_evolution,
 )
 
+# qubit 量子计算模块 (懒加载)
+_qubit_module = None
+
+
+def _get_qubit():
+    """懒加载 qubit 模块"""
+    global _qubit_module
+    if _qubit_module is None:
+        import src.qubit as _qubit_module
+    return _qubit_module
+
 
 def load_config(path: str = None) -> dict:
     """加载配置文件"""
@@ -508,6 +519,9 @@ Type 'help' for commands, 'demo all' to see examples.
             elif cmd == 'demo':
                 self.cmd_demo(args)
 
+            elif cmd == 'qubit':
+                self.cmd_qubit(args)
+
             elif cmd == 'status':
                 self._print_status()
 
@@ -516,6 +530,85 @@ Type 'help' for commands, 'demo all' to see examples.
 
             else:
                 print(f"未知命令: {cmd}。输入 'help' 查看帮助。")
+
+    def cmd_qubit(self, args: list):
+        """量子计算命令: qubit <subcommand>
+
+        subcommands:
+            demo    — 运行 Bell 态 + GHZ 态演示
+            gates   — 列出所有可用量子门
+            states  — 列出所有预定义量子态
+            help    — 帮助
+        """
+        if not args or args[0] in ('help', '-h'):
+            print("qubit 命令 — 量子计算")
+            print("  qubit demo      运行 Bell 态 + GHZ 态演示")
+            print("  qubit gates     列出所有可用量子门")
+            print("  qubit states    列出所有预定义量子态")
+            print("")
+            print("或在 calc 中直接使用:")
+            print("  calc H @ ket0")
+            print("  calc bell_state(0)")
+            print("  calc qc = Circuit(2); qc.h(0); qc.cnot(0,1); qc.draw()")
+            return
+
+        sub = args[0]
+        qubit = _get_qubit()
+
+        if sub == 'demo':
+            print("\n" + "=" * 50)
+            print("  Qubit Demo: Bell State")
+            print("=" * 50)
+            qc = qubit.bell_circuit()
+            print(qc.draw())
+            print(f"\n  Measurement (10 shots):")
+            # 每次测量前恢复态
+            saved = qc.get_state()
+            for i in range(10):
+                outcome = qc.measure()
+                bits = format(outcome, '02b')
+                print(f"    → |{bits}⟩", end='')
+                qc.state = saved.copy()  # 恢复
+            print()
+
+            print("\n" + "=" * 50)
+            print("  Qubit Demo: GHZ State (3 qubits)")
+            print("=" * 50)
+            qc3 = qubit.ghz_circuit(3)
+            print(qc3.draw())
+
+        elif sub == 'gates':
+            print("\nAvailable Quantum Gates:")
+            gates_info = [
+                ('I, X, Y, Z', 'Pauli matrices'),
+                ('H', 'Hadamard'),
+                ('S, S_dag, T_gate, T_dag', 'Phase gates'),
+                ('Rx(θ), Ry(θ), Rz(φ)', 'Rotation gates'),
+                ('Phase(φ), U3(θ,φ,λ)', 'General single-qubit'),
+                ('CNOT, CNOT_rev, CZ, SWAP', 'Two-qubit gates'),
+                ('Toffoli()', 'Three-qubit CCNOT'),
+                ('controlled_U(U)', 'Controlled arbitrary U'),
+            ]
+            for name, desc in gates_info:
+                print(f"  {name:<28s} {desc}")
+
+        elif sub == 'states':
+            print("\nAvailable Quantum States:")
+            states_info = [
+                ('ket0, ket1', 'Computational basis'),
+                ('ket_plus, ket_minus', 'X eigenstates'),
+                ('ket_plus_i, ket_minus_i', 'Y eigenstates'),
+                ('ket(θ, φ)', 'Bloch sphere parameterization'),
+                ('bell_state(i)', 'Bell states (i=0..3)'),
+                ('ghz_state(n)', 'n-qubit GHZ state'),
+                ('w_state(n)', 'n-qubit W state'),
+                ('density_matrix(ψ)', 'Pure state density matrix'),
+            ]
+            for name, desc in states_info:
+                print(f"  {name:<28s} {desc}")
+
+        else:
+            print(f"未知 qubit 子命令: {sub}。可用: demo, gates, states, help")
 
     def cmd_calc(self, expr: str):
         """计算 Python 表达式: calc <expression> | calc <var> = <expr>
@@ -560,6 +653,21 @@ Type 'help' for commands, 'demo all' to see examples.
         }
         # 合并持久化变量
         ns.update(self._calc_vars)
+
+        # qubit 量子计算模块
+        try:
+            qubit = _get_qubit()
+            ns['qubit'] = qubit
+            # 常用函数直接暴露
+            for name in ['ket0', 'ket1', 'ket_plus', 'ket_minus',
+                         'bell_state', 'ghz_state', 'w_state',
+                         'tensor_product', 'density_matrix',
+                         'X', 'Y', 'Z', 'H', 'CNOT', 'SWAP',
+                         'Rx', 'Ry', 'Rz',
+                         'Circuit', 'bell_circuit', 'ghz_circuit']:
+                ns[name] = getattr(qubit, name, None)
+        except Exception:
+            pass
 
         # scipy 可选
         try:
@@ -696,6 +804,7 @@ Type 'help' for commands, 'demo all' to see examples.
 ║  plot <type>              — 绘制图形                          ║
 ║  animate <type>           — 生成动画                          ║
 ║  demo <name|all>          — 运行 demo                        ║
+║  qubit <demo|gates|states> — 量子计算 (态/门/电路)            ║
 ║  calc <expression>        — Python 表达式/矩阵运算             ║
 ║  status                   — 当前状态                          ║
 ║  help                     — 帮助                              ║
