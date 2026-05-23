@@ -25,7 +25,13 @@ import sys
 import os
 import numpy as np
 import argparse
-import yaml
+
+try:
+    import yaml
+    HAS_YAML = True
+except ImportError:
+    HAS_YAML = False
+    yaml = None
 
 # 添加项目根目录到 Python 路径
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -46,7 +52,7 @@ def load_config(path: str = None) -> dict:
     """加载配置文件"""
     if path is None:
         path = os.path.join(os.path.dirname(__file__), 'config.yaml')
-    if os.path.exists(path):
+    if os.path.exists(path) and HAS_YAML:
         with open(path, 'r') as f:
             return yaml.safe_load(f)
     return {}
