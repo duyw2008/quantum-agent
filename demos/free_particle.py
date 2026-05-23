@@ -2,7 +2,7 @@
 """自由粒子高斯波包量子弥散 — 动画生成"""
 
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 import numpy as np
 from src.qm.wave import WaveGrid, gaussian_wavepacket, evolve_ssfm, animate_wave
