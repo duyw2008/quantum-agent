@@ -53,7 +53,7 @@ print(f"Barrier: x = {barrier_x}, height = {barrier_height}")
 # 初始波包
 # ============================================================
 x0, p0 = -10.0, 6.0
-sigma_x, sigma_y = 1.5, 3.0
+sigma_x, sigma_y = 2.0, 2.0   # 圆波包
 hbar, mass = 1.0, 1.0
 
 psi = np.exp(-(X - x0)**2 / (2 * sigma_x**2) -
@@ -142,6 +142,7 @@ ax_2d.text(screen_x + 0.2, y[-1] * 0.9, 'SCREEN', color='#f0883e',
            fontsize=9, fontweight='bold')
 ax_2d.set_xlabel('x', color='#e6edf3', fontsize=12)
 ax_2d.set_ylabel('y', color='#e6edf3', fontsize=12)
+ax_2d.set_aspect('equal')  # 保持 x-y 比例, 波包显示为正圆
 ax_2d.set_title('Double-Slit Interference', color='#e6edf3',
                 fontsize=14, fontweight='bold')
 ax_2d.tick_params(colors='#e6edf3')
