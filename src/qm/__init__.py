@@ -35,6 +35,9 @@ from .dynamics import (
     sesolve, mesolve, steadystate,
     lindblad_rhs,
 )
+from .wave import (
+    WaveGrid, gaussian_wavepacket, evolve_ssfm, animate_wave,
+)
 
 __all__ = [
     'FockBasis', 'get_basis',
@@ -45,4 +48,5 @@ __all__ = [
     'mean_photon', 'g2', 'mandel_q',
     'is_hermitian', 'is_unitary',
     'sesolve', 'mesolve', 'steadystate', 'lindblad_rhs',
+    'WaveGrid', 'gaussian_wavepacket', 'evolve_ssfm', 'animate_wave',
 ]

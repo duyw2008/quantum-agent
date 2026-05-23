@@ -134,6 +134,11 @@ Type 'help' for commands, 'demo' to see examples.
             'steadystate': qm.steadystate,
             'photon_dist': qm.photon_dist,
             'fidelity': qm.fidelity, 'purity': qm.purity,
+            # wave
+            'WaveGrid': qm.WaveGrid,
+            'gaussian_wavepacket': qm.gaussian_wavepacket,
+            'evolve_ssfm': qm.evolve_ssfm,
+            'animate_wave': qm.animate_wave,
             # viz
             'wigner': viz.wigner, 'qfunc': viz.qfunc,
             'plot_wigner': viz.plot_wigner,
