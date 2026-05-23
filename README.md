@@ -138,7 +138,8 @@ quantum_agent/
 
 | 文档 | 内容 |
 |------|------|
-| [PHYSICS.md](docs/PHYSICS.md) | 量子力学公式、数值方法推导、势函数解析性质 |
+| [MATHEMATICS.md](docs/MATHEMATICS.md) | 完整数学模型：TDSE、SSFM、CN、矩阵力学、全部势函数解析 |
+| [PHYSICS.md](docs/PHYSICS.md) | 量子力学物理背景和数值方法概述 |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 模块架构、数据流、设计原则 |
 | [CAPABILITIES.md](docs/CAPABILITIES.md) | 完整功能矩阵、命令参考 |
 | [TUTORIAL.md](docs/TUTORIAL.md) | 交互命令教程 + Python API 示例 |
