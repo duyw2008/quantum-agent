@@ -26,6 +26,13 @@ import os
 import numpy as np
 import argparse
 
+# readline: 命令行历史和上下键选择
+try:
+    import readline
+    HAS_READLINE = True
+except ImportError:
+    HAS_READLINE = False
+
 try:
     import yaml
     HAS_YAML = True
@@ -80,6 +87,11 @@ class QuantumAgent:
         os.makedirs(os.path.join(self.output_dir, 'figures'), exist_ok=True)
 
         self.history = []
+
+        # readline 历史文件
+        self._history_file = os.path.join(os.path.expanduser('~'),
+                                           '.quantum_agent_history')
+        self._setup_readline()
 
         # 当前状态 (可被命令修改)
         self.current_grid = None
@@ -422,6 +434,31 @@ Type 'help' for commands, 'demo all' to see examples.
             print(f"Demo 文件不存在: {full_path}")
 
     # ============================================================
+    # readline 设置
+    # ============================================================
+
+    def _setup_readline(self):
+        """设置 readline 历史"""
+        if not HAS_READLINE:
+            return
+        # 设置历史文件
+        readline.set_history_length(1000)
+        # 加载历史
+        try:
+            readline.read_history_file(self._history_file)
+        except (FileNotFoundError, PermissionError):
+            pass
+
+    def _save_history(self):
+        """保存 readline 历史"""
+        if not HAS_READLINE:
+            return
+        try:
+            readline.write_history_file(self._history_file)
+        except (IOError, PermissionError):
+            pass
+
+    # ============================================================
     # 交互循环
     # ============================================================
 
@@ -432,6 +469,7 @@ Type 'help' for commands, 'demo all' to see examples.
                 cmd_line = input('\n⚛ > ').strip()
             except (EOFError, KeyboardInterrupt):
                 print("\n👋 Goodbye!")
+                self._save_history()
                 break
 
             if not cmd_line:
@@ -443,6 +481,7 @@ Type 'help' for commands, 'demo all' to see examples.
 
             if cmd in ('quit', 'exit', 'q'):
                 print("👋 Goodbye!")
+                self._save_history()
                 break
 
             elif cmd == 'help':
