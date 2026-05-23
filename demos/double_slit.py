@@ -52,8 +52,8 @@ print(f"Barrier: x = {barrier_x}, height = {barrier_height}")
 # ============================================================
 # 初始波包
 # ============================================================
-x0, p0 = -8.0, 4.0
-sigma_x, sigma_y = 1.5, 2.5
+x0, p0 = -10.0, 6.0
+sigma_x, sigma_y = 1.5, 3.0
 hbar, mass = 1.0, 1.0
 
 psi = np.exp(-(X - x0)**2 / (2 * sigma_x**2) -
@@ -106,7 +106,7 @@ print(f"\nDone: {len(times)} snapshots")
 # ============================================================
 # 提取干涉图案 — 右侧屏幕上的概率密度
 # ============================================================
-screen_x = 8.0  # 屏幕位置
+screen_x = 10.0  # 屏幕位置 (更远 → 条纹间距更大)
 screen_idx = np.argmin(np.abs(x - screen_x))
 screen_pattern = probs[-1][screen_idx, :]
 print(f"Screen at x = {x[screen_idx]:.1f}")
@@ -127,11 +127,13 @@ ax_2d = fig.add_subplot(gs[0, :], facecolor='#0d1117')      # 2D 概率密度
 ax_scr = fig.add_subplot(gs[1, 0], facecolor='#0d1117')     # 屏幕图案
 ax_slc = fig.add_subplot(gs[1, 1], facecolor='#0d1117')     # 中心切片
 
-# --- 2D 热图 ---
+# --- 2D 热图 --- 使用 gamma 校正让干涉条纹更明显
+gamma = 0.45  # <1 提亮暗部, 让微弱条纹可见
 vmax = max(p.max() for p in probs)
-im = ax_2d.imshow(probs[0].T, extent=[x[0], x[-1], y[0], y[-1]],
-                   origin='lower', cmap='plasma', aspect='auto',
-                   vmin=0, vmax=vmax * 0.8)
+display_data = (np.clip(probs[0] / (vmax * 0.15), 0, 1)) ** gamma
+im = ax_2d.imshow(display_data.T, extent=[x[0], x[-1], y[0], y[-1]],
+                   origin='lower', cmap='inferno', aspect='auto',
+                   vmin=0, vmax=1)
 # 画屏障位置
 ax_2d.axvline(barrier_x, color='white', linewidth=1, alpha=0.3, linestyle='--')
 # 画屏幕位置
@@ -187,7 +189,8 @@ for ax in [ax_2d, ax_scr, ax_slc]:
         spine.set_color('#30363d')
 
 def update(i):
-    im.set_data(probs[i].T)
+    display = (np.clip(probs[i] / (vmax * 0.15), 0, 1)) ** gamma
+    im.set_data(display.T)
     line_slc.set_ydata(slices[i])
     # 仅最后一帧更新屏幕图案
     if i == len(times) - 1:
