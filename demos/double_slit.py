@@ -21,7 +21,7 @@ print("=" * 60)
 # 2D 网格与势函数
 # ============================================================
 Nx, Ny = 256, 128
-x = np.linspace(-15, 15, Nx)
+x = np.linspace(-20, 30, Nx)
 y = np.linspace(-8, 8, Ny)
 dx, dy = x[1] - x[0], y[1] - y[0]
 X, Y = np.meshgrid(x, y, indexing='ij')
@@ -69,7 +69,7 @@ print(f"σ_x={sigma_x}, σ_y={sigma_y}")
 # 2D SSFM 演化
 # ============================================================
 dt = 0.003
-t_max = 7.0
+t_max = 12.0
 n_steps = int(t_max / dt)
 snapshots = 200
 interval = max(1, n_steps // snapshots)
@@ -106,7 +106,7 @@ print(f"\nDone: {len(times)} snapshots")
 # ============================================================
 # 提取干涉图案 — 右侧屏幕上的概率密度
 # ============================================================
-screen_x = 6.0  # 屏幕位置
+screen_x = 8.0  # 屏幕位置
 screen_idx = np.argmin(np.abs(x - screen_x))
 screen_pattern = probs[-1][screen_idx, :]
 print(f"Screen at x = {x[screen_idx]:.1f}")
