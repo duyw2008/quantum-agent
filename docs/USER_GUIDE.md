@@ -12,9 +12,10 @@
 4. [算符工具](#4-算符工具)
 5. [光子统计](#5-光子统计)
 6. [波函数动力学](#6-波函数动力学-tdse)
-    - [自由粒子弥散](#63-示例-a自由粒子量子弥散)
-    - [位置测量坍缩](#64-示例-b位置测量坍缩)
-    - [动量测量坍缩](#65-示例-c动量测量坍缩)
+    - [海森堡不确定性原理](#63-示例-a海森堡不确定性原理)
+    - [自由粒子弥散](#64-示例-b自由粒子量子弥散)
+    - [位置测量坍缩](#65-示例-c位置测量坍缩)
+    - [动量测量坍缩](#66-示例-d动量测量坍缩)
 7. [时间演化 (Fock 空间)](#7-时间演化)
 8. [相空间可视化](#8-相空间可视化)
 9. [完整工作流示例](#9-完整工作流示例)
@@ -623,7 +624,27 @@ plot_photon_dist(state, title="Photon Distribution", save=None) -> fig
 ⚛ > calc animate_wave(r, save_path='output/my_wave.gif')
 ```
 
-### 6.3 示例 A：自由粒子量子弥散
+### 6.3 示例 A：海森堡不确定性原理
+
+自由高斯波包的 Δx·Δp 始终 ≥ ℏ/2。初始为最小不确定态，随时间 Δx 增长而 Δp 恒定（自由粒子动量守恒），乘积持续远离下界。
+
+$$初始: \Delta x\cdot\Delta p \approx \hbar/2, \quad 最终: \Delta x\cdot\Delta p \gg \hbar/2$$
+
+```
+⚛ > calc g = WaveGrid(-40, 40, 1024)
+⚛ > calc psi0 = gaussian_wavepacket(g, x0=0, p0=0, sigma=1)
+⚛ > calc r = evolve_ssfm(psi0, g, dt=0.01, t_max=10)
+⚛ > calc animate_wave(r, save_path='output/uncertainty.gif')
+```
+
+| 时间 | Δx | Δp | Δx·Δp |
+|------|:---:|:---:|:---:|
+| t=0 | 0.71 | 0.72 | 0.51 ≈ ℏ/2 |
+| t=10 | 7.11 | 0.72 | 5.14 = 10×ℏ/2 |
+
+> 4 面板完整动画：`python demos/heisenberg_uncertainty.py`
+
+### 6.4 示例 B：自由粒子量子弥散
 
 高斯波包在自由空间演化，宽度随时间增长。
 
