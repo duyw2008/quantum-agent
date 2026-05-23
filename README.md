@@ -67,7 +67,8 @@ quantum_agent/
 
 ## 文档
 
-- [MATHEMATICS.md](docs/MATHEMATICS.md) — 完整数学模型（Fock 空间、量子态、算符代数、Lindblad 主方程、Wigner 函数）
+- [MATHEMATICS.md](docs/MATHEMATICS.md) — 完整数学模型
+- [USER_GUIDE.md](docs/USER_GUIDE.md) — 函数参考与应用实例
 
 ## License
 
