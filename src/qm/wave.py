@@ -8,6 +8,10 @@ Split-Step Fourier Method (SSFM) 求解:
 
 import numpy as np
 
+# numpy 兼容
+if not hasattr(np, 'trapezoid'):
+    np.trapezoid = np.trapz  # type: ignore
+
 
 class WaveGrid:
     """一维空间网格"""
