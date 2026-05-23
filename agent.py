@@ -93,6 +93,9 @@ class QuantumAgent:
                                            '.quantum_agent_history')
         self._setup_readline()
 
+        # calc 持久化变量命名空间
+        self._calc_vars = {}  # 用户通过 calc 赋值保存的变量
+
         # 当前状态 (可被命令修改)
         self.current_grid = None
         self.current_potential = None
@@ -515,10 +518,11 @@ Type 'help' for commands, 'demo all' to see examples.
                 print(f"未知命令: {cmd}。输入 'help' 查看帮助。")
 
     def cmd_calc(self, expr: str):
-        """计算 Python 表达式: calc <expression>
+        """计算 Python 表达式: calc <expression> | calc <var> = <expr>
 
         可直接使用:
-            np          — numpy
+            np/numpy    — numpy
+            sp/scipy    — scipy (if installed)
             x, p        — 当前矩阵力学坐标/动量算符
             a, ad       — 湮灭/产生算符
             H           — 谐振子哈密顿量
@@ -527,25 +531,35 @@ Type 'help' for commands, 'demo all' to see examples.
             V           — 当前势函数
             grid        — 当前网格
 
+        赋值支持:
+            calc A = x @ p           # 保存矩阵到变量 A
+            calc E, vec = np.linalg.eigh(H)  # 元组解包
+            calc A                     # 查看变量 A
+            calc vars                  # 列出所有变量
+
         示例:
             calc np.dot(x, p) - np.dot(p, x)    # [x̂, p̂]
             calc np.trace(H)                     # Tr[Ĥ]
-            calc np.linalg.eigvalsh(H)[:5]       # 前5个本征值
-            calc np.abs(wf)**2                   # 概率密度
+            calc E = np.linalg.eigvalsh(H)[:5]   # 储存本征值
+            calc E                               # 查看
         """
         if not expr:
             print("用法: calc <expression>")
-            print("示例: calc np.dot(x, p) - np.dot(p, x)")
-            print("      calc np.linalg.eigvalsh(H)[:5]")
-            print("      calc np.trace(a @ ad)")
+            print("      calc <var> = <expression>   (赋值)")
+            print("      calc vars                    (查看变量)")
+            print("示例: calc A = x @ p")
+            print("      calc E = np.linalg.eigvalsh(H)[:5]")
+            print("      calc E")
             return
 
-        # 准备命名空间 — 常用模块已预加载，无需 import
+        # 准备命名空间 — 常用模块已预加载
         ns = {
             'np': np,
             'numpy': np,
-            '__builtins__': {},  # 安全沙箱，禁止 import / exec 等
+            '__builtins__': {},
         }
+        # 合并持久化变量
+        ns.update(self._calc_vars)
 
         # scipy 可选
         try:
@@ -576,22 +590,58 @@ Type 'help' for commands, 'demo all' to see examples.
             ns['x_arr'] = self.current_grid.x
             ns['k_arr'] = self.current_grid.k
 
-        try:
-            result = eval(expr, ns)
-            self._display_result(result, expr)
-        except Exception as e:
-            print(f"Error: {type(e).__name__}: {e}")
+        # 特殊命令
+        if expr.strip() == 'vars':
+            if self._calc_vars:
+                print("User variables:")
+                for name, val in sorted(self._calc_vars.items()):
+                    if isinstance(val, np.ndarray):
+                        print(f"  {name}: array(shape={val.shape}, dtype={val.dtype})")
+                    else:
+                        print(f"  {name}: {type(val).__name__} = {repr(val)[:60]}")
+            else:
+                print("(no user variables yet. Use: calc A = <expr>)")
+            return
 
-    def _display_result(self, result, expr: str):
+        # 检测赋值语句
+        if '=' in expr and not expr.strip().startswith('='):
+            # 赋值模式: exec
+            try:
+                exec(expr, ns)
+                # 提取新赋值的变量
+                for name, val in ns.items():
+                    if name not in ('np', 'numpy', 'sp', 'scipy', '__builtins__',
+                                    'x', 'p', 'a', 'ad', 'H', 'I', 'N',
+                                    'wf', 'wf_k', 'V', 'grid', 'x_arr', 'k_arr'):
+                        if name not in self._calc_vars or self._calc_vars[name] is not val:
+                            self._calc_vars[name] = val
+                # 显示赋值的变量
+                var_name = expr.split('=')[0].strip()
+                if var_name in self._calc_vars:
+                    self._display_result(self._calc_vars[var_name], var_name, prefix=f"  {var_name} = ")
+            except Exception as e:
+                print(f"Error: {type(e).__name__}: {e}")
+        else:
+            # 表达式模式: eval
+            try:
+                result = eval(expr, ns)
+                self._display_result(result, expr)
+            except Exception as e:
+                print(f"Error: {type(e).__name__}: {e}")
+
+    def _display_result(self, result, expr: str, prefix: str = ""):
         """格式化显示计算结果"""
         if isinstance(result, np.ndarray):
             shape = result.shape
             if result.size == 1:
                 val = complex(result.item())
                 if abs(val.imag) < 1e-14:
-                    print(f"= {val.real:.10g}")
+                    print(f"{prefix}{val.real:.10g}")
                 else:
-                    print(f"= {val.real:.10g} + {val.imag:.10g}i")
+                    print(f"{prefix}{val.real:.10g} + {val.imag:.10g}i")
+            elif result.ndim == 1 and result.size <= 10:
+                # 小向量：直接显示
+                print(f"{prefix}{np.array2string(result, precision=4, suppress_small=True)}")
             elif result.ndim == 2 and min(shape) <= 8:
                 # 小矩阵：完整显示
                 if np.allclose(result.imag, 0):
@@ -616,15 +666,18 @@ Type 'help' for commands, 'demo all' to see examples.
                 print(f"  (use calc with slice to inspect: calc x[:5,:5])")
         elif isinstance(result, complex):
             if abs(result.imag) < 1e-14:
-                print(f"= {result.real:.10g}")
+                print(f"{prefix}{result.real:.10g}")
             else:
-                print(f"= {result.real:.10g} + {result.imag:.10g}i")
+                print(f"{prefix}{result.real:.10g} + {result.imag:.10g}i")
         elif isinstance(result, (int, float)):
-            print(f"= {result:.10g}")
+            print(f"{prefix}{result:.10g}")
         elif result is None:
             pass
         else:
-            print(repr(result))
+            if prefix:
+                print(f"{prefix}{repr(result)}")
+            else:
+                print(repr(result))
 
     def _print_help(self):
         print("""
