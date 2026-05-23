@@ -11,11 +11,12 @@ print("Free Particle Gaussian Wavepacket Spreading")
 print("=" * 50)
 
 # 网格
-grid = WaveGrid(x_min=-15, x_max=15, N=1024)
-print(f"Grid: x ∈ [{grid.x[0]:.1f}, {grid.x[-1]:.1f}], N={grid.N}, dx={grid.dx:.4f}")
+# 网格 — 足够大以容纳移动+弥散的波包
+x_margin = 30
+grid = WaveGrid(x_min=-x_margin, x_max=x_margin, N=1024)
 
-# 初始波包
-x0, p0, sigma = 0.0, 5.0, 1.0
+# 初始波包 — 低动量确保留在网格内
+x0, p0, sigma = 0.0, 2.0, 1.0
 psi0 = gaussian_wavepacket(grid, x0=x0, p0=p0, sigma=sigma)
 print(f"Wavepacket: x₀={x0}, p₀={p0}, σ={sigma}")
 print(f"  Initial Δx = {sigma:.3f}")

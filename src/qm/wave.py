@@ -77,15 +77,15 @@ def evolve_ssfm(psi0: np.ndarray, grid: WaveGrid, V_func=None,
 
     # 预计算 SSFM 相位因子
     pe_half = np.exp(-0.5j * Vx * dt / hbar)
-    ke_factor = np.exp(-0.5j * hbar * k**2 * dt / mass)
+    ke_full = np.exp(-1.0j * hbar * k**2 * dt / (2 * mass))
 
     for step in range(1, n_steps + 1):
         # Step 1: 半步势能
         psi = pe_half * psi
         # Step 2: FFT → 动量空间
         psi_k = np.fft.fft(psi)
-        # Step 3: 动能演化 (全步, 因为对称分解中有两个半步势能)
-        psi_k *= ke_factor**2
+        # Step 3: 动能演化 (全步)
+        psi_k *= ke_full
         # Step 4: 逆 FFT
         psi = np.fft.ifft(psi_k)
         # Step 5: 半步势能
@@ -140,9 +140,11 @@ def animate_wave(result, save_path='wave_evolution.mp4', fps=20):
         for spine in ax.spines.values():
             spine.set_color('#30363d')
 
+    fill_ref = [fill]  # mutable container for update
+
     def update(i):
-        fill.remove()
-        new_fill = ax_main.fill_between(x, 0, prob[i], alpha=0.5, color='#79c0ff')
+        fill_ref[0].remove()
+        fill_ref[0] = ax_main.fill_between(x, 0, prob[i], alpha=0.5, color='#79c0ff')
         line.set_ydata(prob[i])
         t_line.set_xdata([times[i], times[i]])
         title.set_text(f't = {times[i]:.2f}  |  '
