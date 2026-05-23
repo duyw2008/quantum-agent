@@ -1,30 +1,33 @@
 # Changelog
 
-All notable changes to Quantum Agent will be documented in this file.
-
-## [0.1.0] — 2026-05-21
+## [2.2.0] — 2026-05-23
 
 ### Added
-- 11 种势函数：InfiniteWell, Harmonic, PotentialBarrier, FiniteWell, DoubleWell, Morse, Coulomb1D, Periodic, StepPotential, ZeroPotential, CustomPotential
-- WaveFunction 波函数表示：高斯波包、平面波、本征态初始化，期望值、不确定度计算
-- Split-Step Fourier Method (SSFM) TDSE 求解器 — 基于 FFT 的谱方法，O(N log N)
-- Crank-Nicolson (CN) TDSE 求解器 — 隐式三对角方法，无条件稳定
-- NumericOperatorSystem — 数态基截断算符表示（â, â†, x̂, p̂, N̂）
-- MatrixMechanics 统一矩阵力学接口：对易子、本征值、时间演化
-- SymbolicQuantum — sympy 符号量子力学（角动量、Pauli 自旋、BCH 公式）
-- 可视化模块：动画（MP4/GIF）+ 静态图（势函数、波函数、本征态、能谱、矩阵热图、相空间）
-- 暗色/亮色双主题配色方案
-- CLI Agent 交互界面：evolve, matrix, eigenstates, plot, animate, demo 命令
-- 5 个 Demo：谐振子、无限深势阱、势垒隧穿、矩阵力学、双势阱
-- 35 个测试（12+6+6+7+4），全部通过
-- 4 份文档：ARCHITECTURE, PHYSICS, CAPABILITIES, TUTORIAL
-- numpy 2.x 兼容性 shim（np.trapz → np.trapezoid）
+- 双缝干涉实验 — 2D TDSE 模拟 (256×128), gamma 校正, inferno 配色
+- 量子擦除实验 — 相干 vs 非相干对比, 中途切换模式, 干涉项可视化
+- 海森堡不确定性原理动画 — 4 面板 Δx·Δp ≥ ℏ/2
+- 位置测量坍缩动画 — 坍缩后 100× 弥散加速
+- 动量测量坍缩动画 — 3 面板频率可视化, Δp 宽度标注
+- 自由粒子量子弥散动画 — SSFM 验证
+- 波函数动力学模块 (`src/qm/wave.py`) — WaveGrid, SSFM, 动画生成
 
-### Verified
-- [x̂, p̂] = iħ 对易关系 ✓
-- [â, â†] = I 产生湮灭对易 ✓
-- Eₙ = ħω(n + ½) 谐振子能谱 ✓（误差 < 1e-8）
-- Δx·Δp ≥ 0.5 不确定度原理 ✓
-- 量子隧穿：E < V₀ 时概率传输 ✓
-- 双势阱隧穿劈裂 ✓
-- 范数守恒：norm drift < 1e-8（长时间演化）✓
+### Changed
+- 量子擦除动画增强：单场景中途切换 + 干涉项面板 + 探测器累积
+- 双缝动画增强：γ=0.45, inferno, p₀=6, 圆波包, aspect='equal'
+- 动量坍缩增强：3 面板, Δp 箭头标注, 频率聚焦显示
+
+## [2.0.0] — 2026-05-22
+
+### Added
+- QuTiP 风格量子力学库 (`src/qm/`)
+  - `basis.py` — FockBasis: a, a†, x, p, N, parity, displacement
+  - `states.py` — fock, coherent, squeezed, thermal_dm, cat
+  - `operators.py` — commutator, expect, variance, g2, mandel_q
+  - `dynamics.py` — sesolve, mesolve, steadystate
+- 可视化模块 (`src/viz/`) — Wigner, Qfunc, 光子分布图
+- Agent CLI (`agent.py`) — calc, demo, test, readline
+- 文档: MATHEMATICS.md (7章), USER_GUIDE.md (9章)
+- 验证: [x̂,p̂]=iħ (6.75×10⁻¹⁶), g²=1.0/2.0, ⟨n⟩=sinh²(r)
+
+### Removed
+- 旧模块全部清理 (core, matrix, viz, qubit, qoptics)
