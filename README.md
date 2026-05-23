@@ -20,6 +20,7 @@ Quantum Agent 是一个模块化的量子力学计算平台，将波函数演化
 # 安装依赖
 python3 -m venv venv && source venv/bin/activate
 pip install numpy scipy matplotlib
+pip install pyyaml        # optional: for config.yaml support
 
 # 运行 agent（交互模式）
 python agent.py
