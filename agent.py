@@ -51,22 +51,64 @@ Type 'help' for commands, 'demo' to see examples.
             readline.read_history_file(self._hist_file)
         except (FileNotFoundError, PermissionError):
             pass
-        # Tab 补全
+        # Tab 补全: 命令 + 智能文件路径
         self._completions = [
             'calc', 'demo', 'test', 'help', 'quit', 'vars',
+            'run', 'animate', 'plot', 'wigner', 'formula',
             'FockBasis', 'coherent', 'coherent_dm', 'squeezed', 'thermal_dm',
             'cat', 'fock', 'fock_dm', 'expect', 'variance', 'g2', 'mandel_q',
             'mean_photon', 'commutator', 'sesolve', 'mesolve', 'steadystate',
             'wigner', 'qfunc', 'plot_wigner', 'plot_photon_dist',
             'WaveGrid', 'gaussian_wavepacket', 'evolve_ssfm', 'animate_wave',
             'fidelity', 'purity', 'photon_dist', 'np',
-            'animate', 'plot', 'wigner',
+            'ScalarField', 'LatticePhi4',
         ]
+        readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>?')
         readline.set_completer(self._completer)
         readline.parse_and_bind('tab: complete')
 
     def _completer(self, text, state):
+        """Smart completion: command names + file paths after run/animate"""
+        import glob as _glob
+
+        line = readline.get_line_buffer()
+        stripped = line.lstrip()
+        words = stripped.split()
+        cmd = words[0].lower() if words else ''
+
+        # File-path completion after 'run' or 'animate'
+        if cmd in ('run', 'animate') and len(words) >= 1:
+            if not line.rstrip().endswith(cmd) or len(words) > 1:
+                prefix = text if text else '.'
+                agent_dir = os.path.dirname(__file__)
+                matches = []
+                for base in ['scripts', 'demos', '.', 'output']:
+                    d = os.path.join(agent_dir, base)
+                    if os.path.isdir(d):
+                        for p in _glob.glob(os.path.join(d, prefix + '*')):
+                            rel = os.path.relpath(p, agent_dir)
+                            if os.path.isdir(p):
+                                rel += os.sep
+                            if rel.startswith(prefix):
+                                matches.append(rel)
+                # Also search user-provided paths (./ ../ ~/)
+                if prefix.startswith(('.', os.sep, '~')):
+                    pat = os.path.expanduser(prefix + '*')
+                    for p in _glob.glob(pat):
+                        s = p + os.sep if os.path.isdir(p) else p
+                        if s not in matches:
+                            matches.append(s)
+                matches = sorted(set(matches))
+                if state < len(matches):
+                    return matches[state]
+                return None
+
+        # Default: command/variable-name completion
         matches = [c for c in self._completions if c.startswith(text)]
+        for v in self._calc_ns:
+            if v.startswith(text) and v not in matches:
+                matches.append(v)
+        matches = sorted(matches)
         try:
             return matches[state]
         except IndexError:
