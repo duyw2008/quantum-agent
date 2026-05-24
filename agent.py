@@ -54,7 +54,7 @@ Type 'help' for commands, 'demo' to see examples.
         # Tab 补全: 命令 + 智能文件路径
         self._completions = [
             'calc', 'demo', 'test', 'help', 'quit', 'vars',
-            'cd', 'pwd', 'run', 'animate', 'plot', 'wigner', 'formula',
+            'cd', 'pwd', 'ls', 'run', 'animate', 'plot', 'wigner', 'formula',
             'FockBasis', 'coherent', 'coherent_dm', 'squeezed', 'thermal_dm',
             'cat', 'fock', 'fock_dm', 'expect', 'variance', 'g2', 'mandel_q',
             'mean_photon', 'commutator', 'sesolve', 'mesolve', 'steadystate',
@@ -337,6 +337,36 @@ Type 'help' for commands, 'demo' to see examples.
             print(f'  cd: {e}')
 
     # ================================================================
+    # ls — 列出当前目录文件
+    # ================================================================
+
+    def _ls(self):
+        """列出当前目录的文件和子目录"""
+        cwd = os.getcwd()
+        try:
+            entries = sorted(os.listdir(cwd))
+        except PermissionError as e:
+            print(f'  ls: {e}')
+            return
+        if not entries:
+            print('  (empty)')
+            return
+        # 列排版
+        max_len = max(len(e) for e in entries) + 2
+        cols = max(1, 80 // max_len)
+        rows = (len(entries) + cols - 1) // cols
+        for r in range(rows):
+            line_parts = []
+            for c in range(cols):
+                idx = r + c * rows
+                if idx < len(entries):
+                    e = entries[idx]
+                    if os.path.isdir(os.path.join(cwd, e)):
+                        e = e + '/'
+                    line_parts.append(e.ljust(max_len))
+            print('  ' + ''.join(line_parts).rstrip())
+
+    # ================================================================
     # 命令分发
     # ================================================================
 
@@ -356,6 +386,8 @@ Type 'help' for commands, 'demo' to see examples.
             self._cd(args)
         elif cmd == 'pwd':
             print(os.getcwd())
+        elif cmd == 'ls':
+            self._ls()
         elif cmd in ('calc', '=', 'eval'):
             self.calc(' '.join(args))
         elif cmd == 'test':
@@ -614,6 +646,7 @@ Commands:
   calc vars           List variables
   cd [path]           Change working directory (tab-completes)
   pwd                 Print working directory
+  ls                  List files in current directory
   formula <latex>     Render LaTeX to Unicode in terminal
   animate <var> [path] Animate wavefunction result
   plot wigner [x] [p] [W]  Plot Wigner function
