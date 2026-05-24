@@ -80,6 +80,54 @@ Type 'help' for commands, 'demo' to see examples.
                 pass
 
     # ================================================================
+    # formula — LaTeX 公式渲染
+    # ================================================================
+
+    def _render_formula(self, latex: str):
+        """将 LaTeX 公式渲染为图片
+
+        用法:
+            formula i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi
+            formula \Delta x \cdot \Delta p \geq \frac{\hbar}{2}
+
+        输出到 output/formulas/formula_<timestamp>.png
+        """
+        if not latex:
+            print("Usage: formula <LaTeX expression>")
+            print("Example: formula i\\hbar\\frac{\\partial}{\\partial t}\\Psi = \\hat{H}\\Psi")
+            return
+
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        import time
+
+        # 译码转义
+        latex = latex.replace('\\\\', '\\')
+
+        fig, ax = plt.subplots(figsize=(len(latex) * 0.12 + 2, 1.2),
+                               facecolor='#ffffff')
+        ax.axis('off')
+        try:
+            ax.text(0.5, 0.5, f'${latex}$', transform=ax.transAxes,
+                    fontsize=20, ha='center', va='center', color='#1f2328')
+        except Exception as e:
+            # 回退：纯文本显示
+            ax.text(0.5, 0.5, latex, transform=ax.transAxes,
+                    fontsize=16, ha='center', va='center', color='#1f2328',
+                    fontfamily='monospace')
+
+        save_dir = os.path.join(os.path.dirname(__file__), 'output', 'formulas')
+        os.makedirs(save_dir, exist_ok=True)
+        ts = time.strftime('%H%M%S')
+        save_path = os.path.join(save_dir, f'formula_{ts}.png')
+        fig.savefig(save_path, dpi=150, bbox_inches='tight', facecolor='#ffffff')
+        plt.close(fig)
+
+        print(f'  Formula rendered: {save_path}')
+        print(f'  {latex}')
+
+    # ================================================================
     # 命令分发
     # ================================================================
 
@@ -117,6 +165,8 @@ Type 'help' for commands, 'demo' to see examples.
                 self.calc(f"plot_wigner(x, p, W, save='output/wigner.png')" if len(args) < 2 else f"plot_wigner({args[1]}, {args[2] if len(args)>2 else 'p'}, {args[3] if len(args)>3 else 'W'}, save='output/wigner.png')")
             elif cmd == 'wigner':
                 self.calc("x, p, W = wigner(psi) if 'psi' in dir() else print('Set psi first: calc psi = coherent(20, 2.0)')")
+            elif cmd == 'formula':
+                self._render_formula(' '.join(args))
             else:
                 # 不是已知命令, 尝试作为 Python 表达式求值
                 self.calc(line)
