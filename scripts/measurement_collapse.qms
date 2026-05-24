@@ -1,0 +1,188 @@
+# Measurement Collapse — 位置测量坍缩与后续量子弥散
+#
+# 物理过程:
+#   1. 宽高斯波包自由演化 (动量不确定度小 → 弥散缓慢)
+#   2. 位置测量 → 坍缩为窄高斯 (位置确定 → 动量极度不确定)
+#   3. 坍缩后快速弥散 (Δx·Δp ≥ ℏ/2 的戏剧性展示)
+#
+# 生成双面板动画: Δx vs t (上) + |ψ|² 概率密度 (下)
+
+# === 0. 环境准备 ===
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import numpy as np
+import os
+
+# === 1. 网格与初始波包 ===
+grid = WaveGrid(x_min=-40, x_max=40, N=1024)
+x = grid.x
+
+sigma_wide = 3.0
+p0 = 2.0
+t_measure = 4.0
+
+psi0 = gaussian_wavepacket(grid, x0=-8.0, p0=p0, sigma=sigma_wide)
+psi0 = psi0 / np.sqrt(np.trapezoid(np.abs(psi0)**2, x))
+
+dx_init = np.sqrt(np.trapezoid(x**2 * np.abs(psi0)**2, x) - np.trapezoid(x * np.abs(psi0)**2, x)**2)
+formula \Delta x(0) \approx \sigma = 3.0
+dx_init
+
+# === 2. 测量前自由演化 ===
+result_pre = evolve_ssfm(psi0, grid, dt=0.005, t_max=t_measure, snapshots=80)
+psi_before = result_pre['psi'][-1]
+
+x_mean_before = np.trapezoid(x * np.abs(psi_before)**2, x)
+dx_before = np.sqrt(np.trapezoid(x**2 * np.abs(psi_before)**2, x) - x_mean_before**2)
+formula \text{At } t=4 \text{ (before measurement)}
+x_mean_before
+dx_before
+
+# === 3. 位置测量 & 坍缩 ===
+prob = np.abs(psi_before)**2
+prob = prob / prob.sum()
+np.random.seed(42)
+measured_x = np.random.choice(x, p=prob)
+
+formula \text{Measurement result: } x_{\rm meas}
+measured_x
+
+sigma_narrow = 0.3
+psi_after = np.exp(-(x - measured_x)**2 / (2 * sigma_narrow**2)).astype(complex)
+psi_after = psi_after / np.sqrt(np.trapezoid(np.abs(psi_after)**2, x))
+
+dx_after = np.sqrt(np.trapezoid(x**2 * np.abs(psi_after)**2, x) - measured_x**2)
+dx_after
+
+# 动量不确定度
+psi_k_before = np.fft.fft(psi_before)
+prob_k_before = np.abs(psi_k_before)**2
+k_grid = grid.k
+p_mean_b = np.trapezoid(k_grid * prob_k_before, k_grid) / np.trapezoid(prob_k_before, k_grid)
+p2_mean_b = np.trapezoid(k_grid**2 * prob_k_before, k_grid) / np.trapezoid(prob_k_before, k_grid)
+dp_before = np.sqrt(p2_mean_b - p_mean_b**2)
+
+psi_k_after = np.fft.fft(psi_after)
+prob_k_after = np.abs(psi_k_after)**2
+p_mean_a = np.trapezoid(k_grid * prob_k_after, k_grid) / np.trapezoid(prob_k_after, k_grid)
+p2_mean_a = np.trapezoid(k_grid**2 * prob_k_after, k_grid) / np.trapezoid(prob_k_after, k_grid)
+dp_after_p = np.sqrt(p2_mean_a - p_mean_a**2)
+
+formula \Delta x \cdot \Delta p \geq \hbar/2
+dx_before * dp_before
+dx_after * dp_after_p
+
+# === 4. 坍缩后快速弥散 ===
+t_after = 5.0
+tau_before = 2 * sigma_wide**2
+tau_after = 2 * sigma_narrow**2
+formula \tau_{\rm spread} = 2m\sigma^2/\hbar
+tau_before / tau_after
+
+result_after = evolve_ssfm(psi_after, grid, dt=0.002, t_max=t_after, snapshots=100)
+
+psi_final = result_after['psi'][-1]
+x_final = np.trapezoid(x * np.abs(psi_final)**2, x)
+dx_final = np.sqrt(np.trapezoid(x**2 * np.abs(psi_final)**2, x) - x_final**2)
+dx_final
+
+# === 5. 生成动画 ===
+all_times_pre = np.array(result_pre['times'])
+all_probs_pre = np.array(result_pre['prob'])
+all_times_after = np.array(result_after['times']) + t_measure
+all_probs_after = np.array(result_after['prob'])
+
+all_times = np.concatenate([all_times_pre, all_times_after])
+all_probs = np.concatenate([all_probs_pre, all_probs_after])
+measure_idx = len(all_times_pre) - 1
+
+# Δx vs t 曲线
+dx_vals_pre = []
+for p in all_probs_pre:
+    xm = np.trapezoid(x * p, x)
+    dx_vals_pre.append(np.sqrt(np.trapezoid(x**2 * p, x) - xm**2))
+dx_vals_after = []
+for p in all_probs_after:
+    xm = np.trapezoid(x * p, x)
+    dx_vals_after.append(np.sqrt(np.trapezoid(x**2 * p, x) - xm**2))
+
+fig, (ax_top, ax_main) = plt.subplots(2, 1, figsize=(14, 8),
+    gridspec_kw={'height_ratios': [1, 3]}, facecolor='#0d1117')
+
+ax_top.set_facecolor('#0d1117')
+ax_top.plot(dx_vals_pre, color='#79c0ff', linewidth=2)
+ax_top.plot(range(len(dx_vals_pre), len(dx_vals_pre)+len(dx_vals_after)),
+            dx_vals_after, color='#ff7b72', linewidth=2)
+ax_top.axvline(measure_idx, color='#f0883e', linewidth=2, linestyle='--')
+ax_top.set_ylabel('Δx', color='#e6edf3', fontsize=12)
+ax_top.tick_params(colors='#e6edf3')
+ax_top.grid(True, alpha=0.15, color='#30363d')
+
+t_line = ax_top.axvline(0, color='#e6edf3', linewidth=1, alpha=0.4)
+
+ax_main.set_facecolor('#0d1117')
+ax_main.set_xlim(x[0], x[-1])
+ymax = max(p.max() for p in all_probs) * 1.2
+ax_main.set_ylim(0, ymax)
+fill = ax_main.fill_between(x, 0, all_probs[0], alpha=0.5, color='#79c0ff')
+line_p, = ax_main.plot(x, all_probs[0], color='#79c0ff', linewidth=1.5)
+ax_main.set_xlabel('x', color='#e6edf3', fontsize=12)
+ax_main.set_ylabel('|ψ|²', color='#e6edf3', fontsize=12)
+ax_main.tick_params(colors='#e6edf3')
+ax_main.grid(True, alpha=0.15, color='#30363d')
+title_text = ax_main.set_title('', color='#e6edf3', fontsize=14)
+meas_line = ax_main.axvline(measured_x, color='#f0883e', linewidth=1.5,
+    linestyle='--', alpha=0)
+
+for spine in list(ax_top.spines.values()) + list(ax_main.spines.values()):
+    spine.set_color('#30363d')
+
+# 动画更新 — 使用可变容器传递 fill 对象
+fill_container = [fill]
+
+def update(frame):
+    i = frame if frame <= measure_idx else frame
+    is_after = frame > measure_idx
+    color = '#ff7b72' if is_after else '#79c0ff'
+    
+    fill_container[0].remove()
+    fill_container[0] = ax_main.fill_between(x, 0, all_probs[i], alpha=0.5, color=color)
+    line_p.set_ydata(all_probs[i])
+    line_p.set_color(color)
+    t_line.set_xdata([i, i])
+    
+    if is_after:
+        meas_line.set_alpha(0.6)
+    else:
+        meas_line.set_alpha(0)
+    
+    t_val = all_times[i]
+    dx_val = dx_vals_pre[i] if i <= measure_idx else dx_vals_after[i - measure_idx - 1]
+    phase = "FREE" if i <= measure_idx else "COLLAPSED"
+    title_text.set_text('t=%.2f  Δx=%.3f  Phase: %s' % (t_val, dx_val, phase))
+
+# 测量帧暂停
+total_frames = len(all_times)
+frames_extended = []
+for i in range(total_frames):
+    frames_extended.append(i)
+    if i == measure_idx:
+        for _ in range(15):
+            frames_extended.append(i)
+
+ani = animation.FuncAnimation(fig, update, frames=frames_extended, interval=40, blit=False)
+
+os.makedirs('output/animations', exist_ok=True)
+save_path = 'output/animations/measurement_collapse.mp4'
+try:
+    ani.save(save_path, writer=animation.FFMpegWriter(fps=25, bitrate=2000), dpi=150)
+    print('saved mp4')
+except:
+    save_path = 'output/animations/measurement_collapse.gif'
+    ani.save(save_path, writer=animation.PillowWriter(fps=25), dpi=150)
+    print('saved gif')
+
+plt.close(fig)
+formula \text{Animation saved! } \Delta x\cdot\Delta p \geq \hbar/2

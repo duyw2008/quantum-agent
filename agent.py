@@ -320,6 +320,35 @@ Type 'help' for commands, 'demo' to see examples.
                     lineno += 1
                     continue
 
+                # Known commands: dispatch immediately (flush buffer first)
+                _KNOWN = ('formula', 'run', 'cd', 'ls', 'pwd', 'help', 'demo',
+                          'test', 'animate', 'plot', 'wigner', 'q', 'quit', 'exit')
+                first_word = line.split()[0].lower() if line else ''
+                if first_word in _KNOWN:
+                    # Flush pending buffer
+                    if buf_lines:
+                        buf = chr(10).join(buf_lines)
+                        disp = buf[:70] + ('...' if len(buf) > 70 else '')
+                        print(f"  [{lineno - len(buf_lines) + 1}] {disp}")
+                        try:
+                            self._dispatch(buf)
+                        except SystemExit:
+                            raise
+                        except Exception as e:
+                            print(f"  Error: {e}")
+                        buf_lines = []
+                    # Dispatch this command
+                    disp = line[:70] + ('...' if len(line) > 70 else '')
+                    print(f"  [{lineno}] {disp}")
+                    try:
+                        self._dispatch(line)
+                    except SystemExit:
+                        raise
+                    except Exception as e:
+                        print(f"  Error (line {lineno}): {e}")
+                    lineno += 1
+                    continue
+
                 # 多行语句: 首行 strip, 后续行保留原始缩进
                 if not buf_lines:
                     buf_lines.append(line)
@@ -332,6 +361,24 @@ Type 'help' for commands, 'demo' to see examples.
                 try:
                     _ast.parse(buf, mode='exec')
                     complete = True
+                    # 复合语句: 缩进未退回时继续累积
+                    _first = buf_lines[0].lstrip()
+                    if _first.startswith(('def ', 'class ', 'if ', 'elif ',
+                        'else:', 'for ', 'while ', 'with ', 'try:', 'except ',
+                        'except:', 'finally:')):
+                        # 从当前位置向前找到下一个非空非注释行
+                        peek_idx = raw_idx
+                        while peek_idx < len(lines):
+                            peek_line = lines[peek_idx].rstrip(chr(10))
+                            if peek_line and not peek_line.lstrip().startswith('#'):
+                                break
+                            peek_idx += 1
+                        if peek_idx < len(lines):
+                            next_line = lines[peek_idx]
+                            def_indent = len(buf_lines[0]) - len(buf_lines[0].lstrip())
+                            next_indent = len(next_line) - len(next_line.lstrip())
+                            if next_indent > def_indent:
+                                complete = False
                 except SyntaxError:
                     # 不完整语句 (unclosed brackets / trailing colon), 继续累积
                     if raw_idx < len(lines):
