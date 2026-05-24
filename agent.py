@@ -302,25 +302,64 @@ Type 'help' for commands, 'demo' to see examples.
         old_cwd = _os.getcwd()
         _os.chdir(script_dir)
 
+        import ast as _ast
+
         try:
-            for lineno, raw_line in enumerate(lines, 1):
+            buf_lines = []  # 多行语句缓冲区
+            lineno = 1
+            raw_idx = 0
+            while raw_idx < len(lines):
+                raw_line = lines[raw_idx]
+                raw_idx += 1
                 line = raw_line.strip()
+
                 # 空行和注释
                 if not line or line.startswith('#'):
                     if line.startswith('#'):
                         print(f"  #{line[1:].strip()}")
+                    lineno += 1
                     continue
 
-                # 显示正在执行的行 (隐藏很长的)
-                disp = line[:70] + ('...' if len(line) > 70 else '')
-                print(f"  [{lineno}] {disp}")
+                # 多行语句: 首行 strip, 后续行保留原始缩进
+                if not buf_lines:
+                    buf_lines.append(line)
+                else:
+                    buf_lines.append(raw_line.rstrip())
+                buf = chr(10).join(buf_lines)
 
+                # 检查语句是否完整 (用 ast.parse 试解析)
+                complete = False
                 try:
-                    self._dispatch(line)
+                    _ast.parse(buf, mode='exec')
+                    complete = True
+                except SyntaxError:
+                    # 不完整语句 (unclosed brackets / trailing colon), 继续累积
+                    if raw_idx < len(lines):
+                        lineno += 1
+                        continue
+
+                if complete:
+                    disp = buf[:70] + ('...' if len(buf) > 70 else '')
+                    print(f"  [{lineno - len(buf_lines) + 1}] {disp}")
+                    try:
+                        self._dispatch(buf)
+                    except SystemExit:
+                        raise
+                    except Exception as e:
+                        print(f"  Error: {e}")
+                    buf_lines = []
+                lineno += 1
+
+            # 尾残 (如文件以不完整语句结束)
+            if buf_lines:
+                buf = '\n'.join(buf_lines)
+                print(f"  [{lineno - len(buf_lines) + 1}] {buf[:70]}...")
+                try:
+                    self._dispatch(buf)
                 except SystemExit:
                     raise
                 except Exception as e:
-                    print(f"  Error (line {lineno}): {e}")
+                    print(f"  Error: {e}")
         finally:
             _os.chdir(old_cwd)
 
@@ -553,9 +592,15 @@ Type 'help' for commands, 'demo' to see examples.
             except Exception as e:
                 print(f"Error: {e}")
         else:
+            # Try eval first, fall back to exec for statements (for, if, etc.)
             try:
                 result = eval(expr, ns)
                 self._show(result)
+            except SyntaxError:
+                try:
+                    exec(expr, ns)
+                except Exception as e2:
+                    print(f"Error: {e2}")
             except Exception as e:
                 print(f"Error: {e}")
 

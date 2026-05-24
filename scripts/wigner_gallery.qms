@@ -1,0 +1,38 @@
+# Wigner 函数对比图 — 在 .qms 脚本中用 matplotlib 作图
+# 对比 5 种量子态的 Wigner 函数
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+# 创建 5 种态
+N = 30
+states = {
+    'Vacuum': fock(N, 0),
+    'Coherent': coherent(N, 1.5+0.5j),
+    'Thermal': thermal_dm(N, 0.8),
+    'Squeezed': squeezed(N, 0.7),
+    'Cat (even)': cat(N, 2.0, 0),
+}
+
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+axes = axes.ravel()
+
+for idx, (name, state) in enumerate(states.items()):
+    ax = axes[idx]
+    x, p, W = wigner(state, N_grid=61, xlim=(-4, 4), ylim=(-4, 4))
+    im = ax.contourf(x, p, W, levels=20, cmap='RdBu_r')
+    ax.set_title(name, fontsize=14)
+    ax.set_xlabel('x')
+    ax.set_ylabel('p')
+    ax.set_aspect('equal')
+    fig.colorbar(im, ax=ax, shrink=0.8)
+
+# 隐藏多余的子图
+axes[-1].axis('off')
+
+fig.suptitle('Wigner Functions of Quantum States', fontsize=16, y=1.02)
+plt.tight_layout()
+import os; os.makedirs('output', exist_ok=True)
+plt.savefig('output/wigner_comparison.png', dpi=150, bbox_inches='tight')
+plt.close()
