@@ -107,7 +107,7 @@ Type 'help' for commands, 'demo' to see examples.
                 self._help()
             elif cmd == 'demo':
                 self._demo()
-            elif cmd == 'calc':
+            elif cmd in ('calc', '=', 'eval'):
                 self.calc(' '.join(args))
             elif cmd == 'test':
                 self._run_tests()
