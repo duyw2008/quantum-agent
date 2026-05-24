@@ -34,10 +34,10 @@ python agent.py
 ```
 
 ```
-⚛ > calc psi = coherent(20, 2.0)      # 创建相干态
-⚛ > calc g2(psi)                       # 计算 g²(0)
-⚛ > calc x, p, W = wigner(psi)         # 计算 Wigner 函数
-⚛ > calc plot_wigner(x, p, W)          # 绘图
+⚛ > psi = coherent(20, 2.0)       # 直接输入表达式
+⚛ > g2(psi)                        # 1.0
+⚛ > x, p, W = wigner(psi)
+⚛ > plot_wigner(x, p, W)
 ```
 
 ### Python 脚本模式
@@ -772,7 +772,7 @@ $$\Delta x(t) = \sigma\sqrt{1 + (t/\tau)^2}, \quad \tau = 2m\sigma^2/\hbar$$
 | 行为 | 快速弥散 | 展宽 | **驻波静止** |
 
 
-## 附录：calc 可用函数速查
+## 附录 A：calc 可用函数速查
 
 | 分类 | 函数 |
 |------|------|
@@ -782,4 +782,36 @@ $$\Delta x(t) = \sigma\sqrt{1 + (t/\tau)^2}, \quad \tau = 2m\sigma^2/\hbar$$
 | **演化** | `sesolve(H,ψ₀,t)`, `mesolve(H,ρ₀,t,c_ops)`, `steadystate(H,c_ops)` |
 | **相空间** | `wigner(ρ)`, `qfunc(ρ)`, `plot_wigner(x,p,W)`, `plot_photon_dist(ρ)` |
 | **波函数** | `WaveGrid`, `gaussian_wavepacket`, `evolve_ssfm`, `animate_wave` |
+| **QFT** | `ScalarField(m,L,N)`, `LatticePhi4(N,m,λ)`, `wick_expand`, `feynman_amplitude_phi4_2to2` |
 | **构造** | `FockBasis(N)`, `fb.displacement(α)`, `fb.hamiltonian(ω)` |
+
+## 附录 B：QFT 快速参考
+
+### 自由标量场
+
+```
+⚛ > sf = ScalarField(mass=1.0, L=20, N_modes=30)
+⚛ > sf.summary()
+⚛ > sf.commutator(0, 2)              # [φ̂(0), φ̂(2)]
+⚛ > sf.feynman_propagator(1, 0, 0)   # D_F(1, 0)
+⚛ > sf.vacuum_fluctuation(0)         # ⟨0|φ̂²|0⟩
+```
+
+### 格点 φ⁴ 理论
+
+```
+⚛ > lpt = LatticePhi4(4, mass=0.5, coupling=1.0)
+⚛ > lpt.summary()
+⚛ > E0 = lpt.ground_state_energy()   # 基态能量
+⚛ > lpt.correlation_function()       # ⟨φ₀φ_d⟩
+⚛ > lpt.particle_number_distribution() # ⟨Nⱼ⟩
+⚛ > r = lpt.scan_coupling(np.linspace(0, 3, 30))
+```
+
+### 散射
+
+```
+⚛ > wick_expand(['φ₁','φ₂','φ₃','φ₄'])  # Wick 定理
+⚛ > feynman_amplitude_phi4_2to2(0.5)     # iM = -iλ
+⚛ > differential_cross_section(0.5, 100) # dσ/dΩ
+```
