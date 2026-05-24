@@ -80,52 +80,129 @@ Type 'help' for commands, 'demo' to see examples.
                 pass
 
     # ================================================================
-    # formula — LaTeX 公式渲染
+    # LaTeX → Unicode 转换表
+    # ================================================================
+
+    @staticmethod
+    def _latex_to_unicode(latex_str: str) -> str:
+        """将 LaTeX 数学公式转换为 Unicode 字符，直接在终端显示"""
+        import re
+
+        _LATEX_MAP = {
+            # Greek
+            r'\hbar': 'ℏ', r'\Psi': 'Ψ', r'\psi': 'ψ',
+            r'\alpha': 'α', r'\beta': 'β', r'\gamma': 'γ', r'\delta': 'δ',
+            r'\epsilon': 'ε', r'\zeta': 'ζ', r'\eta': 'η', r'\theta': 'θ',
+            r'\iota': 'ι', r'\kappa': 'κ', r'\lambda': 'λ', r'\mu': 'μ',
+            r'\nu': 'ν', r'\xi': 'ξ', r'\pi': 'π', r'\rho': 'ρ',
+            r'\sigma': 'σ', r'\tau': 'τ', r'\upsilon': 'υ', r'\phi': 'φ',
+            r'\chi': 'χ', r'\omega': 'ω',
+            r'\Gamma': 'Γ', r'\Delta': 'Δ', r'\Theta': 'Θ', r'\Lambda': 'Λ',
+            r'\Xi': 'Ξ', r'\Pi': 'Π', r'\Sigma': 'Σ', r'\Upsilon': 'Υ',
+            r'\Phi': 'Φ', r'\Omega': 'Ω',
+            # Math operators
+            r'\partial': '∂', r'\nabla': '∇', r'\int': '∫', r'\sum': '∑',
+            r'\prod': '∏', r'\infty': '∞', r'\approx': '≈', r'\propto': '∝',
+            r'\sim': '~', r'\simeq': '≃', r'\times': '×', r'\cdot': '·',
+            r'\otimes': '⊗', r'\oplus': '⊕', r'\ominus': '⊖',
+            r'\langle': '⟨', r'\rangle': '⟩', r'\bra': '⟨', r'\ket': '|',
+            r'\equiv': '≡', r'\neq': '≠', r'\pm': '±', r'\mp': '∓',
+            r'\leq': '≤', r'\geq': '≥', r'\ll': '≪', r'\gg': '≫',
+            r'\rightarrow': '→', r'\Rightarrow': '⇒', r'\leftarrow': '←',
+            r'\uparrow': '↑', r'\downarrow': '↓', r'\leftrightarrow': '↔',
+            r'\mapsto': '↦', r'\longrightarrow': '→',
+            r'\dagger': '†', r'\ddagger': '‡',
+            r'\dots': '…', r'\cdots': '⋯', r'\vdots': '⋮', r'\ddots': '⋱',
+            # Hatted operators (precomposed chars for better terminal support)
+            r'\hat{H}': 'Ĥ', r'\hat{x}': 'x̂', r'\hat{p}': 'p̂',
+            r'\hat{a}': 'â', r'\hat{N}': 'N̂', r'\hat{\rho}': 'ρ̂',
+            # Superscripts (>2 chars first)
+            r'^{(0)}': '⁽⁰⁾', r'^0': '⁰', r'^1': '¹', r'^2': '²',
+            r'^3': '³', r'^4': '⁴', r'^5': '⁵', r'^6': '⁶',
+            r'^7': '⁷', r'^8': '⁸', r'^9': '⁹', r'^+': '⁺', r'^-': '⁻',
+            r'^*': '*',  # complex conjugate
+            # Subscripts
+            r'_0': '₀', r'_1': '₁', r'_2': '₂', r'_3': '₃', r'_4': '₄',
+            r'_5': '₅', r'_6': '₆', r'_7': '₇', r'_8': '₈', r'_9': '₉',
+        }
+
+        s = latex_str
+        # Longest patterns first
+        for k, v in sorted(_LATEX_MAP.items(), key=lambda x: -len(x[0])):
+            s = s.replace(k, v)
+
+        # \\frac{num}{den}
+        def frac_repl(m):
+            num = QuantumAgent._latex_to_unicode(m.group(1))
+            den = QuantumAgent._latex_to_unicode(m.group(2))
+            # Single char or number: use compact a/b
+            if len(num) <= 2 and not (' ' in num or '(' in num):
+                if len(den) <= 2 and not (' ' in den or '(' in den):
+                    return f'{num}/{den}'
+            return f'({num})/({den})'
+        s = re.sub(
+            r'\\frac\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
+            frac_repl, s)
+
+        # \\sqrt{...}
+        s = re.sub(
+            r'\\sqrt\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
+            lambda m: f'√({QuantumAgent._latex_to_unicode(m.group(1))})', s)
+
+        # Cleanup
+        s = s.replace('\\left', '').replace('\\right', '')
+        s = s.replace('{', '').replace('}', '')
+        s = s.replace('\\,', ' ').replace('\\;', '  ').replace('\\ ', ' ')
+        return s
+
+    # ================================================================
+    # formula — LaTeX 公式终端显示
     # ================================================================
 
     def _render_formula(self, latex: str):
-        """将 LaTeX 公式渲染为图片
+        """在终端显示 LaTeX 公式 (Unicode) + 保存 PNG 文件
 
         用法:
-            formula i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi
-            formula \Delta x \cdot \Delta p \geq \frac{\hbar}{2}
+            formula i\\hbar\\frac{\\partial}{\\partial t}\\Psi = \\hat{H}\\Psi
+            formula \\Delta x \\cdot \\Delta p \\geq \\frac{\\hbar}{2}
 
-        输出到 output/formulas/formula_<timestamp>.png
+        Unicode 显示在终端，PNG 保存到 output/formulas/
         """
         if not latex:
             print("Usage: formula <LaTeX expression>")
-            print("Example: formula i\\hbar\\frac{\\partial}{\\partial t}\\Psi = \\hat{H}\\Psi")
+            print(r"Example: formula i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi")
             return
 
-        import matplotlib
-        matplotlib.use('Agg')
-        import matplotlib.pyplot as plt
-        import time
+        # 先显示 Unicode 版本
+        unicode_version = self._latex_to_unicode(latex)
+        print(f'\n  {unicode_version}\n')
 
-        # 译码转义
-        latex = latex.replace('\\\\', '\\')
-
-        fig, ax = plt.subplots(figsize=(len(latex) * 0.12 + 2, 1.2),
-                               facecolor='#ffffff')
-        ax.axis('off')
+        # 渲染 PNG 保存
         try:
-            ax.text(0.5, 0.5, f'${latex}$', transform=ax.transAxes,
-                    fontsize=20, ha='center', va='center', color='#1f2328')
-        except Exception as e:
-            # 回退：纯文本显示
-            ax.text(0.5, 0.5, latex, transform=ax.transAxes,
-                    fontsize=16, ha='center', va='center', color='#1f2328',
-                    fontfamily='monospace')
+            import matplotlib
+            matplotlib.use('Agg')
+            import matplotlib.pyplot as plt
+            import time
 
-        save_dir = os.path.join(os.path.dirname(__file__), 'output', 'formulas')
-        os.makedirs(save_dir, exist_ok=True)
-        ts = time.strftime('%H%M%S')
-        save_path = os.path.join(save_dir, f'formula_{ts}.png')
-        fig.savefig(save_path, dpi=150, bbox_inches='tight', facecolor='#ffffff')
-        plt.close(fig)
+            fig, ax = plt.subplots(figsize=(10, 1.0), facecolor='#ffffff')
+            ax.axis('off')
+            try:
+                ax.text(0.5, 0.5, f'${latex}$', transform=ax.transAxes,
+                        fontsize=30, ha='center', va='center', color='#1f2328')
+            except Exception:
+                ax.text(0.5, 0.5, latex, transform=ax.transAxes,
+                        fontsize=16, ha='center', va='center', color='#1f2328',
+                        fontfamily='monospace')
 
-        print(f'  Formula rendered: {save_path}')
-        print(f'  {latex}')
+            save_dir = os.path.join(os.path.dirname(__file__), 'output', 'formulas')
+            os.makedirs(save_dir, exist_ok=True)
+            ts = time.strftime('%H%M%S')
+            save_path = os.path.join(save_dir, f'formula_{ts}.png')
+            fig.savefig(save_path, dpi=150, bbox_inches='tight', facecolor='#ffffff')
+            plt.close(fig)
+            print(f'  PNG: {save_path}')
+        except Exception:
+            pass  # PNG save is best-effort
 
     # ================================================================
     # 命令分发
