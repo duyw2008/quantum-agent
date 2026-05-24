@@ -54,7 +54,7 @@ Type 'help' for commands, 'demo' to see examples.
         # Tab 补全: 命令 + 智能文件路径
         self._completions = [
             'calc', 'demo', 'test', 'help', 'quit', 'vars',
-            'run', 'animate', 'plot', 'wigner', 'formula',
+            'cd', 'pwd', 'run', 'animate', 'plot', 'wigner', 'formula',
             'FockBasis', 'coherent', 'coherent_dm', 'squeezed', 'thermal_dm',
             'cat', 'fock', 'fock_dm', 'expect', 'variance', 'g2', 'mandel_q',
             'mean_photon', 'commutator', 'sesolve', 'mesolve', 'steadystate',
@@ -76,8 +76,8 @@ Type 'help' for commands, 'demo' to see examples.
         words = stripped.split()
         cmd = words[0].lower() if words else ''
 
-        # File-path completion after 'run' or 'animate'
-        if cmd in ('run', 'animate') and len(words) >= 1:
+        # File-path completion after 'run', 'animate', 'cd'
+        if cmd in ('run', 'animate', 'cd') and len(words) >= 1:
             if not line.rstrip().endswith(cmd) or len(words) > 1:
                 prefix = text if text else '.'
                 agent_dir = os.path.dirname(__file__)
@@ -97,6 +97,16 @@ Type 'help' for commands, 'demo' to see examples.
                     for p in _glob.glob(pat):
                         s = p + os.sep if os.path.isdir(p) else p
                         if s not in matches:
+                            matches.append(s)
+                # cd command: search from cwd for any prefix
+                if cmd == 'cd':
+                    cwd = os.getcwd()
+                    for p in _glob.glob(os.path.join(cwd, prefix + '*')):
+                        if os.path.isdir(p):
+                            s = os.path.basename(p) + os.sep
+                        else:
+                            s = os.path.basename(p)
+                        if s.startswith(prefix) and s not in matches:
                             matches.append(s)
                 matches = sorted(set(matches))
                 if state < len(matches):
@@ -313,6 +323,20 @@ Type 'help' for commands, 'demo' to see examples.
         print(f"  [Done: {script_path}]")
 
     # ================================================================
+    # cd / pwd — 路径导航
+    # ================================================================
+
+    def _cd(self, args):
+        """cd [path] — change working directory, tab-completes paths"""
+        path = args[0] if args else os.path.expanduser('~')
+        path = os.path.expanduser(path)
+        try:
+            os.chdir(path)
+            print(f'  {os.getcwd()}')
+        except (FileNotFoundError, NotADirectoryError, PermissionError) as e:
+            print(f'  cd: {e}')
+
+    # ================================================================
     # 命令分发
     # ================================================================
 
@@ -328,6 +352,10 @@ Type 'help' for commands, 'demo' to see examples.
             self._help()
         elif cmd == 'demo':
             self._demo()
+        elif cmd == 'cd':
+            self._cd(args)
+        elif cmd == 'pwd':
+            print(os.getcwd())
         elif cmd in ('calc', '=', 'eval'):
             self.calc(' '.join(args))
         elif cmd == 'test':
@@ -358,7 +386,14 @@ Type 'help' for commands, 'demo' to see examples.
     def run(self):
         while True:
             try:
-                line = input('\n⚛ > ').strip()
+                cwd = os.getcwd()
+                home = os.path.expanduser('~')
+                if cwd.startswith(home):
+                    cwd = '~' + cwd[len(home):]
+                if len(cwd) > 35:
+                    cwd = '...' + cwd[-32:]
+                prompt = f'\n⚛ {cwd} > '
+                line = input(prompt).strip()
             except (EOFError, KeyboardInterrupt):
                 print("\nGoodbye!")
                 self._save_hist()
@@ -577,6 +612,8 @@ Commands:
   <expression>        Direct Python expression (auto-evaluated)
   calc <var> = <expr> Assign variable (prefix optional)
   calc vars           List variables
+  cd [path]           Change working directory (tab-completes)
+  pwd                 Print working directory
   formula <latex>     Render LaTeX to Unicode in terminal
   animate <var> [path] Animate wavefunction result
   plot wigner [x] [p] [W]  Plot Wigner function
