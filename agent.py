@@ -178,6 +178,7 @@ Type 'help' for commands, 'demo' to see examples.
             import src.qft as qft
             ns['qft'] = qft
             ns['ScalarField'] = qft.ScalarField
+            ns['LatticePhi4'] = qft.LatticePhi4
         except Exception:
             pass
         ns.update(self._calc_ns)
