@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.5.0] — 2026-05-24
+
+### Added
+- `.qms` 脚本支持 (类 MATLAB .m 文件): 批量执行量子命令
+  - `python agent.py --run <script.qms>` — 命令行启动
+  - `run <script.qms>` — 交互模式下调用
+  - `#` 注释、变量跨行共享、错误继续执行
+  - `import` / `print` 等 Python 内置函数可用
+- 示例脚本: `scripts/harmonic_oscillator.qms` (5步谐振子分析)
+- 示例脚本: `scripts/core_formulas.qms` (10个核心QM公式)
+
+### Changed
+- 命令分发重构为 `_dispatch()` 方法, 脚本和交互模式共用
+- calc 命名空间扩展: 支持 `import` 语句, `print`/`abs`/`len`/`range` 等内置函数
+- Unicode 映射新增: `\sinh`→sinh, `\cosh`→cosh, `\tanh`→tanh
+
 ## [2.4.0] — 2026-05-24
 
 ### Added

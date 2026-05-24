@@ -113,6 +113,7 @@ Type 'help' for commands, 'demo' to see examples.
             r'\mapsto': '↦', r'\longrightarrow': '→',
             r'\dagger': '†', r'\ddagger': '‡',
             r'\dots': '…', r'\cdots': '⋯', r'\vdots': '⋮', r'\ddots': '⋱',
+            r'\sinh': 'sinh', r'\cosh': 'cosh', r'\tanh': 'tanh',
             # Hatted operators (precomposed chars for better terminal support)
             r'\hat{H}': 'Ĥ', r'\hat{x}': 'x̂', r'\hat{p}': 'p̂',
             r'\hat{a}': 'â', r'\hat{N}': 'N̂', r'\hat{\rho}': 'ρ̂',
@@ -205,8 +206,112 @@ Type 'help' for commands, 'demo' to see examples.
             pass  # PNG save is best-effort
 
     # ================================================================
+    # run — 执行脚本 (.qms 文件)
+    # ================================================================
+
+    def _run_script(self, script_path: str):
+        """执行 .qms 量子脚本文件
+
+        类似 MATLAB .m 文件: 每行一条命令，支持:
+          - Python 表达式 (自动求值)
+          - formula / animate / plot wigner / demo / test / help
+          - run <another_script> (嵌套调用)
+          - # 注释
+          - 变量跨行共享 (同一命名空间)
+        """
+        if not script_path:
+            print("Usage: run <script.qms>")
+            print("       python agent.py --run <script.qms>")
+            return
+
+        import os as _os
+        # 支持相对路径
+        if not _os.path.isabs(script_path) and not _os.path.exists(script_path):
+            script_path = _os.path.join(_os.path.dirname(__file__), script_path)
+
+        if not _os.path.exists(script_path):
+            print(f"Script not found: {script_path}")
+            return
+
+        script_dir = _os.path.dirname(_os.path.abspath(script_path))
+        print(f"  [Running: {script_path}]")
+        try:
+            with open(script_path, 'r') as f:
+                lines = f.readlines()
+        except Exception as e:
+            print(f"  Error reading script: {e}")
+            return
+
+        # 切换工作目录到脚本所在目录 (便于 output/animation.mp4 等相对路径)
+        old_cwd = _os.getcwd()
+        _os.chdir(script_dir)
+
+        try:
+            for lineno, raw_line in enumerate(lines, 1):
+                line = raw_line.strip()
+                # 空行和注释
+                if not line or line.startswith('#'):
+                    if line.startswith('#'):
+                        print(f"  #{line[1:].strip()}")
+                    continue
+
+                # 显示正在执行的行 (隐藏很长的)
+                disp = line[:70] + ('...' if len(line) > 70 else '')
+                print(f"  [{lineno}] {disp}")
+
+                try:
+                    self._dispatch(line)
+                except SystemExit:
+                    raise
+                except Exception as e:
+                    print(f"  Error (line {lineno}): {e}")
+        finally:
+            _os.chdir(old_cwd)
+
+        print(f"  [Done: {script_path}]")
+
+    # ================================================================
     # 命令分发
     # ================================================================
+
+    def _dispatch(self, line: str) -> bool:
+        """分发单条命令。返回 False 表示退出。"""
+        parts = line.split()
+        cmd = parts[0].lower()
+        args = parts[1:]
+
+        if cmd in ('q', 'quit', 'exit'):
+            return False
+        elif cmd == 'help':
+            self._help()
+        elif cmd == 'demo':
+            self._demo()
+        elif cmd in ('calc', '=', 'eval'):
+            self.calc(' '.join(args))
+        elif cmd == 'test':
+            self._run_tests()
+        elif cmd == 'animate':
+            if args:
+                save = args[1] if len(args) > 1 else 'output/animation.mp4'
+                self.calc(f"animate_wave({args[0]}, save_path='{save}')")
+            else:
+                print('Usage: animate <result_var> [save_path]')
+        elif cmd == 'plot' and args and args[0] == 'wigner':
+            xv = args[1] if len(args) > 1 else 'x'
+            pv = args[2] if len(args) > 2 else 'p'
+            wv = args[3] if len(args) > 3 else 'W'
+            self.calc(f"plot_wigner({xv}, {pv}, {wv}, save='output/wigner.png')")
+        elif cmd == 'wigner':
+            self.calc("x, p, W = wigner(psi) if 'psi' in dir() else print('Set psi first')")
+        elif cmd == 'formula':
+            formula_args = line[len('formula'):].strip()
+            self._render_formula(formula_args)
+        elif cmd == 'run':
+            self._run_script(' '.join(args))
+        else:
+            # 不是已知命令, 尝试作为 Python 表达式求值
+            self.calc(line)
+        return True
 
     def run(self):
         while True:
@@ -220,33 +325,10 @@ Type 'help' for commands, 'demo' to see examples.
             if not line:
                 continue
 
-            parts = line.split()
-            cmd = parts[0].lower()
-            args = parts[1:]
-
-            if cmd in ('q', 'quit', 'exit'):
+            if not self._dispatch(line):
                 self._save_hist()
                 print("Goodbye!")
                 break
-            elif cmd == 'help':
-                self._help()
-            elif cmd == 'demo':
-                self._demo()
-            elif cmd in ('calc', '=', 'eval'):
-                self.calc(' '.join(args))
-            elif cmd == 'test':
-                self._run_tests()
-            elif cmd == 'animate':
-                self.calc(f"animate_wave({args[0]}, save_path='{args[1] if len(args)>1 else 'output/animation.mp4'}')" if args else "print('Usage: animate <result_var> [save_path]')")
-            elif cmd == 'plot' and args and args[0] == 'wigner':
-                self.calc(f"plot_wigner(x, p, W, save='output/wigner.png')" if len(args) < 2 else f"plot_wigner({args[1]}, {args[2] if len(args)>2 else 'p'}, {args[3] if len(args)>3 else 'W'}, save='output/wigner.png')")
-            elif cmd == 'wigner':
-                self.calc("x, p, W = wigner(psi) if 'psi' in dir() else print('Set psi first: calc psi = coherent(20, 2.0)')")
-            elif cmd == 'formula':
-                self._render_formula(' '.join(args))
-            else:
-                # 不是已知命令, 尝试作为 Python 表达式求值
-                self.calc(line)
 
     # ================================================================
     # calc — Python 表达式求值
@@ -273,7 +355,12 @@ Type 'help' for commands, 'demo' to see examples.
 
         ns = {
             'np': np, 'numpy': np,
-            '__builtins__': {},
+            '__builtins__': {'__import__': __import__, 'print': print, 'abs': abs, 'len': len, 'range': range,
+                             'int': int, 'float': float, 'complex': complex,
+                             'bool': bool, 'str': str, 'list': list, 'dict': dict,
+                             'tuple': tuple, 'set': set, 'min': min, 'max': max,
+                             'sum': sum, 'round': round, 'zip': zip, 'enumerate': enumerate,
+                             'sorted': sorted, 'reversed': reversed, 'isinstance': isinstance},
             # qm 模块
             'qm': qm, 'FockBasis': qm.FockBasis,
             'fock': qm.fock, 'fock_dm': qm.fock_dm,
@@ -324,6 +411,19 @@ Type 'help' for commands, 'demo' to see examples.
                     print(f"  {k}: {s}")
             else:
                 print("(no variables)")
+            return
+
+        # 支持 import 语句 (脚本中常用)
+        if expr.strip().startswith('import ') or expr.strip().startswith('from '):
+            try:
+                exec(expr, ns)
+                # 追踪新增的模块/变量
+                for k, v in ns.items():
+                    if k not in ('np', 'numpy', 'qm', 'fb', '__builtins__') and not k.startswith('_'):
+                        if k not in self._calc_ns or self._calc_ns.get(k) is not v:
+                            self._calc_ns[k] = v
+            except Exception as e:
+                print(f"Error: {e}")
             return
 
         # 赋值或求值
@@ -432,18 +532,24 @@ Type 'help' for commands, 'demo' to see examples.
     def _help(self):
         print("""
 Commands:
-  calc <expr>        Evaluate Python expression
-  calc <var> = <expr> Assign variable
+  <expression>        Direct Python expression (auto-evaluated)
+  calc <var> = <expr> Assign variable (prefix optional)
   calc vars           List variables
+  formula <latex>     Render LaTeX to Unicode in terminal
   animate <var> [path] Animate wavefunction result
   plot wigner [x] [p] [W]  Plot Wigner function
   wigner              Quick Wigner of current psi
+  run <script.qms>    Execute quantum script file
   demo                Run Fock-basis demonstration
   test                Run self-tests
   help                This help
   quit                Exit
 
-Preloaded in calc:
+Scripts (.qms files):
+  python agent.py --run scripts/harmonic.qms
+  (or inside agent:  run scripts/harmonic.qms)
+
+Preloaded:
   FockBasis, fock, coherent, squeezed, thermal_dm, cat
   expect, variance, g2, mandel_q, mean_photon
   commutator, sesolve, mesolve, steadystate
@@ -495,6 +601,7 @@ def main():
     p.add_argument('--demo', action='store_true')
     p.add_argument('--test', action='store_true')
     p.add_argument('--list', action='store_true')
+    p.add_argument('--run', metavar='SCRIPT', help='Execute a .qms script file', dest='script')
     args = p.parse_args()
 
     agent = QuantumAgent()
@@ -515,8 +622,11 @@ def main():
         for name, desc in demos:
             print(f"  {name:<28s} {desc}")
         print(f"\nRun: python demos/<name>.py")
+        print(f"\nScript: python agent.py --run scripts/<name>.qms")
         return
-    if args.demo:
+    if args.script:
+        agent._run_script(args.script)
+    elif args.demo:
         agent._demo()
     elif args.test:
         agent._run_tests()

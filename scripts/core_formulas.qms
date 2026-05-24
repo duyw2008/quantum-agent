@@ -1,0 +1,22 @@
+# Essential Quantum Mechanics Formulas
+# 量子力学核心公式集合
+
+formula i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi
+
+formula [\hat{x}, \hat{p}] = i\hbar
+
+formula \Delta x \cdot \Delta p \geq \frac{\hbar}{2}
+
+formula H = \frac{p^2}{2m} + \frac{1}{2}m\omega^2 x^2
+
+formula E_n = \hbar\omega\left(n + \frac{1}{2}\right)
+
+formula \int_{-\infty}^{\infty} \psi^*(x)\psi(x) dx = 1
+
+formula a^\dagger a|n\rangle = n|n\rangle
+
+formula \psi(x,t) = \frac{1}{\sqrt{2\pi}} \int \phi(k) e^{i(kx - \omega_k t)} dk
+
+formula \sigma_x \sigma_p \geq \frac{\hbar}{2}
+
+formula \nabla^2\psi + k^2\psi = 0

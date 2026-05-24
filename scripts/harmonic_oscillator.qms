@@ -1,0 +1,42 @@
+# Quantum Harmonic Oscillator — Complete Analysis
+# 谐振子标准分析: 对易子、光子统计、Wigner 负性
+
+formula [\hat{x}, \hat{p}] = i\hbar
+
+# === 1. 相干态基准 ===
+formula |\alpha\rangle = e^{-|\alpha|^2/2} \sum_n (\alpha^n)/(\sqrt{n!}) |n\rangle
+
+alpha = 2.0 + 0.5j
+psi = coherent(30, alpha)
+mean_photon(psi)
+
+# === 2. 对易子验证 ===
+import numpy as np
+C = commutator(fb.x, fb.p)
+np.linalg.norm(C[:10,:10] - 1j*np.eye(10), 'fro')
+
+# === 3. 光子统计 g²(0) ===
+formula g^{(2)}(0) = (\langle a^\dagger a^\dagger a a \rangle)/(\langle a^\dagger a \rangle^2)
+
+g2(psi)
+
+# 热态
+rho_th = thermal_dm(30, 1.5)
+mean_photon(rho_th)
+g2(rho_th)
+
+# === 4. 压缩真空 ===
+formula \langle n \rangle = \sinh^2(r)
+
+r = 0.8
+psi_sq = squeezed(30, r)
+mean_photon(psi_sq)
+g2(psi_sq)
+
+# === 5. 猫态 Wigner ===
+cat_even = cat(30, 2.0, 0)
+x, p, W = wigner(cat_even, N_grid=51)
+W_min = W.min()
+W_max = W.max()
+
+formula Done! \quad [\hat{x},\hat{p}]=i\hbar,\; g^{(2)}_{coh}=1,\; W_{cat}<0

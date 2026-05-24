@@ -63,6 +63,49 @@ python agent.py
 
 PNG 高精度版本同步保存到 `output/formulas/`，方便插入论文/PPT。
 
+### .qms 脚本（类 MATLAB .m 文件）
+
+将命令序列保存为 `.qms` 文件批量执行，变量跨行共享。
+
+```bash
+# 命令行执行
+python agent.py --run scripts/harmonic_oscillator.qms
+
+# 交互模式执行
+⚛ > run scripts/harmonic_oscillator.qms
+```
+
+**示例脚本内容** (`scripts/harmonic_oscillator.qms`)：
+```
+# 谐振子标准分析
+formula [\hat{x}, \hat{p}] = i\hbar
+
+alpha = 2.0 + 0.5j
+psi = coherent(30, alpha)
+mean_photon(psi)
+
+C = commutator(fb.x, fb.p)
+g2(psi)
+
+r = 0.8
+psi_sq = squeezed(30, r)
+mean_photon(psi_sq)
+g2(psi_sq)
+
+cat_even = cat(30, 2.0, 0)
+x, p, W = wigner(cat_even)
+W.min()
+W.max()
+```
+
+**脚本特性：**
+- `#` 行注释
+- 变量跨行共享
+- 错误不终止执行
+- 支持 `import numpy as np` 等 import 语句
+- 支持嵌套调用 `run another.qms`
+- 输出 PNG 自动保存到当前脚本所在目录
+
 ### Python 脚本模式
 
 ```python

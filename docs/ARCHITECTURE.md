@@ -17,7 +17,8 @@ src/
 │   └── wave.py              # 波函数 (WaveGrid, SSFM, animate)
 ├── viz/                     # 可视化
 │   └── wigner_plot.py       # Wigner, Qfunc, 光子分布图
-└── qft/                     # 量子场论
+├── scripts/                 # .qms 量子脚本 (类似 MATLAB .m)
+├── qft/                     # 量子场论
     ├── field.py             # ScalarField — 标量场
     ├── lattice.py           # LatticePhi4 — 格点 φ⁴
     └── scattering.py        # 散射 / Feynman 图

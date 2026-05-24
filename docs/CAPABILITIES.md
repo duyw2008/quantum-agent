@@ -15,6 +15,43 @@
 内置 90+ LaTeX→Unicode 映射：希腊字母、数学算符、hat、上下标、积分、梯度、梯度平方等。
 PNG 文件同步保存到 `output/formulas/` 作为高精度备份。
 
+## .qms 量子脚本
+
+类似 MATLAB `.m` 文件，将一系列 agent 命令写入脚本批量执行。
+
+```
+# harmonic_oscillator.qms — 谐振子分析
+formula [\hat{x}, \hat{p}] = i\hbar
+
+alpha = 2.0 + 0.5j
+psi = coherent(30, alpha)
+mean_photon(psi)
+
+C = commutator(fb.x, fb.p)
+g2(psi)
+
+cat_even = cat(30, 2.0, 0)
+x, p, W = wigner(cat_even)
+```
+
+**执行方式：**
+
+```bash
+python agent.py --run scripts/harmonic_oscillator.qms   # 命令行
+```
+
+```
+⚛ > run scripts/harmonic_oscillator.qms                  # 交互模式
+```
+
+**脚本特性：**
+- `#` 行注释，跳过空行
+- 变量跨行共享（同一命名空间）
+- 错误不终止（继续执行后续命令）
+- 支持 `import` / `print` 等 Python 内置
+- 支持嵌套调用 `run <another.qms>`
+- 工作目录自动切换到脚本所在目录
+
 ## Fock 基量子光学
 
 ### 算符 (FockBasis)

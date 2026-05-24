@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-交互式量子力学平台：Fock 基量子光学、波函数动力学、格点量子场论。
+交互式量子力学平台：Fock 基量子光学、波函数动力学、格点量子场论、.qms 脚本批量执行。
 
 ## 快速开始
 
@@ -15,6 +15,7 @@ python agent.py          # 交互模式
 python agent.py --demo   # Fock 基演示
 python agent.py --test   # 自检
 python agent.py --list   # 列出所有 demo
+python agent.py --run  scripts/harmonic.qms   # 执行量子脚本 (.qms)
 ```
 
 ## 使用 — 直接输入表达式
@@ -60,6 +61,7 @@ quantum_agent/
 │   ├── viz/              # Wigner, Qfunc, 光子分布
 │   └── qft/              # 量子场论 (ScalarField, LatticePhi4, scattering)
 ├── demos/                # 10 个物理动画
+├── scripts/              # .qms 脚本 (类 MATLAB .m)
 ├── docs/                 # 7 份文档
 └── output/               # 动画、图片、公式 PNG
 ```
