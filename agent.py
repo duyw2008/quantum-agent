@@ -164,7 +164,11 @@ Type 'help' for commands, 'demo' to see examples.
             r'\uparrow': '↑', r'\downarrow': '↓', r'\leftrightarrow': '↔',
             r'\mapsto': '↦', r'\longrightarrow': '→',
             r'\dagger': '†', r'\ddagger': '‡',
-            r'\dots': '…', r'\cdots': '⋯', r'\vdots': '⋮', r'\ddots': '⋱',
+            r'\dots': '…', r'\cdots': '⋯', r'\vdots': '⋮',            r'\ddots': '⋱',
+            r'\xrightarrow': '→', r'\xleftarrow': '←',
+            r'\mapsto': '↦', r'\to': '→', r'\implies': '⇒',
+            r'\gg': '≫', r'\ll': '≪', r'\ggg': '⋙', r'\lll': '⋘',
+            r'\mid': '∣', r'\nmid': '∤',
             r'\sinh': 'sinh', r'\cosh': 'cosh', r'\tanh': 'tanh',
             # Hatted operators (precomposed chars for better terminal support)
             r'\hat{H}': 'Ĥ', r'\hat{x}': 'x̂', r'\hat{p}': 'p̂',
