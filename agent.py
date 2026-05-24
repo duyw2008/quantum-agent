@@ -98,8 +98,8 @@ Type 'help' for commands, 'demo' to see examples.
                         s = p + os.sep if os.path.isdir(p) else p
                         if s not in matches:
                             matches.append(s)
-                # cd command: search from cwd for any prefix
-                if cmd == 'cd':
+                # cd/run/animate: also search from cwd for any prefix
+                if cmd in ('run', 'animate', 'cd'):
                     cwd = os.getcwd()
                     for p in _glob.glob(os.path.join(cwd, prefix + '*')):
                         if os.path.isdir(p):
@@ -277,9 +277,13 @@ Type 'help' for commands, 'demo' to see examples.
             return
 
         import os as _os
-        # 支持相对路径
-        if not _os.path.isabs(script_path) and not _os.path.exists(script_path):
-            script_path = _os.path.join(_os.path.dirname(__file__), script_path)
+        # Resolve relative path: cwd first, then agent_dir
+        if not _os.path.isabs(script_path):
+            cwd_path = _os.path.join(_os.getcwd(), script_path)
+            if _os.path.exists(cwd_path):
+                script_path = cwd_path
+            elif not _os.path.exists(script_path):
+                script_path = _os.path.join(_os.path.dirname(__file__), script_path)
 
         if not _os.path.exists(script_path):
             print(f"Script not found: {script_path}")
