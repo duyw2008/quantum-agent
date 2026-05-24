@@ -118,7 +118,8 @@ Type 'help' for commands, 'demo' to see examples.
             elif cmd == 'wigner':
                 self.calc("x, p, W = wigner(psi) if 'psi' in dir() else print('Set psi first: calc psi = coherent(20, 2.0)')")
             else:
-                print(f"Unknown: {cmd}.  Type 'help'.")
+                # 不是已知命令, 尝试作为 Python 表达式求值
+                self.calc(line)
 
     # ================================================================
     # calc — Python 表达式求值
