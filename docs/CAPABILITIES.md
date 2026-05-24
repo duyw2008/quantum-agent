@@ -1,101 +1,71 @@
 # Quantum Agent 功能清单
 
-## 势函数 (9+ 种)
+## Fock 基量子光学
 
-| 势函数 | 类型 | 参数 | 解析能级 |
-|--------|------|------|----------|
-| InfiniteWell | 无限深势阱 | width | ✓ |
-| Harmonic | 谐振子 | omega, mass | ✓ |
-| PotentialBarrier | 势垒/势阱 | height, width | — |
-| FiniteWell | 有限深势阱 | depth, width | 数值 |
-| DoubleWell | 双势阱 | separation, depth | 数值 (隧穿劈裂) |
-| Morse | Morse 分子势 | depth, alpha, x0 | ✓ |
-| Coulomb1D | 软核库仑 | Z, softening | 数值 |
-| Periodic | 周期势 | amplitude, k | 能带结构 (Bloch) |
-| StepPotential | 阶梯势 | height, x0 | 散射问题 |
-| ZeroPotential | 自由粒子 | — | 连续谱 |
-| CustomPotential | 自定义 | func, name | — |
+### 算符 (FockBasis)
+| 算符 | 符号 | 属性 |
+|------|:---:|------|
+| 湮灭 | â | `fb.a` |
+| 产生 | â† | `fb.a_dag` |
+| 数 | N̂ | `fb.n_op` |
+| 坐标 | x̂ | `fb.x` |
+| 动量 | p̂ | `fb.p` |
+| 宇称 | Π̂ | `fb.parity` |
+| 位移 | D̂(α) | `fb.displacement(α)` |
+| 哈密顿量 | Ĥ | `fb.hamiltonian(ω)` |
 
-## TDSE 求解器
+### 量子态
+| 函数 | 态 |
+|------|------|
+| `fock(N, n)` | \|n⟩ |
+| `coherent(N, α)` | \|α⟩ |
+| `squeezed(N, ζ)` | \|ζ⟩ |
+| `thermal_dm(N, n̄)` | ρ_th |
+| `cat(N, α, φ)` | \|α⟩+e^{iφ}\|-α⟩ |
 
-| 方法 | 类型 | 精度 | 稳定性 | 复杂度 |
-|------|------|------|--------|--------|
-| Split-Step Fourier | 显式/谱方法 | O(Δt³) | 条件稳定 | O(N log N) |
-| Crank-Nicolson | 隐式/有限差分 | O(Δt²) | 无条件稳定 | O(N) |
+### 工具函数
+| 函数 | 说明 |
+|------|------|
+| `commutator(A,B)` | [A,B] |
+| `expect(O,ρ)` | ⟨O⟩ |
+| `variance(O,ρ)` | ΔO² |
+| `g2(ρ)` | g²(0) |
+| `mandel_q(ρ)` | Mandel Q |
+| `fidelity` / `purity` | 态诊断 |
 
-## 矩阵力学
+### 动力学
+| 函数 | 说明 |
+|------|------|
+| `sesolve(H,ψ₀,t)` | Schrödinger 方程 |
+| `mesolve(H,ρ₀,t,c_ops)` | Lindblad 主方程 |
+| `steadystate(H,c_ops)` | 稳态求解 |
 
-### 算符表示 (数态基)
-- 湮灭算符 â
-- 产生算符 â†
-- 坐标算符 x̂
-- 动量算符 p̂
-- 数算符 N̂ = â†â
-- 谐振子哈密顿量 Ĥ = ħω(N̂ + ½)
-- 一般势哈密顿量 Ĥ = p̂²/2m + V(x̂)
+## 波函数动力学
 
-### 计算功能
-- 对易子 [Â, B̂] 和反对易子 {Â, B̂}
-- 本征值/本征态求解
-- 期望值 ⟨ψ|Ô|ψ⟩ 和不确定度 ΔO
-- 时间演化 |ψ(t)⟩ = e^{-iĤt/ħ}|ψ(0)⟩
-- 海森堡绘景 Ô(t) = e^{iĤt/ħ} Ô e^{-iĤt/ħ}
-- 虚时间演化 (基态搜索)
-- 厄米性/幺正性检查
+| 函数 | 说明 |
+|------|------|
+| `WaveGrid(xmin,xmax,N)` | 空间网格 |
+| `gaussian_wavepacket(...)` | 高斯波包 |
+| `evolve_ssfm(ψ,g,dt,tmax)` | SSFM 演化 |
+| `animate_wave(result,path)` | 动画生成 |
 
-### 符号力学 (sympy, 可选)
-- 算符矩阵的符号表示
-- 能级解析公式
-- 角动量代数 [J_i, J_j] = iħ ε_ijk J_k
-- 自旋-½ Pauli 矩阵
-- BCH 公式和 Hadamard 引理
+## 相空间可视化
 
-## 可视化
+| 函数 | 说明 |
+|------|------|
+| `wigner(ρ)` | Wigner 函数 |
+| `qfunc(ρ)` | Husimi Q 函数 |
+| `plot_wigner(x,p,W)` | Wigner 图 |
+| `plot_photon_dist(ρ)` | 光子分布图 |
 
-### 静态图
-- 势函数 V(x) 图
-- 波函数快照 (|ψ|², Re, Im, φ)
-- 本征态能级 + 波函数
-- 能谱图
-- 算符矩阵热图
-- 相空间不确定度椭圆
+## Demo 动画
 
-### 动画
-- 波函数时间演化 (概率密度 + 期望值)
-- 概率密度热图
-- 支持 MP4 和 GIF 格式
-- 暗色/亮色双主题
-
-## 交互命令
-
-```
-evolve <potential> [options]    — 波函数时间演化
-matrix <subcommand>             — 矩阵力学操作
-eigenstates <potential> [N]     — 本征态计算
-plot <type>                     — 绘图
-animate <type>                  — 动画
-demo <name|all>                 — 运行演示
-status                          — 查看当前状态
-help                            — 帮助
-```
-
-### Demo 案例
-
-| Demo | 说明 | 物理亮点 |
-|------|------|----------|
-| harmonic_oscillator | 谐振子波包 | Ehrenfest 定理、相干态 |
-| infinite_well | 无限深势阱 | 本征态、波包反弹 |
-| potential_barrier | 势垒隧穿 | 量子隧穿、WKB 近似 |
-| matrix_mechanics | 矩阵力学 | [x̂,p̂]=iħ、能谱、自旋 |
-| double_well | 双势阱 | 隧穿振荡、能级劈裂 |
-| hydrogen_atom | 氢原子库仑势 | 本征态、能级、径向分布 |
-| hydrogen_animation | 库仑势演化 | 波包散射、量子动力学 |
-
-## 测试
-
-35 个测试覆盖：
-- 势函数 (12 tests) — 所有势函数类型的正确性
-- 波函数 (6 tests) — 初始化、归一化、期望值、本征态
-- 求解器 (6 tests) — SSFM、CN、守恒律、一致性
-- 矩阵力学 (7 tests) — 算符、对易子、本征值、演化
-- 可视化 (4 tests) — 所有绘图函数生成有效图像
+| Demo | 物理 |
+|------|------|
+| `free_particle.py` | 自由粒子量子弥散 |
+| `heisenberg_uncertainty.py` | Δx·Δp ≥ ℏ/2 |
+| `measurement_collapse.py` | 位置测量坍缩 |
+| `momentum_collapse.py` | 动量测量坍缩 |
+| `energy_collapse.py` | 能量测量坍缩 (驻波) |
+| `double_slit.py` | 双缝干涉 (2D TDSE) |
+| `quantum_eraser.py` | 量子擦除实验 |

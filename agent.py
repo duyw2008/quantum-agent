@@ -51,6 +51,26 @@ Type 'help' for commands, 'demo' to see examples.
             readline.read_history_file(self._hist_file)
         except (FileNotFoundError, PermissionError):
             pass
+        # Tab 补全
+        self._completions = [
+            'calc', 'demo', 'test', 'help', 'quit', 'vars',
+            'FockBasis', 'coherent', 'coherent_dm', 'squeezed', 'thermal_dm',
+            'cat', 'fock', 'fock_dm', 'expect', 'variance', 'g2', 'mandel_q',
+            'mean_photon', 'commutator', 'sesolve', 'mesolve', 'steadystate',
+            'wigner', 'qfunc', 'plot_wigner', 'plot_photon_dist',
+            'WaveGrid', 'gaussian_wavepacket', 'evolve_ssfm', 'animate_wave',
+            'fidelity', 'purity', 'photon_dist', 'np',
+            'animate', 'plot', 'wigner',
+        ]
+        readline.set_completer(self._completer)
+        readline.parse_and_bind('tab: complete')
+
+    def _completer(self, text, state):
+        matches = [c for c in self._completions if c.startswith(text)]
+        try:
+            return matches[state]
+        except IndexError:
+            return None
 
     def _save_hist(self):
         if HAS_READLINE:
@@ -91,6 +111,12 @@ Type 'help' for commands, 'demo' to see examples.
                 self.calc(' '.join(args))
             elif cmd == 'test':
                 self._run_tests()
+            elif cmd == 'animate':
+                self.calc(f"animate_wave({args[0]}, save_path='{args[1] if len(args)>1 else 'output/animation.mp4'}')" if args else "print('Usage: animate <result_var> [save_path]')")
+            elif cmd == 'plot' and args and args[0] == 'wigner':
+                self.calc(f"plot_wigner(x, p, W, save='output/wigner.png')" if len(args) < 2 else f"plot_wigner({args[1]}, {args[2] if len(args)>2 else 'p'}, {args[3] if len(args)>3 else 'W'}, save='output/wigner.png')")
+            elif cmd == 'wigner':
+                self.calc("x, p, W = wigner(psi) if 'psi' in dir() else print('Set psi first: calc psi = coherent(20, 2.0)')")
             else:
                 print(f"Unknown: {cmd}.  Type 'help'.")
 
@@ -268,7 +294,10 @@ Commands:
   calc <expr>        Evaluate Python expression
   calc <var> = <expr> Assign variable
   calc vars           List variables
-  demo                Run demonstration
+  animate <var> [path] Animate wavefunction result
+  plot wigner [x] [p] [W]  Plot Wigner function
+  wigner              Quick Wigner of current psi
+  demo                Run Fock-basis demonstration
   test                Run self-tests
   help                This help
   quit                Exit
@@ -324,9 +353,25 @@ def main():
     p = argparse.ArgumentParser(description='Quantum Agent')
     p.add_argument('--demo', action='store_true')
     p.add_argument('--test', action='store_true')
+    p.add_argument('--list', action='store_true')
     args = p.parse_args()
 
     agent = QuantumAgent()
+    if args.list:
+        print("Available demos:")
+        demos = [
+            ('heisenberg_uncertainty', 'Δx·Δp ≥ ℏ/2'),
+            ('free_particle', 'Free particle spreading'),
+            ('measurement_collapse', 'Position measurement collapse'),
+            ('momentum_collapse', 'Momentum measurement collapse'),
+            ('energy_collapse', 'Energy measurement collapse'),
+            ('double_slit', 'Double-slit interference (2D TDSE)'),
+            ('quantum_eraser', 'Quantum eraser experiment'),
+        ]
+        for name, desc in demos:
+            print(f"  {name:<28s} {desc}")
+        print(f"\nRun: python demos/<name>.py")
+        return
     if args.demo:
         agent._demo()
     elif args.test:
