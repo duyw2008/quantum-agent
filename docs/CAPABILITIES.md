@@ -1,5 +1,20 @@
 # Quantum Agent 功能清单
 
+## 公式终端显示
+
+`formula` 命令将 LaTeX 数学公式转换为 Unicode 原生显示在终端中。
+
+| 输入 | 终端显示 |
+|------|---------|
+| `formula i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi` | iℏ(∂)/(∂t)Ψ = ĤΨ |
+| `formula [\hat{x}, \hat{p}] = i\hbar` | [x̂, p̂] = iℏ |
+| `formula \sigma_x \sigma_p \geq \frac{\hbar}{2}` | σ_x σ_p ≥ ℏ/2 |
+| `formula H = \frac{p^2}{2m} + \frac{1}{2}m\omega^2x^2` | H = p²/2m + 1/2 m ω² x² |
+| `formula \int_{-\infty}^{\infty} \psi^*\psi dx = 1` | ∫_-∞^∞ ψ*ψ dx = 1 |
+
+内置 90+ LaTeX→Unicode 映射：希腊字母、数学算符、hat、上下标、积分、梯度、梯度平方等。
+PNG 文件同步保存到 `output/formulas/` 作为高精度备份。
+
 ## Fock 基量子光学
 
 ### 算符 (FockBasis)

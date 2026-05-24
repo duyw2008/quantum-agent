@@ -1,6 +1,6 @@
 # Quantum Agent ⚛️
 
-> 量子力学智能体 — Fock 空间 + 波函数 + 量子场论
+> 量子力学智能体 — Fock 空间 + 波函数 + 量子场论 + 公式终端显示
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -19,12 +19,14 @@ python agent.py --list   # 列出所有 demo
 
 ## 使用 — 直接输入表达式
 
-```
+```python
 ⚛ > 1+1
 2
 ⚛ > psi = coherent(20, 2.0)
 ⚛ > g2(psi)
 1.0
+⚛ > formula i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi
+  iℏ(∂)/(∂t)Ψ = ĤΨ
 ⚛ > x, p, W = wigner(psi)
 ⚛ > plot_wigner(x, p, W)
 ⚛ > sf = ScalarField(mass=1.0)
@@ -52,13 +54,14 @@ python agent.py --list   # 列出所有 demo
 
 ```
 quantum_agent/
-├── agent.py              # CLI (直接输入表达式, readline, tab补全)
+├── agent.py              # CLI (表达式、readline、tab补全、公式终端显示)
 ├── src/
 │   ├── qm/               # 量子力学 (FockBasis, states, dynamics, wave)
 │   ├── viz/              # Wigner, Qfunc, 光子分布
 │   └── qft/              # 量子场论 (ScalarField, LatticePhi4, scattering)
 ├── demos/                # 10 个物理动画
-└── docs/                 # 7 份文档
+├── docs/                 # 7 份文档
+└── output/               # 动画、图片、公式 PNG
 ```
 
 ## 文档

@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.4.0] — 2026-05-24
+
+### Added
+- 公式终端显示: `formula` 命令将 LaTeX 实时转换为 Unicode 数学符号
+  - 内置 90+ 映射 (希腊字母、算符、hat、上下标、积分、梯度和二阶导等)
+  - `\frac`/`\sqrt`/`\left`/`\right` 智能处理
+  - PNG 同步保存到 `output/formulas/`
+
+### Changed
+- `formula` 命令: 从 ASCII art (img2txt, 不可读) 改为原生 Unicode 终端显示
+- `\hat{H}` 渲染为预组合字符 `Ĥ` (U+0124)，终端兼容性更好
+- 公式图 fontsize: 20→30, figsize 固定 10×1.0
+
 ## [2.2.0] — 2026-05-23
 
 ### Added

@@ -38,7 +38,30 @@ python agent.py
 ⚛ > g2(psi)                        # 1.0
 ⚛ > x, p, W = wigner(psi)
 ⚛ > plot_wigner(x, p, W)
+⚛ > formula [\hat{x}, \hat{p}] = i\hbar  # LaTeX→Unicode 终端显示
 ```
+
+### 公式终端显示
+
+使用 `formula` 命令在终端直接查看数学公式：
+
+```
+⚛ > formula i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi
+  iℏ(∂)/(∂t)Ψ = ĤΨ
+  PNG: output/formulas/formula_102704.png
+
+⚛ > formula \sigma_x \sigma_p \geq \frac{\hbar}{2}
+  σ_x σ_p ≥ ℏ/2
+  PNG: output/formulas/formula_102704.png
+```
+
+`formula` 接受标准 LaTeX 数学表达式，包括：
+- 希腊字母: `\hbar \psi \Psi \alpha \omega \Omega`
+- 算符: `\hat{H} \hat{x} \frac \sqrt \partial \nabla \int \sum`
+- 上下标: `^2 _0 ^{(0)} _\infty \dagger`
+- 对易子/量子态: `\langle \rangle \otimes \ket{\psi}`
+
+PNG 高精度版本同步保存到 `output/formulas/`，方便插入论文/PPT。
 
 ### Python 脚本模式
 
