@@ -172,6 +172,14 @@ Type 'help' for commands, 'demo' to see examples.
             # 全局 fb
             'fb': qm.FockBasis(50),
         }
+
+        # qft 量子场论模块 (懒加载)
+        try:
+            import src.qft as qft
+            ns['qft'] = qft
+            ns['ScalarField'] = qft.ScalarField
+        except Exception:
+            pass
         ns.update(self._calc_ns)
 
         # 特殊命令
