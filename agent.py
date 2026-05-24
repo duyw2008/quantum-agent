@@ -180,6 +180,10 @@ Type 'help' for commands, 'demo' to see examples.
             ns['qft'] = qft
             ns['ScalarField'] = qft.ScalarField
             ns['LatticePhi4'] = qft.LatticePhi4
+            ns['wick_expand'] = qft.wick_expand
+            ns['feynman_amplitude_phi4_2to2'] = qft.feynman_amplitude_phi4_2to2
+            ns['differential_cross_section'] = qft.differential_cross_section
+            ns['transition_probability'] = qft.transition_probability
         except Exception:
             pass
         ns.update(self._calc_ns)
@@ -377,6 +381,9 @@ def main():
             ('energy_collapse', 'Energy measurement collapse'),
             ('double_slit', 'Double-slit interference (2D TDSE)'),
             ('quantum_eraser', 'Quantum eraser experiment'),
+            ('qft_scalar_field', 'QFT: free scalar field'),
+            ('qft_lattice', 'QFT: lattice φ⁴ theory'),
+            ('qft_scattering', 'QFT: Feynman diagrams'),
         ]
         for name, desc in demos:
             print(f"  {name:<28s} {desc}")
