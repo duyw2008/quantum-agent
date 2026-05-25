@@ -6,125 +6,208 @@
 
 ## 目录
 
-1. [快速入门](#1-快速入门)
+1. [两种使用模式](#1-两种使用模式)
+   - [Python 脚本模式 — 独立 .py 调用函数库](#11-python-脚本模式--独立-py-调用函数库)
+   - [Agent 脚本模式 — agent 内 .qms 批量执行](#12-agent-脚本模式--agent-内-qms-批量执行)
 2. [FockBasis — 算符工厂](#2-fockbasis--算符工厂)
 3. [量子态函数](#3-量子态函数)
 4. [算符工具](#4-算符工具)
 5. [光子统计](#5-光子统计)
 6. [波函数动力学](#6-波函数动力学-tdse)
-    - [海森堡不确定性原理](#63-示例-a海森堡不确定性原理)
-    - [自由粒子弥散](#64-示例-b自由粒子量子弥散)
-    - [位置测量坍缩](#65-示例-c位置测量坍缩)
-    - [动量测量坍缩](#66-示例-d动量测量坍缩)
-    - [双缝干涉实验](#67-示例-e双缝干涉实验)
-    - [量子擦除实验](#68-示例-f量子擦除实验)
-    - [能量测量坍缩](#69-示例-g能量测量坍缩)
 7. [时间演化 (Fock 空间)](#7-时间演化)
 8. [相空间可视化](#8-相空间可视化)
 9. [完整工作流示例](#9-完整工作流示例)
 
 ---
 
-## 1. 快速入门
+## 1. 两种使用模式
 
-### Agent 交互模式
+Quantum Agent 提供两套独立的使用方式，适合不同场景：
+
+| 模式 | 适用场景 | 灵活性 | 复杂度 |
+|------|----------|:---:|:---:|
+| **Python 脚本模式** | 科研计算、数据处理、集成到工具链 | ⭐⭐⭐ | 需手动导入 |
+| **Agent 脚本模式** | 教学演示、快速验证、交互探索 | ⭐⭐ | 函数预加载 |
+
+### 1.1 Python 脚本模式 — 独立 .py 调用函数库
+
+在普通 `.py` 文件中 `import` 函数库，完全控制执行流程。适合批量计算、数据处理、集成到 Jupyter。
 
 ```bash
-python agent.py
+python my_calculation.py
 ```
 
+**完整示例：**
+
+```python
+import numpy as np
+from src.qm import FockBasis, coherent, expect, got, mandel_q
+
+# 创建 Fock 空间
+fb = FockBasis(50)
+
+# 构建量子态
+psi = coherent(30, 2.0 + 0.5j)
+rho_th = thermal_dm(30, 0.5)
+
+# 计算可观测量
+n_mean = mean_photon(psi, fb)      # ⟨a†a⟩
+g2_val = g2(rho_th, fb)            # g²(0)
+xp_error = np.linalg.norm(
+    commutator(fb.x, fb.p)[:10,:10] - 1j*np.eye(10), 'fro'
+)
+
+print(f"⟨n⟩ = {n_mean:.3f}")
+print(f"g²(0) = {g2_val:.3f}")
+print(f"[x̂,p̂] error = {xp_error:.2e}")
 ```
-⚛ > psi = coherent(20, 2.0)       # 直接输入表达式
-⚛ > g2(psi)                        # 1.0
-⚛ > x, p, W = wigner(psi)
-⚛ > plot_wigner(x, p, W)
-⚛ > formula [\hat{x}, \hat{p}] = i\hbar  # LaTeX→Unicode 终端显示
+
+**导入方式：**
+
+```python
+# 量子力学核心
+from src.qm import FockBasis, fock, coherent, squeezed, thermal_dm, cat
+from src.qm import expect, variance, g2, mandel_q, mean_photon
+from src.qm import commutator, sesolve, mesolve, steadystate
+from src.qm import fidelity, purity, photon_dist
+
+# 波函数动力学
+from src.qm import WaveGrid, gaussian_wavepacket, evolve_ssfm, animate_wave
+
+# 可视化
+from src.viz import wigner, qfunc, plot_wigner, plot_photon_dist
+
+# 量子场论 (可选)
+from src.qft import ScalarField, LatticePhi4
+from src.qft import wick_expand, feynman_amplitude_phi4_2to2
 ```
 
-### 公式终端显示
+**Python 模式的优点：**
 
-使用 `formula` 命令在终端直接查看数学公式：
+- 完全控制 `import`、`for`、`if`、`def` 等 Python 语法
+- 可用 `print()`、`plt.show()`、`open()` 等所有标准库
+- IDE 支持、断点调试、类型提示
+- 适合生成论文图表、跑参数扫描、做 Monte Carlo
+
+---
+
+### 1.2 Agent 脚本模式 — agent 内 .qms 批量执行
+
+在 agent 交互环境中编写 `.qms` 脚本，函数预加载免 import，适合快速验证和教学演示。
+
+**启动 agent：**
+
+```bash
+python agent.py                  # 交互模式
+python agent.py --run script.qms  # 直接执行脚本
+```
+
+**交互模式示例：**
 
 ```
-⚛ > formula i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi
-  iℏ(∂)/(∂t)Ψ = ĤΨ
-  PNG: output/formulas/formula_102704.png
-
-⚛ > formula \sigma_x \sigma_p \geq \frac{\hbar}{2}
-  σ_x σ_p ≥ ℏ/2
-  PNG: output/formulas/formula_102704.png
+⚛ ~/quantum_agent > psi = coherent(20, 2.0)
+⚛ ~/quantum_agent > g2(psi)
+1.0
+⚛ ~/quantum_agent > x, p, W = wigner(psi)
+⚛ ~/quantum_agent > plot_wigner(x, p, W)
 ```
 
-`formula` 接受标准 LaTeX 数学表达式，包括：
-- 希腊字母: `\hbar \psi \Psi \alpha \omega \Omega`
-- 算符: `\hat{H} \hat{x} \frac \sqrt \partial \nabla \int \sum`
-- 上下标: `^2 _0 ^{(0)} _\infty \dagger`
-- 对易子/量子态: `\langle \rangle \otimes \ket{\psi}`
+**预加载函数（无需 import）：**
 
-PNG 高精度版本同步保存到 `output/formulas/`，方便插入论文/PPT。
+```
+FockBasis, fock, coherent, squeezed, thermal_dm, cat,
+expect, variance, g2, mandel_q, mean_photon,
+commutator, sesolve, mesolve, steadystate,
+wigner, qfunc, plot_wigner, plot_photon_dist,
+WaveGrid, gaussian_wavepacket, evolve_ssfm, animate_wave,
+fb (默认 FockBasis(50)), np (numpy)
+```
 
-### .qms 脚本（类 MATLAB .m 文件）
+#### .qms 脚本格式
 
-将命令序列保存为 `.qms` 文件批量执行，变量跨行共享。
+将命令序列写入 `.qms` 文件，批量执行：
 
 ```bash
 # 命令行执行
 python agent.py --run scripts/harmonic_oscillator.qms
 
-# 交互模式执行
+# 交互模式内执行（支持 Tab 文件路径补全）
 ⚛ > run scripts/harmonic_oscillator.qms
 ```
 
-**示例脚本内容** (`scripts/harmonic_oscillator.qms`)：
+**.qms 脚本写法：**
+
 ```
-# 谐振子标准分析
-formula [\hat{x}, \hat{p}] = i\hbar
+# 用 # 写注释
+# agent 命令: formula, animate, run 等
+# Python 表达式: 直接写
 
-alpha = 2.0 + 0.5j
+formula [\hat{x}, \hat{p}] = i\hbar          ← formula 命令
+
+alpha = 2.0 + 0.5j                            ← Python 赋值
 psi = coherent(30, alpha)
-mean_photon(psi)
+mean_photon(psi)                              ← Python 求值
 
-C = commutator(fb.x, fb.p)
+C = commutator(fb.x, fb.p)                    ← fb 已预加载
 g2(psi)
 
-r = 0.8
-psi_sq = squeezed(30, r)
-mean_photon(psi_sq)
-g2(psi_sq)
+# 多行语句: dict / for / def 等
+psi_sq = squeezed(30, 0.8)
+x, p, W = wigner(psi_sq)
 
-cat_even = cat(30, 2.0, 0)
-x, p, W = wigner(cat_even)
-W.min()
-W.max()
+# matplotlib 作图
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot(x, W[30, :])
+plt.savefig('output/wigner_slice.png')
+plt.close()
 ```
 
-**脚本特性：**
-- `#` 行注释
-- 变量跨行共享
-- 错误不终止执行
-- 支持 `import numpy as np` 等 import 语句
-- 支持嵌套调用 `run another.qms`
-- 输出 PNG 自动保存到当前脚本所在目录
+**.qms 脚本特性：**
 
-### Python 脚本模式
+| 特性 | 说明 |
+|------|------|
+| `# 注释` | 行注释，跳过空行 |
+| 函数预加载 | FockBasis、coherent、g2 等直接可用，无需 import |
+| 变量跨行共享 | 所有行共享同一命名空间 |
+| 错误容错 | 出错不终止，继续执行后续行 |
+| `import` 支持 | `import numpy as np` 等可用 |
+| 多行语法 | dict、for、if、def、try 等复合语句 |
+| Tab 补全 | `run <TAB>` 补全脚本路径；`cd <TAB>` 补全目录 |
+| 嵌套调用 | `run another.qms` 可在脚本内调用其他脚本 |
 
-```python
-import numpy as np
-from src.qm import *
+#### agent 内置命令
 
-# 创建 Fock 空间
-fb = FockBasis(30)
+| 命令 | 说明 |
+|------|------|
+| `<expression>` | 直接 Python 表达式求值 |
+| `formula <latex>` | LaTeX 公式 → 终端 Unicode 显示 + PNG 保存 |
+| `run <script.qms>` | 执行量子脚本 |
+| `animate <var> [path]` | 生成波函数动画 |
+| `plot wigner` | 绘制 Wigner 函数 |
+| `cd [path]` | 切换工作目录（Tab 补全） |
+| `pwd` | 打印当前目录 |
+| `ls` | 列出当前目录文件 |
+| `demo` | 运行 Fock 基演示 |
+| `test` | 运行自检 |
+| `help` | 显示帮助 |
+| `quit` | 退出 |
 
-# 构建量子态
-psi = coherent(30, 1.5 + 0.5j)
-rho_th = thermal_dm(30, 0.5)
+#### 两种模式对比
 
-# 计算可观测量
-n_mean = mean_photon(psi, fb)     # ⟨a†a⟩
-g2_val = g2(rho_th, fb)           # g²(0)
-
-print(f"⟨n⟩ = {n_mean:.3f}, g² = {g2_val:.3f}")
-```
+| | Python .py | Agent .qms |
+|---|---|---|
+| **导入** | `from src.qm import *` | 自动预加载 |
+| **执行** | `python file.py` | `python agent.py --run file.qms` |
+| **Python 语法** | 全部 | 全部（逐行/多行解析） |
+| **print()** | ✓ | ✓ |
+| **matplotlib** | `plt.show()` | `matplotlib.use('Agg')` + `plt.savefig()` |
+| **公式显示** | `print()` | `formula \latex` → Unicode |
+| **Tab 补全** | IDE | 内置 readline |
+| **调试** | pdb / IDE | 行号错误提示 |
+| **适用场景** | 科研计算、制图、参数扫描 | 教学演示、快速验证、截图 |
 
 ---
 
@@ -166,30 +249,24 @@ FockBasis(N=50, hbar=1.0, mass=1.0, omega=1.0)
 | `fb.displacement(alpha)` | (N,N) | 位移算符 D̂(α) |
 | `fb.hamiltonian(omega)` | (N,N) | 谐振子哈密顿量 |
 
-### 示例
+### Python 示例
 
 ```python
+>>> from src.qm import FockBasis
 >>> fb = FockBasis(20)
->>> fb.a[:4, :4]          # 湮灭算符前 4×4
+>>> fb.a[:4, :4]
 array([[0., 1., 0., 0.],
        [0., 0., √2, 0.],
        [0., 0., 0., √3],
        [0., 0., 0., 0.]])
-
->>> fb.x[:4, :4]          # 坐标算符 (x0=1/√2 时)
-array([[0.   , 0.707, 0.   , 0.   ],
-       [0.707, 0.   , 1.   , 0.   ],
-       [0.   , 1.   , 0.   , 1.225],
-       [0.   , 0.   , 1.225, 0.   ]])
 ```
 
-### 在 calc 中的快捷方式
+### Agent 快捷方式
 
-agent 中预定义了 `fb = FockBasis(50)`，可直接使用：
-
-```
-⚛ > calc fb.a[:3,:3]
-⚛ > calc fb.displacement(1.0)[:3,:3]
+```python
+# agent 和 .qms 中 fb 已预创建为 FockBasis(50)
+⚛ > fb.a[:3,:3]
+⚛ > fb.displacement(1.0)[:3,:3]
 ```
 
 ---
@@ -205,16 +282,14 @@ fock(N: int, n: int = 0) -> np.ndarray  # shape (N,)
 返回 Fock 态 |n⟩。
 
 ```python
+# Python 模式
 >>> psi = fock(10, 3)
 >>> psi
-array([0., 0., 0., 1., 0., 0., 0., 0., 0., 0.])
-```
+array([0., 0., 0., 1., 0., ...])
 
-**示例**：计算 Fock 态的 g²(0)
-
-```
-⚛ > calc psi3 = fock(20, 3)
-⚛ > calc g2(psi3)
+# Agent 模式
+⚛ > psi3 = fock(20, 3)
+⚛ > g2(psi3)
   0.6667           # g² = 1 - 1/n = 2/3 ✓
 ```
 
@@ -227,32 +302,22 @@ coherent(N: int, alpha: complex) -> np.ndarray  # shape (N,)
 返回相干态 |α⟩。|α|² 即为平均光子数。
 
 ```python
+# Python 模式
 >>> psi = coherent(20, 2.0 + 1.0j)
->>> np.linalg.norm(psi)        # 归一化
+>>> np.linalg.norm(psi)  # 归一化验证
 1.0
 ```
 
-**示例**：验证相干态的 Poisson 统计
-
 ```
-⚛ > calc psi = coherent(30, 3.0)
-⚛ > calc mean_photon(psi)
+# Agent 模式
+⚛ > psi = coherent(30, 3.0)
+⚛ > mean_photon(psi)
   9.0000           # ⟨n⟩ = |α|² = 9 ✓
-⚛ > calc g2(psi)
+⚛ > g2(psi)
   1.0000           # Poisson ✓
-⚛ > calc mandel_q(psi)
-  1.68e-15         # Q ≈ 0 ✓
 ```
 
-### 3.3 `coherent_dm(N, alpha)` — 相干态密度矩阵
-
-```python
-coherent_dm(N: int, alpha: complex) -> np.ndarray  # shape (N, N)
-```
-
-返回 ρ = |α⟩⟨α|。
-
-### 3.4 `squeezed(N, zeta)` — 压缩真空
+### 3.3 `squeezed(N, zeta)` — 压缩真空
 
 ```python
 squeezed(N: int, zeta: complex) -> np.ndarray  # shape (N,)
@@ -260,50 +325,13 @@ squeezed(N: int, zeta: complex) -> np.ndarray  # shape (N,)
 
 压缩参数 ζ = r e^{iθ}。平均光子数 ⟨n⟩ = sinh²(r)。
 
-```python
->>> r = 0.8
->>> psi = squeezed(30, r)
->>> mean_photon(psi)           # ≈ sinh²(0.8)
-0.732...
-```
-
-**示例**：验证压缩态的非经典统计
-
-```
-⚛ > calc psi_sq = squeezed(30, 0.8)
-⚛ > calc mean_photon(psi_sq)
-  0.7322           # sinh²(0.8) ✓
-⚛ > calc g2(psi_sq)
-  6.9317           # > 1 (光子聚束)
-```
-
-### 3.5 `thermal_dm(N, n_th)` — 热态
+### 3.4 `thermal_dm(N, n_th)` — 热态
 
 ```python
 thermal_dm(N: int, n_th: float) -> np.ndarray  # shape (N, N)
 ```
 
-平均热光子数 n_th。
-
-```python
->>> rho = thermal_dm(20, 0.5)
->>> purity(rho)
-0.667...           # < 1 (混合态)
-```
-
-**示例**：验证热态统计
-
-```
-⚛ > calc rho = thermal_dm(30, 2.0)
-⚛ > calc mean_photon(rho)
-  2.0000           # ✓
-⚛ > calc g2(rho)
-  2.0000           # 热聚束 ✓
-⚛ > calc purity(rho)
-  0.3408           # < 1 ✓
-```
-
-### 3.6 `cat(N, alpha, phi)` — 薛定谔猫态
+### 3.5 `cat(N, alpha, phi)` — 薛定谔猫态
 
 ```python
 cat(N: int, alpha: complex, phi: float = 0.0) -> np.ndarray  # shape (N,)
@@ -311,18 +339,7 @@ cat(N: int, alpha: complex, phi: float = 0.0) -> np.ndarray  # shape (N,)
 
 |ψ⟩ ∝ |α⟩ + e^{iφ}|-α⟩。φ=0 为偶猫态，φ=π 为奇猫态。
 
-**示例**：对比偶/奇猫态的光子数分布
-
-```
-⚛ > calc cat_even = cat(30, 2.0, 0)
-⚛ > calc cat_odd  = cat(30, 2.0, np.pi)
-⚛ > calc photon_dist(cat_even)[:8]
-  [0.686, 0., 0.249, 0., 0.053, 0., 0.009, 0.]   # 仅偶数
-⚛ > calc photon_dist(cat_odd)[:8]
-  [0., 0.921, 0., 0.070, 0., 0.008, 0., 0.001]    # 仅奇数
-```
-
-### 3.7 态诊断函数
+### 3.6 态诊断函数
 
 | 函数 | 返回 | 说明 |
 |------|:---:|------|
@@ -331,63 +348,15 @@ cat(N: int, alpha: complex, phi: float = 0.0) -> np.ndarray  # shape (N,)
 | `photon_dist(state)` | array | P(n) 分布 |
 | `is_dm(state)` | bool | 是否为密度矩阵 |
 
-```
-⚛ > calc fidelity(coherent(20, 1), coherent(20, 1))
-  1.0
-⚛ > calc fidelity(coherent(20, 2), coherent(20, -2))
-  0.0183           # |⟨2|-2⟩|² = e^{-8} ≈ 0.000335? 不对...
-```
-
 ---
 
 ## 4. 算符工具
 
-### 4.1 `commutator(A, B)` — 对易子
-
-```python
-commutator(A: np.ndarray, B: np.ndarray) -> np.ndarray
-```
-
-返回 [A, B] = AB - BA。
-
-```
-⚛ > calc C = commutator(fb.x, fb.p)
-⚛ > calc np.linalg.norm(C[:25,:25] - 1j*np.eye(25), 'fro')
-  3.8e-15          # [x̂, p̂] ≈ iℏI ✓
-```
-
-### 4.2 `expect(oper, state)` — 期望值
-
-```python
-expect(oper: np.ndarray, state: np.ndarray) -> complex
-```
-
-自动检测纯态（向量）或密度矩阵。
-
-```
-⚛ > calc psi = coherent(20, 2.0)
-⚛ > calc expect(fb.n_op, psi)       # ⟨N⟩
-  4.0
-⚛ > calc expect(fb.x, psi)          # ⟨x⟩
-  2.828            # √2 * Re(α) = √2 * 2 ✓
-```
-
-### 4.3 `variance(oper, state)` — 方差
-
-```python
-variance(oper: np.ndarray, state: np.ndarray) -> float
-```
-
-```
-⚛ > calc psi = coherent(20, 2.0)
-⚛ > calc variance(fb.n_op, psi)
-  4.0               # ΔN² = ⟨N⟩ for coherent ✓
-```
-
-### 4.4 矩阵属性
-
 | 函数 | 说明 |
 |------|------|
+| `commutator(A, B)` | [A, B] = AB − BA |
+| `expect(oper, state)` | ⟨O⟩，自动检测纯态/密度矩阵 |
+| `variance(oper, state)` | ΔO² = ⟨O²⟩ − ⟨O⟩² |
 | `is_hermitian(A)` | A = A†? |
 | `is_unitary(U)` | U†U = I? |
 
@@ -395,489 +364,95 @@ variance(oper: np.ndarray, state: np.ndarray) -> float
 
 ## 5. 光子统计
 
-### 5.1 `mean_photon(state, fb)` — 平均光子数
-
-```python
-mean_photon(state, fb=None) -> float
-```
-
-```
-⚛ > calc psi = coherent(30, 3.0)
-⚛ > calc mean_photon(psi)
-  9.0
-```
-
-### 5.2 `g2(state, fb)` — 二阶关联 g²(0)
-
-```python
-g2(state, fb=None) -> float
-```
+| 函数 | 说明 |
+|------|------|
+| `mean_photon(state, fb)` | ⟨a†a⟩ |
+| `g2(state, fb)` | g²(0) — 二阶关联 |
+| `mandel_q(state, fb)` | Q = ⟨n⟩(g²−1) |
 
 | 态 | g²(0) |
-|----|:---:|
+|---|:---:|
 | 相干态 |α⟩ | 1.0 |
 | 热态 (n̄) | 2.0 |
-| Fock 态 |n⟩ | 1 - 1/n |
+| Fock 态 |n⟩ | 1 − 1/n |
 | 压缩真空 (r) | 3 + 1/sinh²(r) |
-
-```
-⚛ > calc g2(coherent(20, 5.0))
-  1.0
-⚛ > calc g2(thermal_dm(20, 1.0))
-  2.0
-⚛ > calc g2(fock(20, 5))
-  0.8               # 1 - 1/5 ✓
-```
-
-### 5.3 `mandel_q(state, fb)` — Mandel Q 参数
-
-Q = ⟨n⟩(g²-1)。Q=0 Poisson，Q<0 亚Poisson（非经典）。
-
-```
-⚛ > calc mandel_q(coherent(20, 3.0))
-  3.7e-15           # ≈ 0 ✓
-⚛ > calc mandel_q(thermal_dm(20, 1.0))
-  1.0               # = n̄ ✓
-```
-
----
-
-## 7. 时间演化
-
-### 6.1 `sesolve(H, psi0, tlist, e_ops)` — Schrödinger 方程
-
-```python
-sesolve(H, psi0, tlist, e_ops=None, hbar=1.0) -> dict
-```
-
-对角化哈密顿量，精确求解 |ψ(t)⟩ = e^{-iHt/ℏ}|ψ(0)⟩。
-
-**返回**：
-```python
-{
-    'times': tlist,           # 时间点
-    'states': [psi(t0), ...], # 每个时间点的态向量
-    'expect': {0: array, ...} # 期望值 (如果提供 e_ops)
-}
-```
-
-**示例**：谐振子中相干态的 Rabi 振荡
-
-```
-⚛ > calc H = fb.hamiltonian()
-⚛ > calc psi0 = coherent(30, 2.0)
-⚛ > calc t = np.linspace(0, 10, 100)
-⚛ > calc r = sesolve(H, psi0, t, e_ops=[fb.n_op, fb.x])
-⚛ > calc np.real(r['expect'][0])[:5]     # ⟨N⟩(t) 前5个点
-  [4., 4., 4., 4., 4.]                     # 能量本征态, ⟨N⟩ 守恒
-```
-
-### 6.2 `mesolve(H, rho0, tlist, c_ops, e_ops)` — Lindblad 主方程
-
-```python
-mesolve(H, rho0, tlist, c_ops=None, e_ops=None, hbar=1.0) -> dict
-```
-
-RK4 积分，求解 dρ/dt = -i[H,ρ] + Σ D[L_k]ρ。
-
-**返回**：同 sesolve，但 states 为密度矩阵列表。
-
-**示例**：腔光子衰减
-
-```
-⚛ > calc H = fb.hamiltonian()
-⚛ > calc rho0 = coherent_dm(30, 3.0)       # 初始相干态 |α=3⟩
-⚛ > calc t = np.linspace(0, 5, 50)
-⚛ > calc gamma = 0.5                        # 衰减率
-⚛ > calc r = mesolve(H, rho0, t,
-        c_ops=[np.sqrt(gamma)*fb.a],
-        e_ops=[fb.n_op])
-⚛ > calc n0 = np.real(r['expect'][0])
-⚛ > calc n0[0], n0[-1]
-  9.0, 0.772                                  # 从 |α|²=9 衰减到 0.77
-```
-
-**理论预测**：⟨n⟩(t) = |α|² e^{-γ t}。验证：
-
-```
-⚛ > calc gamma = 0.5
-⚛ > calc 9 * np.exp(-gamma * 5)
-  0.739             # 理论 ≈ 0.772 (接近)
-```
-
-### 6.3 `steadystate(H, c_ops)` — 稳态求解
-
-```python
-steadystate(H, c_ops=None, hbar=1.0) -> np.ndarray
-```
-
-直接求解 Liouvillian 线性系统，得到 dρ/dt=0 的稳态。
-
-```
-⚛ > calc rho_ss = steadystate(H, [np.sqrt(0.5)*fb.a])
-⚛ > calc mean_photon(rho_ss)
-  9.2e-16           # 衰减到真空 |0⟩⟨0| ✓
-```
-
----
-
-## 8. 相空间可视化
-
-### 9.1 `wigner(state, ...)` — Wigner 函数
-
-```python
-wigner(state, xvec=None, yvec=None, N_grid=81,
-       xlim=(-5,5), ylim=(-5,5), fb=None) -> (xvec, yvec, W)
-```
-
-返回 (x 网格, p 网格, W 矩阵 shape (Nx, Ny))。
-
-**示例**：计算并绘制相干态的 Wigner 函数
-
-```
-⚛ > calc psi = coherent(30, 2.0 + 0.5j)
-⚛ > calc x, p, W = wigner(psi, N_grid=61)
-⚛ > calc W.shape
-  (61, 61)
-⚛ > calc W.min(), W.max()
-  -2.4e-10, 0.637          # 相干态 Wigner > 0
-⚛ > calc plot_wigner(x, p, W, save='output/coherent_wigner.png')
-```
-
-**不同态的 Wigner 特征**：
-
-| 态 | calc 命令 | Wigner 特征 |
-|----|-----------|------------|
-| 真空 | `wigner(fock(20,0))` | 原点高斯峰 |
-| 相干 | `wigner(coherent_dm(20, 2+1j))` | 位移高斯峰 |
-| Fock | `wigner(fock_dm(20, 3))` | 环状 + 负值 |
-| 猫态 | `wigner(cat(30, 3.0))` | 双峰 + 干涉条纹 |
-| 压缩 | `wigner(squeezed(30, 0.8))` | 压扁椭圆 |
-
-### 8.2 `qfunc(state, ...)` — Husimi Q 函数
-
-```python
-qfunc(state, xvec=None, yvec=None, N_grid=81,
-      xlim=(-5,5), ylim=(-5,5)) -> (xvec, yvec, Q)
-```
-
-恒为非负：Q(α) = (1/π)⟨α|ρ|α⟩。
-
-```
-⚛ > calc x, p, Q = qfunc(coherent_dm(20, 2.0), N_grid=51)
-⚛ > calc Q.max()
-  0.3183             # = 1/π ✓
-```
-
-### 8.3 `plot_wigner(x, p, W, ...)` — 绘图
-
-```python
-plot_wigner(xvec, yvec, W, title="Wigner", save=None, cmap='RdBu_r') -> fig
-```
-
-保存到文件：
-
-```
-⚛ > calc psi = cat(30, 3.0)
-⚛ > calc x, p, W = wigner(psi, xlim=(-6,6), ylim=(-6,6), N_grid=101)
-⚛ > calc plot_wigner(x, p, W,
-        title='Schrodinger Cat Wigner',
-        save='output/cat_wigner.png')
-```
-
-### 8.4 `plot_photon_dist(state, ...)` — 光子分布图
-
-```python
-plot_photon_dist(state, title="Photon Distribution", save=None) -> fig
-```
-
-```
-⚛ > calc plot_photon_dist(thermal_dm(30, 2.0),
-        title='Thermal State P(n)',
-        save='output/thermal_photon_dist.png')
-```
-
----
-
-## 9. 完整工作流示例
-
-### 示例 1：相干态衰减
-
-研究初始相干态在腔损耗下的演化。
-
-```
-⚛ > calc fb = FockBasis(40)
-⚛ > calc H = fb.hamiltonian()
-⚛ > calc rho0 = coherent_dm(40, 3.0)
-⚛ > calc t = np.linspace(0, 8, 80)
-⚛ > calc gamma = 0.3
-⚛ > calc r = mesolve(H, rho0, t,
-        c_ops=[np.sqrt(gamma)*fb.a],
-        e_ops=[fb.n_op, fb.x, fb.p])
-⚛ > calc nt = np.real(r['expect'][0])
-⚛ > calc nt[0], nt[-1]
-  9.0, 0.814
-```
-
-### 示例 2：猫态的非经典性
-
-验证薛定谔猫态的 Wigner 函数负值。
-
-```
-⚛ > calc cat_odd = cat(40, 3.0, np.pi)
-⚛ > calc x, p, W = wigner(cat_odd, xlim=(-7,7), ylim=(-7,7), N_grid=101)
-⚛ > calc W.min()
-  -0.385            # 负值 → 非经典性 ✓
-⚛ > calc plot_wigner(x, p, W, title='Odd Cat State',
-        save='output/odd_cat.png')
-```
-
-### 示例 3：热态 vs 相干态的 g² 对比
-
-```
-⚛ > calc alphas = [0.5, 1.0, 2.0, 3.0, 5.0]
-⚛ > calc [g2(coherent(30, a)) for a in alphas]
-  [1.0, 1.0, 1.0, 1.0, 1.0]       # 全部为 1
-⚛ > calc n_ths = [0.1, 0.5, 1.0, 2.0, 5.0]
-⚛ > calc [g2(thermal_dm(30, n)) for n in n_ths]
-  [2, 2, 2, 2, 2]                  # 全部为 2
-```
-
-### 示例 4：位移算符验证
-
-验证 D̂(α)|0⟩ = |α⟩：
-
-```
-⚛ > calc alpha = 2.0 + 1.0j
-⚛ > calc D = fb.displacement(alpha)
-⚛ > calc psi_D = D @ fock(30, 0)          # D(α)|0⟩
-⚛ > calc psi_coh = coherent(30, alpha)     # |α⟩
-⚛ > calc fidelity(psi_D, psi_coh)
-  1.0
-```
-
-### 示例 5：对易关系数值验证
-
-```
-⚛ > calc fb = FockBasis(30)
-⚛ > calc xp = commutator(fb.x, fb.p)
-⚛ > calc aa = commutator(fb.a, fb.a_dag)
-⚛ > calc k = 25
-⚛ > calc np.linalg.norm(xp[:k,:k] - 1j*np.eye(k), 'fro')
-  5.2e-16           # [x,p] ≈ iI ✓
-⚛ > calc np.linalg.norm(aa[:k,:k] - np.eye(k), 'fro')
-  7.3e-16           # [a,a†] ≈ I ✓
-```
 
 ---
 
 ## 6. 波函数动力学 (TDSE)
 
-波函数模块提供一维含时薛定谔方程的数值求解。
+| 类/函数 | 说明 |
+|------|------|
+| `WaveGrid(x_min, x_max, N)` | 一维空间网格 |
+| `gaussian_wavepacket(grid, x0, p0, sigma)` | 高斯波包 |
+| `evolve_ssfm(psi, grid, dt, t_max, snapshots)` | SSFM 求解 TDSE |
+| `animate_wave(result, save_path)` | 生成 .mp4/.gif 动画 |
 
-### 6.1 可用函数
+**Python 模式示例：**
+
+```python
+from src.qm import WaveGrid, gaussian_wavepacket, evolve_ssfm
+
+grid = WaveGrid(-40, 40, 1024)
+psi0 = gaussian_wavepacket(grid, x0=-8, p0=2.0, sigma=3.0)
+result = evolve_ssfm(psi0, grid, dt=0.005, t_max=4.0, snapshots=80)
+```
+
+**Agent 示例：**
+
+```
+⚛ > grid = WaveGrid(-40, 40, 1024)
+⚛ > psi0 = gaussian_wavepacket(grid, x0=-8, p0=2.0, sigma=3.0)
+⚛ > res = evolve_ssfm(psi0, grid, dt=0.005, t_max=4.0, snapshots=80)
+⚛ > animate res output/wave.mp4
+```
+
+---
+
+## 7. 时间演化 (Fock 空间)
 
 | 函数 | 说明 |
 |------|------|
-| `WaveGrid(x_min, x_max, N)` | 创建空间网格 |
-| `gaussian_wavepacket(grid, x0, p0, sigma)` | 高斯波包 ψ(x) |
-| `evolve_ssfm(psi0, grid, dt, t_max)` | Split-Step Fourier 演化 |
-| `animate_wave(result, save_path)` | 生成演化动画 (MP4/GIF) |
+| `sesolve(H, psi0, tlist, e_ops)` | Schrödinger 方程 (精确对角化) |
+| `mesolve(H, rho0, tlist, c_ops, e_ops)` | Lindblad 主方程 (RK4) |
+| `steadystate(H, c_ops)` | 稳态 Liouvillian 求解 |
 
-### 6.2 基本用法
+---
 
-```
-⚛ > calc g = WaveGrid(-20, 20, 512)
-⚛ > calc psi0 = gaussian_wavepacket(g, x0=-5, p0=3, sigma=1)
-⚛ > calc r = evolve_ssfm(psi0, g, dt=0.01, t_max=6)
-⚛ > calc animate_wave(r, save_path='output/my_wave.gif')
-```
+## 8. 相空间可视化
 
-### 6.3 示例 A：海森堡不确定性原理
-
-自由高斯波包的 Δx·Δp 始终 ≥ ℏ/2。初始为最小不确定态，随时间 Δx 增长而 Δp 恒定（自由粒子动量守恒），乘积持续远离下界。
-
-$$初始: \Delta x\cdot\Delta p \approx \hbar/2, \quad 最终: \Delta x\cdot\Delta p \gg \hbar/2$$
-
-```
-⚛ > calc g = WaveGrid(-40, 40, 1024)
-⚛ > calc psi0 = gaussian_wavepacket(g, x0=0, p0=0, sigma=1)
-⚛ > calc r = evolve_ssfm(psi0, g, dt=0.01, t_max=10)
-⚛ > calc animate_wave(r, save_path='output/uncertainty.gif')
-```
-
-| 时间 | Δx | Δp | Δx·Δp |
-|------|:---:|:---:|:---:|
-| t=0 | 0.71 | 0.72 | 0.51 ≈ ℏ/2 |
-| t=10 | 7.11 | 0.72 | 5.14 = 10×ℏ/2 |
-
-> 4 面板完整动画：`python demos/heisenberg_uncertainty.py`
-
-### 6.4 示例 B：自由粒子量子弥散
-
-高斯波包在自由空间演化，宽度随时间增长。
-
-$$\Delta x(t) = \sigma\sqrt{1 + (t/\tau)^2}, \quad \tau = 2m\sigma^2/\hbar$$
-
-```
-⚛ > calc g = WaveGrid(-30, 30, 1024)
-⚛ > calc psi0 = gaussian_wavepacket(g, x0=0, p0=2, sigma=1)
-⚛ > calc r = evolve_ssfm(psi0, g, dt=0.01, t_max=8)
-⚛ > calc animate_wave(r, save_path='output/free_spreading.mp4')
-```
-
-| 物理量 | 数值 | 理论 |
-|--------|:---:|:---:|
-| ⟨x⟩(t=8) | 15.6 | 16.0 |
-| Δx(t=8) | 6.6 | 4.1 |
-| 能量 | 守恒 | ✓ |
-
-### 6.4 示例 B：位置测量坍缩
-
-宽波包自由演化 → 位置测量坍缩为窄波包 → 快速弥散。
-
-```
-⚛ > calc g = WaveGrid(-40, 40, 1024)
-⚛ > calc psi = gaussian_wavepacket(g, x0=-8, p0=2, sigma=3)
-⚛ > calc r1 = evolve_ssfm(psi, g, dt=0.005, t_max=4)
-⚛ > calc x = g.x
-⚛ > calc prob = np.abs(r1['psi'][-1])**2
-⚛ > calc mx = np.random.choice(x, p=prob/prob.sum())
-⚛ > calc psi_c = np.exp(-(x-mx)**2/(2*0.3**2)) + 0j
-⚛ > calc psi_c /= np.sqrt(np.trapezoid(np.abs(psi_c)**2, x))
-⚛ > calc r2 = evolve_ssfm(psi_c, g, dt=0.002, t_max=5)
-```
-
-| 阶段 | Δx | Δp | 弥散 τ |
-|------|:---:|:---:|:---:|
-| 测量前 | 2.32 | 0.24 | 18.0 |
-| 坍缩后 | 0.21 | 2.37 | **0.18** |
-
-弥散加速 **100 倍**。完整动画：`python demos/measurement_collapse.py`
-
-### 6.5 示例 C：动量测量坍缩
-
-窄波包（Δp 大）→ 动量测量坍缩为窄动量分布 → Δx 暴增。
-
-动画采用 **3 面板布局**：
-- **左上**：位置空间 |ψ(x)|² — 坍缩后剧烈展宽（Δx ↑18×）
-- **右上**：动量空间 |ψ̃(p)|² — 坍缩后收窄为单一频率分量（Δp ↓7×），并用箭头标注 Δp 宽度变化
-- **下方**：Δx 和 Δp 随时间演化 — 测量瞬间的跳跃清晰可见
-
-```
-⚛ > calc g = WaveGrid(-80, 80, 2048)
-⚛ > calc psi = gaussian_wavepacket(g, x0=-5, p0=3, sigma=0.5)
-⚛ > calc r1 = evolve_ssfm(psi, g, dt=0.003, t_max=3)
-⚛ > calc k = g.k
-⚛ > calc psi_k = np.fft.fft(r1['psi'][-1])
-⚛ > calc prob_k = np.abs(psi_k)**2
-⚛ > calc mp = np.random.choice(k, p=prob_k/prob_k.sum())
-⚛ > calc psi_k_c = np.exp(-(k-mp)**2/(2*0.3**2)) + 0j
-⚛ > calc psi_c = np.fft.ifft(psi_k_c)
-⚛ > calc psi_c /= np.sqrt(np.trapezoid(np.abs(psi_c)**2, x))
-⚛ > calc r2 = evolve_ssfm(psi_c, g, dt=0.005, t_max=4)
-```
-
-| 阶段 | Δx | Δp |
-|------|:---:|:---:|
-| 测量前 | 4.24 | 1.41 |
-| 坍缩后 | 78.1 | 0.21 |
-
-完整动画（双面板：位置+动量）：`python demos/momentum_collapse.py`
-
-### 6.6 示例 D：双缝干涉实验
-
-2D TDSE 模拟（256×128）。波包穿过双缝，gamma 校正增强干涉条纹。
-
-```
-⚛ > python demos/double_slit.py     # 约 3 分钟
-```
-
-| 参数 | 值 | | 参数 | 值 |
-|------|:--:|--|------|:--:|
-| 缝距 | 4.0 | | p₀ | 6.0 |
-| λ | 1.05 | | 屏幕 | x=10 |
-| 条纹间距 | 2.62 | | 配色 | inferno+γ=0.45 |
-
-### 6.7 示例 E：量子擦除实验
-
-双缝 + BBO 晶体产生纠缠光子对。**动画中途切换**：
-
-- **t < 8**: Which-path 模式 — 路径可区分 → 无干涉条纹
-- **t = 8**: ⚡ 擦除路径信息（暂停标记）
-- **t > 8**: Eraser 模式 — **干涉条纹从无到有逐渐浮现**
-
-右下角面板显示纯量子干涉项 2Re(ψ₁*ψ₂)，屏幕探测器逐帧累积。
-
-```
-⚛ > python demos/quantum_eraser.py   # 3 组模拟, 约 8 分钟
-```
-
-### 6.8 示例 F：能量测量坍缩
-
-能量本征态 ≠ 动量本征态！自由粒子能量 E=k²/2m 对 ±k 简并，
-因此能量测量坍缩为**驻波** cos(kx)，⟨p⟩=0，波包停止运动。
-
-```
-⚛ > python demos/energy_collapse.py     # 约 2 分钟
-```
-
-| 阶段 | ⟨x⟩ | ⟨p⟩ | 动量空间 |
-|------|:---:|:---:|------|
-| 测量前 | ~8.0 | 4.00 | 单峰 at +k |
-| 坍缩后 | ~0.0 | **0.000** | 双峰 at ±k |
-
-动画展示驻波节点线、能量双轴（动量+能量）、⟨p⟩→0 的戏剧性转变。
-
-### 6.9 三种坍缩对比
-
-| | 位置 | 动量 | 能量 |
-|------|:---:|:---:|:---:|
-| 本征态 | δ(x-x₀) | e^{ikx} | cos(kx) |
-| ⟨p⟩ 坍缩后 | — | k | **0** |
-| 行为 | 快速弥散 | 展宽 | **驻波静止** |
-
-
-## 附录 A：calc 可用函数速查
-
-| 分类 | 函数 |
+| 函数 | 说明 |
 |------|------|
-| **算符** | `fb.a`, `fb.a_dag`, `fb.x`, `fb.p`, `fb.n_op`, `fb.I`, `fb.parity` |
-| **态** | `fock(N,n)`, `fock_dm(N,n)`, `coherent(N,α)`, `coherent_dm(N,α)`, `squeezed(N,ζ)`, `thermal_dm(N,n̄)`, `cat(N,α,φ)` |
-| **工具** | `expect(O,ρ)`, `variance(O,ρ)`, `commutator(A,B)`, `mean_photon(ρ)`, `g2(ρ)`, `mandel_q(ρ)`, `photon_dist(ρ)`, `fidelity`, `purity` |
-| **演化** | `sesolve(H,ψ₀,t)`, `mesolve(H,ρ₀,t,c_ops)`, `steadystate(H,c_ops)` |
-| **相空间** | `wigner(ρ)`, `qfunc(ρ)`, `plot_wigner(x,p,W)`, `plot_photon_dist(ρ)` |
-| **波函数** | `WaveGrid`, `gaussian_wavepacket`, `evolve_ssfm`, `animate_wave` |
-| **QFT** | `ScalarField(m,L,N)`, `LatticePhi4(N,m,λ)`, `wick_expand`, `feynman_amplitude_phi4_2to2` |
-| **构造** | `FockBasis(N)`, `fb.displacement(α)`, `fb.hamiltonian(ω)` |
+| `wigner(state, N_grid, xlim, ylim)` | Wigner 函数 (x, p, W) |
+| `qfunc(state, N_grid, xlim, ylim)` | Husimi Q 函数 |
+| `plot_wigner(x, p, W, save)` | Wigner 等高线图 |
+| `plot_photon_dist(state, save)` | 光子数分布柱状图 |
 
-## 附录 B：QFT 快速参考
+---
 
-### 自由标量场
+## 9. shell 导航命令
 
-```
-⚛ > sf = ScalarField(mass=1.0, L=20, N_modes=30)
-⚛ > sf.summary()
-⚛ > sf.commutator(0, 2)              # [φ̂(0), φ̂(2)]
-⚛ > sf.feynman_propagator(1, 0, 0)   # D_F(1, 0)
-⚛ > sf.vacuum_fluctuation(0)         # ⟨0|φ̂²|0⟩
-```
+| 命令 | 说明 |
+|------|------|
+| `pwd` | 打印当前工作目录 |
+| `cd [path]` | 切换目录（Tab 补全，无参 = HOME） |
+| `ls` | 列排显示当前目录内容（目录加 `/`） |
 
-### 格点 φ⁴ 理论
+---
 
-```
-⚛ > lpt = LatticePhi4(4, mass=0.5, coupling=1.0)
-⚛ > lpt.summary()
-⚛ > E0 = lpt.ground_state_energy()   # 基态能量
-⚛ > lpt.correlation_function()       # ⟨φ₀φ_d⟩
-⚛ > lpt.particle_number_distribution() # ⟨Nⱼ⟩
-⚛ > r = lpt.scan_coupling(np.linspace(0, 3, 30))
-```
+## 10. 脚本库参考
 
-### 散射
+现有 `.qms` 脚本：
 
-```
-⚛ > wick_expand(['φ₁','φ₂','φ₃','φ₄'])  # Wick 定理
-⚛ > feynman_amplitude_phi4_2to2(0.5)     # iM = -iλ
-⚛ > differential_cross_section(0.5, 100) # dσ/dΩ
+| 脚本 | 内容 | 输出 |
+|------|------|------|
+| `harmonic_oscillator.qms` | 谐振子 5 步分析 | 终端输出 |
+| `core_formulas.qms` | 10 个核心 QM 公式 | PNG × 10 |
+| `wigner_gallery.qms` | 5 态 Wigner 对比 | 2×3 面板 PNG |
+| `measurement_collapse.qms` | 测量坍缩动画 | 双面板 .mp4 |
+
+```bash
+python agent.py --run scripts/harmonic_oscillator.qms
+python agent.py --run scripts/wigner_gallery.qms
+python agent.py --run scripts/measurement_collapse.qms
 ```
