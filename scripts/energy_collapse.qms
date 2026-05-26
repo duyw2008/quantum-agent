@@ -1,0 +1,125 @@
+# 能量测量坍缩 — 行波→驻波
+# 动量本征态 = e^{ikx} (有方向, ⟨p⟩≠0)
+# 能量本征态 = cos(kx) ∝ |k⟩+|-k⟩ (无方向, ⟨p⟩=0)
+
+formula E = \frac{\hbar^2 k^2}{2m}, \quad \psi_E(x) \propto \cos(kx)
+
+grid = WaveGrid(x_min=-60, x_max=60, N=2048)
+x = grid.x
+
+# 初始高斯波包 (有动量 → 行波)
+sigma, p0 = 1.5, 4.0
+psi0 = gaussian_wavepacket(grid, x0=-20.0, p0=p0, sigma=sigma)
+psi0 = psi0 / np.sqrt(np.trapezoid(np.abs(psi0)**2, x))
+
+# 自由演化一小段
+result_pre = evolve_ssfm(psi0, grid, dt=0.005, t_max=3.0, snapshots=60)
+psi_before = result_pre['psi'][-1]
+
+# 能量测量 — 按概率密度随机选 k
+psi_k = np.fft.fft(psi_before)
+prob_k = np.abs(psi_k)**2
+prob_k = prob_k / prob_k.sum()
+np.random.seed(42)
+k_grid = grid.k
+measured_k_idx = np.random.choice(len(k_grid), p=prob_k)
+k_measured = np.abs(k_grid[measured_k_idx])
+
+# 坍缩为驻波
+psi_after = np.cos(k_measured * x).astype(complex)
+psi_after[x < -30] = 0
+psi_after[x > 30] = 0
+psi_after = psi_after / np.sqrt(np.trapezoid(np.abs(psi_after)**2, x))
+
+p_before = np.trapezoid(x * np.abs(psi_before)**2, x)
+p_after = np.trapezoid(x * np.abs(psi_after)**2, x)
+
+formula \text{Before: } \langle x \rangle
+p_before
+formula \text{After: } \langle x \rangle \approx 0 \text{ (standing wave!)}
+p_after
+
+# 坍缩后演化 — 驻波不再移动
+result_after = evolve_ssfm(psi_after, grid, dt=0.005, t_max=5.0, snapshots=100)
+
+# 生成动画
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import os
+
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 8), facecolor='#0d1117',
+    gridspec_kw={'height_ratios': [1, 3]})
+
+all_times_pre = np.array(result_pre['times'])
+all_probs_pre = np.array(result_pre['prob'])
+all_times_after = np.array(result_after['times']) + 3.0
+all_probs_after = np.array(result_after['prob'])
+all_times = np.concatenate([all_times_pre, all_times_after])
+all_probs = np.concatenate([all_probs_pre, all_probs_after])
+measure_idx = len(all_times_pre) - 1
+
+# 顶部: ⟨x⟩ vs t
+x_means = []
+for p in all_probs:
+    x_means.append(np.trapezoid(x * p, x))
+
+ax1.set_facecolor('#0d1117')
+ax1.plot(all_times_pre, x_means[:len(all_times_pre)], color='#79c0ff', linewidth=2)
+ax1.plot(all_times_after, x_means[len(all_times_pre):], color='#ff7b72', linewidth=2)
+ax1.axvline(3.0, color='#f0883e', linewidth=2, linestyle='--')
+ax1.axhline(0, color='#e6edf3', linewidth=0.5, alpha=0.3)
+ax1.set_ylabel('<x>', color='#e6edf3', fontsize=12)
+ax1.tick_params(colors='#e6edf3')
+ax1.grid(True, alpha=0.1, color='#30363d')
+t_line = ax1.axvline(0, color='#e6edf3', linewidth=1, alpha=0.4)
+
+# 底部: |ψ|²
+ax2.set_facecolor('#0d1117')
+ax2.set_xlim(x[0], x[-1])
+ymax = max(p.max() for p in all_probs) * 1.2
+ax2.set_ylim(0, ymax)
+fill = ax2.fill_between(x, 0, all_probs[0], alpha=0.5, color='#79c0ff')
+line_p, = ax2.plot(x, all_probs[0], color='#79c0ff', linewidth=1.5)
+ax2.set_xlabel('x', color='#e6edf3', fontsize=12)
+ax2.set_ylabel('|ψ|²', color='#e6edf3', fontsize=12)
+ax2.tick_params(colors='#e6edf3')
+ax2.grid(True, alpha=0.1, color='#30363d')
+title = ax2.set_title('', color='#e6edf3', fontsize=14)
+
+for ax in [ax1, ax2]:
+    for spine in ax.spines.values():
+        spine.set_color('#30363d')
+
+fill_ref = [fill]
+
+def update(i):
+    fill_ref[0].remove()
+    is_after = i > measure_idx
+    color = '#ff7b72' if is_after else '#79c0ff'
+    fill_ref[0] = ax2.fill_between(x, 0, all_probs[i], alpha=0.5, color=color)
+    line_p.set_ydata(all_probs[i])
+    line_p.set_color(color)
+    t_line.set_xdata([all_times[i], all_times[i]])
+    t = all_times[i]
+    phase = 'STANDING' if is_after else 'TRAVELING'
+    title.set_text(f't = {t:.2f}  |  <x> = {x_means[i]:.2f}  |  Phase: {phase}')
+
+# 测量帧暂停
+frames_ext = []
+for i in range(len(all_times)):
+    frames_ext.append(i)
+    if i == measure_idx:
+        for _ in range(15):
+            frames_ext.append(i)
+
+ani = animation.FuncAnimation(fig, update, frames=frames_ext, interval=40, blit=False)
+os.makedirs('output/animations', exist_ok=True)
+try:
+    ani.save('output/animations/energy_collapse.mp4', writer=animation.FFMpegWriter(fps=25, bitrate=2000), dpi=150)
+except:
+    ani.save('output/animations/energy_collapse.gif', writer=animation.PillowWriter(fps=25), dpi=150)
+plt.close(fig)
+
+formula E_{\rm collapse} = \frac{\hbar^2 k^2}{2m}, \quad \psi \propto \cos(kx), \quad \langle p \rangle = 0

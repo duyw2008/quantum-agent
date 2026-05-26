@@ -37,6 +37,8 @@ from .dynamics import (
 )
 from .wave import (
     WaveGrid, gaussian_wavepacket, evolve_ssfm, animate_wave,
+    double_well, periodic_potential, delta_barrier, finite_well,
+    harmonic_oscillator_potential, step_potential,
 )
 
 __all__ = [
@@ -49,4 +51,6 @@ __all__ = [
     'is_hermitian', 'is_unitary',
     'sesolve', 'mesolve', 'steadystate', 'lindblad_rhs',
     'WaveGrid', 'gaussian_wavepacket', 'evolve_ssfm', 'animate_wave',
+    'double_well', 'periodic_potential', 'delta_barrier', 'finite_well',
+    'harmonic_oscillator_potential', 'step_potential',
 ]

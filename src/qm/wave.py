@@ -171,3 +171,81 @@ def animate_wave(result, save_path='wave_evolution.mp4', fps=20):
     plt.close(fig)
     print(f"Animation saved: {save_path}")
     return save_path
+
+
+# ================================================================
+# 特色势函数工厂
+# ================================================================
+
+def double_well(grid: WaveGrid, a=3.0, depth=10.0, separation=6.0):
+    """双阱势: V(x) = depth * [(x/separation)² - 1]² / 2
+    
+    参数:
+        a:        阱宽 (控制抛物线形状)
+        depth:    阱深
+        separation: 两阱间距
+    """
+    x = grid.x
+    s = separation
+    return depth * ((x/s)**2 - 1)**2 / 2
+
+
+def periodic_potential(grid: WaveGrid, amplitude=2.0, period=4.0):
+    """周期势 (余弦光晶格): V(x) = amplitude * cos(2π x / period)
+    
+    参数:
+        amplitude: 势的幅度
+        period:    空间周期
+    """
+    x = grid.x
+    return amplitude * np.cos(2 * np.pi * x / period)
+
+
+def delta_barrier(grid: WaveGrid, x0=0.0, strength=10.0):
+    """δ 势垒的近似: V(x) = strength / (π σ²) * exp(-(x-x0)²/σ²)
+    
+    用窄高斯近似 δ 函数。σ 自动取为网格间距的 5 倍。
+    
+    参数:
+        x0:       势垒位置
+        strength: 势垒强度 (积分 ∫ V dx ≈ strength)
+    """
+    x = grid.x
+    sigma = grid.dx * 5
+    return strength / (np.sqrt(np.pi) * sigma) * np.exp(-(x - x0)**2 / sigma**2)
+
+
+def finite_well(grid: WaveGrid, x0=0.0, width=4.0, depth=5.0):
+    """有限深方势阱: V(x) = -depth (|x-x0| < width/2), 0 otherwise
+    
+    参数:
+        x0:     阱中心
+        width:  阱宽度
+        depth:  阱深 (正值)
+    """
+    x = grid.x
+    V = np.zeros_like(x)
+    mask = np.abs(x - x0) < width / 2
+    V[mask] = -depth
+    return V
+
+
+def harmonic_oscillator_potential(grid: WaveGrid, omega=1.0, mass=1.0):
+    """谐振子势: V(x) = ½ m ω² x²
+    
+    参数:
+        omega: 频率
+        mass:  质量
+    """
+    return 0.5 * mass * omega**2 * grid.x**2
+
+
+def step_potential(grid: WaveGrid, x0=0.0, height=3.0):
+    """阶跃势: V(x) = height (x > x0), 0 (x < x0)
+    
+    经典散射问题: 透射/反射
+    """
+    x = grid.x
+    V = np.zeros_like(x)
+    V[x > x0] = height
+    return V

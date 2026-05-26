@@ -59,7 +59,7 @@ Type 'help' for commands, 'demo' to see examples.
             'cat', 'fock', 'fock_dm', 'expect', 'variance', 'g2', 'mandel_q',
             'mean_photon', 'commutator', 'sesolve', 'mesolve', 'steadystate',
             'wigner', 'qfunc', 'plot_wigner', 'plot_photon_dist',
-            'WaveGrid', 'gaussian_wavepacket', 'evolve_ssfm', 'animate_wave',
+            'WaveGrid', 'gaussian_wavepacket', 'evolve_ssfm', 'animate_wave', 'double_well', 'periodic_potential', 'delta_barrier', 'finite_well',
             'fidelity', 'purity', 'photon_dist', 'np',
             'ScalarField', 'LatticePhi4',
         ]
@@ -583,6 +583,12 @@ Type 'help' for commands, 'demo' to see examples.
             'gaussian_wavepacket': qm.gaussian_wavepacket,
             'evolve_ssfm': qm.evolve_ssfm,
             'animate_wave': qm.animate_wave,
+            'double_well': qm.double_well,
+            'periodic_potential': qm.periodic_potential,
+            'delta_barrier': qm.delta_barrier,
+            'finite_well': qm.finite_well,
+            'harmonic_oscillator_potential': qm.harmonic_oscillator_potential,
+            'step_potential': qm.step_potential,
             # viz
             'wigner': viz.wigner, 'qfunc': viz.qfunc,
             'plot_wigner': viz.plot_wigner,

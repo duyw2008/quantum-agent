@@ -1,0 +1,25 @@
+# 自由粒子高斯波包量子弥散
+# 物理: Δx(t) = σ√(1 + (t/τ)²),  τ = 2mσ²/ℏ
+
+formula \Delta x(t) = \sigma\sqrt{1 + (t/\tau)^2}, \quad \tau = \frac{2m\sigma^2}{\hbar}
+
+sigma = 1.0
+x0, p0 = 0.0, 2.0
+grid = WaveGrid(x_min=-30, x_max=30, N=1024)
+
+psi0 = gaussian_wavepacket(grid, x0=x0, p0=p0, sigma=sigma)
+dx_init = np.sqrt(np.trapezoid(grid.x**2 * np.abs(psi0)**2, grid.x) - np.trapezoid(grid.x * np.abs(psi0)**2, grid.x)**2)
+
+tau = 2 * sigma**2
+t_max = 4 * tau
+result = evolve_ssfm(psi0, grid, dt=0.01, t_max=t_max, snapshots=200)
+
+# 验证理论
+dx_theory = sigma * np.sqrt(1 + (t_max / tau)**2)
+
+import os
+os.makedirs('output/animations', exist_ok=True)
+animate_wave(result, save_path='output/animations/free_particle_spreading.mp4', fps=25)
+
+formula \Delta x_{\rm final} \approx \sigma\sqrt{1+(4)^2}
+dx_theory

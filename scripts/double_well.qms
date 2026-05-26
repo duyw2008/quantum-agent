@@ -1,0 +1,84 @@
+# 双阱势波包演化 — 量子隧穿演示
+# 粒子在两个势阱之间隧穿振荡
+
+formula V(x) = V_0 \left[\left(\frac{x}{a}\right)^2 - 1\right]^2
+
+grid = WaveGrid(x_min=-15, x_max=15, N=1024)
+x = grid.x
+
+# 双阱势
+V = double_well(grid, a=3.0, depth=8.0, separation=6.0)
+
+# 初始波包 — 放在左阱中
+p0 = 1.5
+psi0 = gaussian_wavepacket(grid, x0=-3.0, p0=p0, sigma=0.8)
+psi0 = psi0 / np.sqrt(np.trapezoid(np.abs(psi0)**2, x))
+
+# 演化
+result = evolve_ssfm(psi0, grid, V_func=lambda g: V, dt=0.005, t_max=20.0, snapshots=250)
+times = np.array(result['times'])
+n_frames = len(times)
+
+# 计算 ⟨x⟩(t) 看隧穿振荡
+x_means = []
+for prob in result['prob']:
+    x_means.append(np.trapezoid(x * prob, x))
+
+# 画图
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import os
+
+fig, (ax_top, ax_main) = plt.subplots(2, 1, figsize=(14, 8),
+    gridspec_kw={'height_ratios': [1, 3]}, facecolor='#0d1117')
+
+# 顶部: ⟨x⟩ vs t + 势
+ax_top.set_facecolor('#0d1117')
+ax_top.plot(times, x_means, color='#79c0ff', linewidth=2)
+ax_top.axhline(0, color='#e6edf3', linewidth=0.5, alpha=0.3)
+t_line = ax_top.axvline(0, color='#e6edf3', linewidth=1, alpha=0.4)
+ax_top.set_ylabel('<x>', color='#e6edf3', fontsize=12)
+ax_top.tick_params(colors='#e6edf3')
+ax_top.grid(True, alpha=0.1, color='#30363d')
+
+# 底部: |ψ|² + 势
+ax_main.set_facecolor('#0d1117')
+v_scaled = V / np.max(np.abs(V)) * 0.3 * max(p.max() for p in result['prob'])
+ax_main.fill_between(x, 0, v_scaled, alpha=0.3, color='#f0883e')
+
+all_probs = np.array(result['prob'])
+fill = ax_main.fill_between(x, 0, all_probs[0], alpha=0.5, color='#79c0ff')
+line_p, = ax_main.plot(x, all_probs[0], color='#79c0ff', linewidth=1.5)
+ax_main.set_xlabel('x', color='#e6edf3', fontsize=12)
+ax_main.set_ylabel('|ψ|² + V(x)', color='#e6edf3', fontsize=12)
+ax_main.tick_params(colors='#e6edf3')
+ax_main.grid(True, alpha=0.1, color='#30363d')
+title = ax_main.set_title('', color='#e6edf3', fontsize=14)
+ax_main.set_xlim(x[0], x[-1])
+
+for ax in [ax_top, ax_main]:
+    for spine in ax.spines.values():
+        spine.set_color('#30363d')
+
+fill_ref = [fill]
+
+def update(i):
+    fill_ref[0].remove()
+    fill_ref[0] = ax_main.fill_between(x, 0, all_probs[i], alpha=0.5, color='#79c0ff')
+    line_p.set_ydata(all_probs[i])
+    t_line.set_xdata([times[i], times[i]])
+    t = times[i]
+    title.set_text(f't = {t:.2f}  |  <x> = {x_means[i]:.3f}  |  Double-Well Tunneling')
+
+ani = animation.FuncAnimation(fig, update, frames=n_frames, interval=40, blit=False)
+
+os.makedirs('output/animations', exist_ok=True)
+try:
+    ani.save('output/animations/double_well.mp4', writer=animation.FFMpegWriter(fps=25, bitrate=2000), dpi=150)
+except:
+    ani.save('output/animations/double_well.gif', writer=animation.PillowWriter(fps=25), dpi=150)
+plt.close(fig)
+
+formula \text{Quantum tunneling between two wells!}
