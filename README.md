@@ -61,8 +61,9 @@ quantum_agent/
 │   ├── viz/              # Wigner, Qfunc, 光子分布
 │   └── qft/              # 量子场论 (ScalarField, LatticePhi4, scattering)
 ├── demos/                # 10 个物理动画
+├── scripts/              # 9 个 .qms 脚本
 ├── scripts/              # .qms 脚本 (类 MATLAB .m)
-├── docs/                 # 7 份文档
+├── docs/                 # 9 份文档 (含知识手册)
 └── output/               # 动画、图片、公式 PNG
 ```
 

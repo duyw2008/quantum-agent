@@ -21,7 +21,8 @@ src/
 ├── qft/                     # 量子场论
     ├── field.py             # ScalarField — 标量场
     ├── lattice.py           # LatticePhi4 — 格点 φ⁴
-    └── scattering.py        # 散射 / Feynman 图
+    ├── scattering.py        # 散射 / Feynman 图
+    └── path_integral.py   # 路径积分 Monte Carlo (Phase 4)
 ```
 
 ## 数据流

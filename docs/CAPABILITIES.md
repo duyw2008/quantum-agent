@@ -15,6 +15,19 @@
 内置 90+ LaTeX→Unicode 映射：希腊字母、数学算符、hat、上下标、积分、梯度、梯度平方等。
 PNG 文件同步保存到 `output/formulas/` 作为高精度备份。
 
+## 特色势函数
+
+6 种特征势函数，用于波函数动力学研究：
+
+| 函数 | 物理 | 公式 |
+|------|------|------|
+| `double_well(grid, a, depth, separation)` | 双阱隧穿 | V₀[(x/a)²-1]²/2 |
+| `periodic_potential(grid, amplitude, period)` | 余弦光晶格 | A cos(2πx/λ) |
+| `delta_barrier(grid, x0, strength)` | δ 势垒 (窄高斯近似) | g/√(πσ) e^{-(x-x₀)²/σ²} |
+| `finite_well(grid, x0, width, depth)` | 有限深方阱 | -V₀ (|x-x₀|<w/2) |
+| `harmonic_oscillator_potential(grid, omega, mass)` | 谐振子势 | ½mω²x² |
+| `step_potential(grid, x0, height)` | 阶跃势 | V₀ (x>x₀) |
+
 ## .qms 量子脚本
 
 类似 MATLAB `.m` 文件，将一系列 agent 命令写入脚本批量执行。

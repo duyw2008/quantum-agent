@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.6.0] — 2026-05-26
+
+### Added
+- 5 个新 .qms 脚本: free_particle, heisenberg_uncertainty, energy_collapse,
+  double_well (双阱隧穿), pimc_demo (路径积分 Monte Carlo)
+- `src/qft/path_integral.py` — PathIntegralMC 类 (Phase 4)
+  - 欧几里得路径积分离散化 + Metropolis-Hastings 采样
+  - ground_state_energy(), wavefunction_density()
+- `src/qm/wave.py` — 6 个特色势函数工厂
+  - double_well(), periodic_potential(), delta_barrier()
+  - finite_well(), harmonic_oscillator_potential(), step_potential()
+- `help <function>` 命令 — 18 个物理公式即时查询
+  - coherent, g2, wigner, sesolve, pathintegralmc, ...
+- `docs/KNOWLEDGE_HANDBOOK.md` — 知识手册 (5卷, 25KB)
+  - Vol.0: 为什么需要 Fock 空间
+  - Vol.1: 闵氏空间与 Fock 空间的缝合
+  - Vol.2: 因果关系在量子力学中的表现
+  - Vol.3: 为什么需要 Wigner 函数
+  - Vol.4: 退相干的机制
+
+### Changed
+- `.qms` 多行语法: 支持 dict/for/if/def/try 等复合语句
+- `.qms` 脚本支持 `cd`/`pwd`/`ls` 命令 + Tab 路径补全
+- formula 命令 LaTeX→Unicode 转换改为原生终端显示
+- `docs/USER_GUIDE.md` 重构: Python .py 与 Agent .qms 双模式分章
+
 ## [2.5.0] — 2026-05-24
 
 ### Added

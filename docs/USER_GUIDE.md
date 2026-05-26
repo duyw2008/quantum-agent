@@ -407,6 +407,26 @@ result = evolve_ssfm(psi0, grid, dt=0.005, t_max=4.0, snapshots=80)
 ⚛ > animate res output/wave.mp4
 ```
 
+### 特色势函数
+
+| 函数 | 说明 |
+|------|------|
+| `double_well(grid, a, depth, sep)` | 双阱势 V₀[(x/a)²-1]²/2 |
+| `periodic_potential(grid, amp, period)` | 余弦光晶格 A cos(2πx/λ) |
+| `delta_barrier(grid, x0, strength)` | δ 势垒 (窄高斯近似) |
+| `finite_well(grid, x0, width, depth)` | 有限深方阱 |
+| `harmonic_oscillator_potential(grid, omega, mass)` | ½mω²x² |
+| `step_potential(grid, x0, height)` | 阶跃势 |
+
+```python
+# Python 模式
+from src.qm import WaveGrid, gaussian_wavepacket, evolve_ssfm, double_well
+grid = WaveGrid(-15, 15, 1024)
+V = double_well(grid, a=3.0, depth=8.0)
+psi0 = gaussian_wavepacket(grid, x0=-3, p0=1.5, sigma=0.8)
+result = evolve_ssfm(psi0, grid, V_func=lambda g: V, dt=0.005, t_max=20)
+```
+
 ---
 
 ## 7. 时间演化 (Fock 空间)
@@ -447,9 +467,14 @@ result = evolve_ssfm(psi0, grid, dt=0.005, t_max=4.0, snapshots=80)
 | 脚本 | 内容 | 输出 |
 |------|------|------|
 | `harmonic_oscillator.qms` | 谐振子 5 步分析 | 终端输出 |
-| `core_formulas.qms` | 10 个核心 QM 公式 | PNG × 10 |
+| `core_formulas.qms` | 10 核心公式一览 | PNG × 10 |
 | `wigner_gallery.qms` | 5 态 Wigner 对比 | 2×3 面板 PNG |
-| `measurement_collapse.qms` | 测量坍缩动画 | 双面板 .mp4 |
+| `measurement_collapse.qms` | 位置测量坍缩动画 | 双面板 .mp4 |
+| `free_particle.qms` | 自由粒子量子弥散 | .mp4 + τ 验证 |
+| `heisenberg_uncertainty.qms` | 不确定性原理 | 4 面板动画 |
+| `energy_collapse.qms` | 能量测量坍缩 (行波→驻波) | 双面板 .mp4 |
+| `double_well.qms` | 双阱势量子隧穿 | .mp4 动画 |
+| `pimc_demo.qms` | 路径积分 Monte Carlo | 基态对比图 |
 
 ```bash
 python agent.py --run scripts/harmonic_oscillator.qms
