@@ -171,16 +171,18 @@ Type 'help' for commands, 'demo' to see examples.
             r'\mid': '∣', r'\nmid': '∤',
             r'\sinh': 'sinh', r'\cosh': 'cosh', r'\tanh': 'tanh',
             # Hatted operators (precomposed chars for better terminal support)
-            r'\hat{H}': 'Ĥ', r'\hat{x}': 'x̂', r'\hat{p}': 'p̂',
+            r'\hat{H}': 'Ĥ', r'\hat H': 'Ĥ', r'\hat{x}': 'x̂', r'\hat{p}': 'p̂', r'\hat\rho': 'ρ̂',
             r'\hat{a}': 'â', r'\hat{N}': 'N̂', r'\hat{\rho}': 'ρ̂',
-            # Superscripts (>2 chars first)
+            # Superscripts
             r'^{(0)}': '⁽⁰⁾', r'^0': '⁰', r'^1': '¹', r'^2': '²',
             r'^3': '³', r'^4': '⁴', r'^5': '⁵', r'^6': '⁶',
-            r'^7': '⁷', r'^8': '⁸', r'^9': '⁹', r'^+': '⁺', r'^-': '⁻',
-            r'^*': '*',  # complex conjugate
-            # Subscripts
+            r'^7': '⁷', r'^8': '⁸', r'^9': '⁹',
+            r'^+': '⁺', r'^-': '⁻', r'^=': '⁼',
+            r'^*': '*',
+            # Subscripts (digits only — safe from false matches)
             r'_0': '₀', r'_1': '₁', r'_2': '₂', r'_3': '₃', r'_4': '₄',
             r'_5': '₅', r'_6': '₆', r'_7': '₇', r'_8': '₈', r'_9': '₉',
+            r'_n': 'ₙ', r'_k': 'ₖ', r'_{th}': 'ₜₕ',
         }
 
         s = latex_str
@@ -198,13 +200,46 @@ Type 'help' for commands, 'demo' to see examples.
                     return f'{num}/{den}'
             return f'({num})/({den})'
         s = re.sub(
-            r'\\frac\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
+r'\\frac\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
             frac_repl, s)
 
         # \\sqrt{...}
         s = re.sub(
-            r'\\sqrt\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
+r'\\sqrt\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
             lambda m: f'√({QuantumAgent._latex_to_unicode(m.group(1))})', s)
+
+        # Handle remaining ^{...} and _{...} → Unicode super/subscript
+        _SUPER = {'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹',
+                  '+':'⁺','-':'⁻','=':'⁼','(':'⁽',')':'⁾',
+                  'a':'ᵃ','b':'ᵇ','c':'ᶜ','d':'ᵈ','e':'ᵉ','f':'ᶠ','g':'ᵍ','h':'ʰ','i':'ⁱ',
+                  'j':'ʲ','k':'ᵏ','l':'ˡ','m':'ᵐ','n':'ⁿ','o':'ᵒ','p':'ᵖ','r':'ʳ','s':'ˢ',
+                  't':'ᵗ','u':'ᵘ','v':'ᵛ','w':'ʷ','x':'ˣ','y':'ʸ','z':'ᶻ',
+                  'A':'ᴬ','B':'ᴮ','D':'ᴰ','E':'ᴱ','G':'ᴳ','H':'ᴴ','I':'ᴵ','J':'ᴶ',
+                  'K':'ᴷ','L':'ᴸ','M':'ᴹ','N':'ᴺ','O':'ᴼ','P':'ᴾ','R':'ᴿ','T':'ᵀ',
+                  'U':'ᵁ','V':'ⱽ','W':'ᵂ'}
+        _SUB = {'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉',
+                '+':'₊','-':'₋','=':'₌','(':'₍',')':'₎',
+                'a':'ₐ','e':'ₑ','h':'ₕ','i':'ᵢ','j':'ⱼ','k':'ₖ','l':'ₗ','m':'ₘ','n':'ₙ',
+                'o':'ₒ','p':'ₚ','r':'ᵣ','s':'ₛ','t':'ₜ','u':'ᵤ','v':'ᵥ','x':'ₓ'}
+
+        def _is_simple(inner):
+            '''Only convert pure alphanumeric + +-= content'''
+            return all(ch.isalnum() or ch in '+-=.' for ch in inner)
+
+        def _conv_super(m):
+            inner = m.group(1)
+            if _is_simple(inner):
+                return ''.join(_SUPER.get(ch, ch) for ch in inner)
+            return inner  # complex content: just remove braces, keep as-is
+
+        def _conv_sub(m):
+            inner = m.group(1)
+            if _is_simple(inner):
+                return ''.join(_SUB.get(ch, ch) for ch in inner)
+            return inner
+
+        s = re.sub(r'\^\{([^}]+)\}', _conv_super, s)
+        s = re.sub(r'_\{([^}]+)\}', _conv_sub, s)
 
         # Cleanup
         s = s.replace('\\left', '').replace('\\right', '')
@@ -751,27 +786,27 @@ Type 'help' for commands, 'demo' to see examples.
     def _function_help(self, name):
         '''显示函数的物理公式 — 用 Unicode + PNG 渲染'''
         formulas_latex = {
-            'coherent': '|\\alpha\rangle = e^{-|\\alpha|^2/2} \\sum_n \\frac{\\alpha^n}{\\sqrt{n!}} |n\rangle',
-            'squeezed': '|\\zeta\rangle = \\exp\\left[\\frac{1}{2}(\\zeta^* a^2 - \\zeta a^{\\dagger 2})\\right]|0\rangle',
-            'thermal_dm': '\\rho_{th} = \\sum_n \\frac{\\bar{n}^n}{(1+\\bar{n})^{n+1}} |n\rangle\\langle n|',
-            'cat': '|\\text{cat}\rangle \\propto |\\alpha\rangle + e^{i\\phi}|-\\alpha\rangle',
-            'fock': '|n\rangle = \\frac{(a^{\\dagger})^n}{\\sqrt{n!}} |0\rangle',
-            'g2': 'g^{(2)}(0) = \\frac{\\langle a^{\\dagger} a^{\\dagger} a a \\rangle}{\\langle a^{\\dagger} a \\rangle^2}',
-            'mandel_q': 'Q = \\langle n \\rangle (g^{(2)} - 1)',
-            'commutator': '[A,B] = AB - BA, \\quad [\\hat{x},\\hat{p}] = i\\hbar, \\quad [a,a^{\\dagger}] = 1',
-            'expect': '\\langle O \\rangle = \\text{Tr}[\\rho O] \\;\\text{or}\\; \\langle\\psi|O|\\psi\\rangle',
-            'variance': '\\Delta O^2 = \\langle O^2 \\rangle - \\langle O \\rangle^2',
-            'sesolve': 'i\\hbar \\frac{\\partial}{\\partial t} |\\psi\\rangle = H |\\psi\\rangle',
-            'mesolve': '\\frac{d\\rho}{dt} = -i[H,\\rho] + \\sum_k \\gamma_k \\mathcal{D}[L_k]\\rho',
-            'steadystate': '\\mathcal{L}[\\rho_{ss}] = 0',
-            'wigner': 'W(x,p) = \\frac{1}{\\pi\\hbar} \\int \\langle x+y|\\rho|x-y\\rangle e^{-2ipy/\\hbar} dy',
-            'gaussian_wavepacket': '\\psi(x,0) = (\\pi\\sigma^2)^{-1/4} \\exp\\left[-\\frac{(x-x_0)^2}{2\\sigma^2} + i\\frac{p_0 x}{\\hbar}\\right]',
-            'evolve_ssfm': 'i\\hbar \\frac{\\partial\\psi}{\\partial t} = -\\frac{\\hbar^2}{2m}\\frac{\\partial^2\\psi}{\\partial x^2} + V(x)\\psi',
-            'double_well': 'V(x) = V_0\\left[\\left(\\frac{x}{a}\\right)^2 - 1\\right]^2',
-            'delta_barrier': 'V(x) = \\frac{g}{\\sqrt{\\pi}\\sigma} e^{-(x-x_0)^2/\\sigma^2} \\approx g\\,\\delta(x-x_0)',
-            'periodic_potential': 'V(x) = A \\cos\\left(\\frac{2\\pi x}{\\lambda}\\right)',
-            'pathintegralmc': 'Z = \\int \\mathcal{D}x\\; e^{-S_E[x]/\\hbar}',
-            'wignerg': 'W(x,p) < 0 \\;\\Longrightarrow\\; \\text{non-classical state}',
+            'coherent': r'|\alpha\rangle = e^{-|\alpha|^2/2} \sum_n \frac{\alpha^n}{\sqrt{n!}} |n\rangle',
+            'squeezed': r'|\zeta\rangle = \exp[\frac12(\zeta^* a^2 - \zeta a^{\dagger2})]|0\rangle',
+            'thermal_dm': r'\rho_{th} = \sum_n \frac{\bar n^n}{(1+\bar n)^{n+1}} |n\rangle\langle n|',
+            'cat': r'|\mathrm{cat}\rangle \propto |\alpha\rangle + e^{i\phi}|-\alpha\rangle',
+            'fock': r'|n\rangle = \frac{(a^\dagger)^n}{\sqrt{n!}} |0\rangle',
+            'g2': r'g^{(2)}(0) = \frac{\langle a^\dagger a^\dagger a a \rangle}{\langle a^\dagger a \rangle^2}',
+            'mandel_q': r'Q = \langle n \rangle (g^{(2)} - 1)',
+            'commutator': r'[A,B] = AB-BA,\quad [\hat x,\hat p]=i\hbar,\quad [a,a^\dagger]=1',
+            'expect': r'\langle\hat O\rangle = \mathrm{Tr}[\rho\hat O] \;\mathrm{or}\; \langle\psi|\hat O|\psi\rangle',
+            'variance': r'\Delta O^2 = \langle\hat O^2\rangle - \langle\hat O\rangle^2',
+            'sesolve': r'i\hbar\frac{\partial}{\partial t}|\psi\rangle = \hat H|\psi\rangle',
+            'mesolve': r'\frac{d\rho}{dt} = -i[\hat H,\rho] + \sum_k \gamma_k\mathcal D[\hat L_k]\rho',
+            'steadystate': r'\mathcal L[\rho_{ss}] = 0',
+            'wigner': r'W(x,p)=\frac{1}{\pi\hbar}\int\langle x+y|\hat\rho|x-y\rangle e^{-2ipy/\hbar}dy',
+            'gaussian_wavepacket': r'\psi(x,0)=(\pi\sigma^2)^{-1/4}\exp[-\frac{(x-x_0)^2}{2\sigma^2}+i\frac{p_0x}{\hbar}]',
+            'evolve_ssfm': r'i\hbar\frac{\partial\psi}{\partial t}=-\frac{\hbar^2}{2m}\frac{\partial^2\psi}{\partial x^2}+V(x)\psi',
+            'double_well': r'V(x)=V_0[(x/a)^2-1]^2',
+            'delta_barrier': r'V(x)=\frac{g}{\sqrt\pi\sigma}e^{-(x-x_0)^2/\sigma^2}\approx g\delta(x-x_0)',
+            'periodic_potential': r'V(x)=A\cos(2\pi x/\lambda)',
+            'pathintegralmc': r'Z=\int\mathcal D x\,e^{-S_E[x]/\hbar}',
+            'wignerg': r'W(x,p)<0\Longrightarrow\mathrm{non-classical}',
         }
         if name in formulas_latex:
             print(f'\n  ═══ {name} ═══')
