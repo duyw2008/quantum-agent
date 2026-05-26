@@ -74,7 +74,7 @@ quantum_agent/
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) — 系统架构
 - [CAPABILITIES.md](docs/CAPABILITIES.md) — 功能清单
 - [TUTORIAL.md](docs/TUTORIAL.md) — 教程
-- [QFT_FOCK_MINKOWSKI.md](docs/QFT_FOCK_MINKOWSKI.md) — QFT：闵氏空间与 Fock 空间的缝合
+- [KNOWLEDGE_HANDBOOK.md](docs/KNOWLEDGE_HANDBOOK.md) — 知识手册（Fock 缝合 + 量子因果）
 - [CHANGELOG.md](docs/CHANGELOG.md) — 版本历史
 
 ## License
