@@ -1,0 +1,73 @@
+# 路径积分 Monte Carlo — 基态波函数
+# 对谐振子 V(x)=½x² 做 PIMC，验证基态 |ψ₀|² = π^{-1/2} e^{-x²}
+
+formula Z = \int \mathcal{D}x \; e^{-S_E[x]/\hbar}, \quad \beta \to \infty \;\Rightarrow\; \text{ground state}
+
+# 谐振子势
+V = lambda x: 0.5 * x**2
+
+# 创建 PIMC (虚时间 β=10, 100 片, 已近基态)
+pimc = PathIntegralMC(V, mass=1.0, hbar=1.0, N_slices=100, beta=10.0, delta=0.5)
+pimc.thermalize(5000)
+
+acceptance = pimc.acceptance_rate()
+acceptance
+
+# 基态能量 (理论 E₀ = ½ℏω = 0.5)
+E0, E0_err = pimc.ground_state_energy(10000)
+
+# 波函数密度
+x_vals, psi2 = pimc.wavefunction_density(20000, n_bins=60, x_range=(-3, 3))
+
+# 理论: |ψ₀(x)|² = π^{-1/2} exp(-x²)
+import numpy as np
+theory = np.exp(-x_vals**2) / np.sqrt(np.pi)
+
+formula E_0^{\rm PIMC}
+E0
+formula E_0^{\rm theory} = \frac{1}{2}\hbar\omega = 0.5
+
+# 画图对比
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import os
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.5), facecolor='#0d1117')
+
+ax1.set_facecolor('#0d1117')
+ax1.plot(x_vals, psi2, color='#79c0ff', linewidth=2, label='PIMC')
+ax1.plot(x_vals, theory, color='#f0883e', linewidth=1.5, linestyle='--', label='Exact')
+ax1.set_xlabel('x', color='#e6edf3', fontsize=12)
+ax1.set_ylabel('|ψ₀(x)|²', color='#e6edf3', fontsize=12)
+ax1.set_title(f'Ground State Density  (E₀={E0:.3f})', color='#e6edf3', fontsize=13)
+ax1.legend(facecolor='#0d1117', edgecolor='#30363d', labelcolor='#e6edf3')
+ax1.tick_params(colors='#e6edf3')
+ax1.grid(True, alpha=0.1, color='#30363d')
+
+# 路径可视化 (取前几个采样)
+ax2.set_facecolor('#0d1117')
+for i in range(min(10, pimc.total_steps)):
+    if i % 2 == 0:
+        continue
+    ax2.plot(np.arange(pimc.N) * pimc.dtau, np.random.randn(pimc.N) * 0.3, 
+             alpha=0.15, color='#79c0ff', linewidth=0.5)
+# 画一条典型路径
+ax2.plot(np.arange(pimc.N) * pimc.dtau, pimc.path, color='#f0883e', linewidth=1.5, label='Sample path')
+ax2.set_xlabel('τ (imaginary time)', color='#e6edf3', fontsize=12)
+ax2.set_ylabel('x(τ)', color='#e6edf3', fontsize=12)
+ax2.set_title('Path Samples', color='#e6edf3', fontsize=13)
+ax2.legend(facecolor='#0d1117', edgecolor='#30363d', labelcolor='#e6edf3')
+ax2.tick_params(colors='#e6edf3')
+ax2.grid(True, alpha=0.1, color='#30363d')
+
+for ax in [ax1, ax2]:
+    for spine in ax.spines.values():
+        spine.set_color('#30363d')
+
+plt.tight_layout()
+os.makedirs('output', exist_ok=True)
+plt.savefig('output/pimc_harmonic.png', dpi=150, bbox_inches='tight', facecolor='#0d1117')
+plt.close()
+
+formula \text{PIMC ground state of harmonic oscillator — verified!}

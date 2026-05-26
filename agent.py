@@ -473,7 +473,10 @@ Type 'help' for commands, 'demo' to see examples.
         if cmd in ('q', 'quit', 'exit'):
             return False
         elif cmd == 'help':
-            self._help()
+            if args:
+                self._function_help(args[0].lower())
+            else:
+                self._help()
         elif cmd == 'demo':
             self._demo()
         elif cmd == 'cd':
@@ -607,6 +610,7 @@ Type 'help' for commands, 'demo' to see examples.
             ns['feynman_amplitude_phi4_2to2'] = qft.feynman_amplitude_phi4_2to2
             ns['differential_cross_section'] = qft.differential_cross_section
             ns['transition_probability'] = qft.transition_probability
+            ns['PathIntegralMC'] = qft.PathIntegralMC
         except Exception:
             pass
         ns.update(self._calc_ns)
@@ -744,6 +748,37 @@ Type 'help' for commands, 'demo' to see examples.
 
         print("\n" + "=" * 55)
 
+    def _function_help(self, name):
+        '''显示函数的物理公式'''
+        formulas = {
+            'coherent': '|α⟩ = e^{-|α|²/2} Σ αⁿ/√(n!) |n⟩    ⟨n⟩ = |α|²,  g²=1',
+            'squeezed': '|ζ⟩ = exp[½(ζ*a² - ζ a†²)]|0⟩    ⟨n⟩ = sinh²(r),  g²=3+1/sinh²(r)',
+            'thermal_dm': 'ρ_th = Σ n_thⁿ/(1+n_th)^{n+1} |n⟩⟨n|    g²=2',
+            'cat': '|cat⟩ ∝ |α⟩ + e^{iφ}|-α⟩    W<0 (non-classical)',
+            'fock': '|n⟩ = (a†)^n/√(n!) |0⟩    g² = 1 - 1/n (sub-Poisson)',
+            'g2': 'g²(0) = ⟨a†a†aa⟩/⟨a†a⟩²     classical: g²≥1, quantum: g²<1 possible',
+            'mandel_q': 'Q = ⟨n⟩(g²-1)    Q=0 Poisson, Q<0 sub-Poisson (non-classical)',
+            'commutator': '[A,B] = AB - BA    [x̂,p̂] = iħ    [a,a†] = 1',
+            'expect': '⟨O⟩ = Tr[ρ O] (DM) or ⟨ψ|O|ψ⟩ (pure)',
+            'variance': 'ΔO² = ⟨O²⟩ - ⟨O⟩²    Heisenberg: Δx·Δp ≥ ħ/2',
+            'sesolve': 'iħ ∂|ψ⟩/∂t = H|ψ⟩    exact diagonalization',
+            'mesolve': 'dρ/dt = -i[H,ρ] + Σ γ(LρL† - ½{L†L,ρ})    RK4 integrator',
+            'steadystate': 'solve L[ρ_ss] = 0    Liouvillian superoperator',
+            'wigner': 'W(x,p) = 1/πħ ∫ ⟨x+y|ρ|x-y⟩ e^{-2ipy/ħ} dy    W<0 = non-classical',
+            'wignerg': 'W negative values = quantumness signature',
+            'gaussian_wavepacket': 'ψ(x,0) = (πσ²)^{-1/4} exp[-(x-x₀)²/2σ² + ip₀x/ħ]',
+            'evolve_ssfm': 'iħ ∂ψ/∂t = -ħ²/2m ∂²ψ/∂x² + V(x)ψ    Split-Step Fourier',
+            'wavegrid': '1D grid: x ∈ [x_min, x_max], N points, dx, k-space',
+            'scalarfield': 'φ̂(x) = ∫ d³k (â_k e^{-ikx} + â†_k e^{ikx}) / √(2ω_k)',
+            'latticephi4': 'H = Σ [½π² + ½(∇φ)² + ½m²φ² + λφ⁴/4!]    exact diag',
+            'pathintegralmc': 'Z = ∫ Dx e^{-S_E[x]/ħ}    Metropolis sampling, β → ∞ = ground state',
+        }
+        if name in formulas:
+            print(f'\n  {name}:\n    {formulas[name]}\n')
+        else:
+            print(f'  No formula reference for: {name}')
+            print(f'  Try: {", ".join(sorted(formulas.keys())[:10])}...')
+
     def _help(self):
         print("""
 Commands:
@@ -766,6 +801,10 @@ Commands:
 Scripts (.qms files):
   python agent.py --run scripts/harmonic.qms
   (or inside agent:  run scripts/harmonic.qms)
+
+Physics reference (type 'help <function>'):
+  help coherent     g2        wigner    sesolve
+  help mesolve      commutator     expect
 
 Preloaded:
   FockBasis, fock, coherent, squeezed, thermal_dm, cat
