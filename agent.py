@@ -749,42 +749,37 @@ Type 'help' for commands, 'demo' to see examples.
         print("\n" + "=" * 55)
 
     def _function_help(self, name):
-        '''显示函数的物理公式'''
-        formulas = {
-            'coherent': '|α⟩ = e^{-|α|²/2} Σ αⁿ/√(n!) |n⟩    ⟨n⟩ = |α|²,  g²=1',
-            'squeezed': '|ζ⟩ = exp[½(ζ*a² - ζ a†²)]|0⟩    ⟨n⟩ = sinh²(r),  g²=3+1/sinh²(r)',
-            'thermal_dm': 'ρ_th = Σ n_thⁿ/(1+n_th)^{n+1} |n⟩⟨n|    g²=2',
-            'cat': '|cat⟩ ∝ |α⟩ + e^{iφ}|-α⟩    W<0 (non-classical)',
-            'fock': '|n⟩ = (a†)^n/√(n!) |0⟩    g² = 1 - 1/n (sub-Poisson)',
-            'g2': 'g²(0) = ⟨a†a†aa⟩/⟨a†a⟩²     classical: g²≥1, quantum: g²<1 possible',
-            'mandel_q': 'Q = ⟨n⟩(g²-1)    Q=0 Poisson, Q<0 sub-Poisson (non-classical)',
-            'commutator': '[A,B] = AB - BA    [x̂,p̂] = iħ    [a,a†] = 1',
-            'expect': '⟨O⟩ = Tr[ρ O] (DM) or ⟨ψ|O|ψ⟩ (pure)',
-            'variance': 'ΔO² = ⟨O²⟩ - ⟨O⟩²    Heisenberg: Δx·Δp ≥ ħ/2',
-            'sesolve': 'iħ ∂|ψ⟩/∂t = H|ψ⟩    exact diagonalization',
-            'mesolve': 'dρ/dt = -i[H,ρ] + Σ γ(LρL† - ½{L†L,ρ})    RK4 integrator',
-            'steadystate': 'solve L[ρ_ss] = 0    Liouvillian superoperator',
-            'wigner': 'W(x,p) = 1/πħ ∫ ⟨x+y|ρ|x-y⟩ e^{-2ipy/ħ} dy    W<0 = non-classical',
-            'wignerg': 'W negative values = quantumness signature',
-            'gaussian_wavepacket': 'ψ(x,0) = (πσ²)^{-1/4} exp[-(x-x₀)²/2σ² + ip₀x/ħ]',
-            'evolve_ssfm': 'iħ ∂ψ/∂t = -ħ²/2m ∂²ψ/∂x² + V(x)ψ    Split-Step Fourier',
-            'wavegrid': '1D grid: x ∈ [x_min, x_max], N points, dx, k-space',
-            'scalarfield': 'φ̂(x) = ∫ d³k (â_k e^{-ikx} + â†_k e^{ikx}) / √(2ω_k)',
-            'latticephi4': 'H = Σ [½π² + ½(∇φ)² + ½m²φ² + λφ⁴/4!]    exact diag',
-            'pathintegralmc': 'Z = ∫ Dx e^{-S_E[x]/ħ}    Metropolis sampling, β → ∞ = ground state',
-            'double_well': 'V(x)=V₀[(x/a)²-1]²/2    quantum tunneling between wells',
-            'delta_barrier': 'V(x)=g/√(πσ) e^{-(x-x₀)²/σ²}    narrow Gaussian ≈ δ(x-x₀)',
-            'periodic_potential': 'V(x)=A cos(2πx/λ)    optical lattice / Bloch waves',
-            'step_potential': 'V(x)=V₀·θ(x-x₀)    scattering: transmission/reflection',
-            'finite_well': 'V(x)=-V₀ (|x-x₀|<w/2)    bound states, discrete spectrum',
-            'fidelity': 'F=|⟨ψ₁|ψ₂⟩|²    state overlap, F∈[0,1]',
-            'purity': 'P=Tr[ρ²]    P=1 pure, P<1 mixed',
+        '''显示函数的物理公式 — 用 Unicode + PNG 渲染'''
+        formulas_latex = {
+            'coherent': '|\\alpha\rangle = e^{-|\\alpha|^2/2} \\sum_n \\frac{\\alpha^n}{\\sqrt{n!}} |n\rangle',
+            'squeezed': '|\\zeta\rangle = \\exp\\left[\\frac{1}{2}(\\zeta^* a^2 - \\zeta a^{\\dagger 2})\\right]|0\rangle',
+            'thermal_dm': '\\rho_{th} = \\sum_n \\frac{\\bar{n}^n}{(1+\\bar{n})^{n+1}} |n\rangle\\langle n|',
+            'cat': '|\\text{cat}\rangle \\propto |\\alpha\rangle + e^{i\\phi}|-\\alpha\rangle',
+            'fock': '|n\rangle = \\frac{(a^{\\dagger})^n}{\\sqrt{n!}} |0\rangle',
+            'g2': 'g^{(2)}(0) = \\frac{\\langle a^{\\dagger} a^{\\dagger} a a \\rangle}{\\langle a^{\\dagger} a \\rangle^2}',
+            'mandel_q': 'Q = \\langle n \\rangle (g^{(2)} - 1)',
+            'commutator': '[A,B] = AB - BA, \\quad [\\hat{x},\\hat{p}] = i\\hbar, \\quad [a,a^{\\dagger}] = 1',
+            'expect': '\\langle O \\rangle = \\text{Tr}[\\rho O] \\;\\text{or}\\; \\langle\\psi|O|\\psi\\rangle',
+            'variance': '\\Delta O^2 = \\langle O^2 \\rangle - \\langle O \\rangle^2',
+            'sesolve': 'i\\hbar \\frac{\\partial}{\\partial t} |\\psi\\rangle = H |\\psi\\rangle',
+            'mesolve': '\\frac{d\\rho}{dt} = -i[H,\\rho] + \\sum_k \\gamma_k \\mathcal{D}[L_k]\\rho',
+            'steadystate': '\\mathcal{L}[\\rho_{ss}] = 0',
+            'wigner': 'W(x,p) = \\frac{1}{\\pi\\hbar} \\int \\langle x+y|\\rho|x-y\\rangle e^{-2ipy/\\hbar} dy',
+            'gaussian_wavepacket': '\\psi(x,0) = (\\pi\\sigma^2)^{-1/4} \\exp\\left[-\\frac{(x-x_0)^2}{2\\sigma^2} + i\\frac{p_0 x}{\\hbar}\\right]',
+            'evolve_ssfm': 'i\\hbar \\frac{\\partial\\psi}{\\partial t} = -\\frac{\\hbar^2}{2m}\\frac{\\partial^2\\psi}{\\partial x^2} + V(x)\\psi',
+            'double_well': 'V(x) = V_0\\left[\\left(\\frac{x}{a}\\right)^2 - 1\\right]^2',
+            'delta_barrier': 'V(x) = \\frac{g}{\\sqrt{\\pi}\\sigma} e^{-(x-x_0)^2/\\sigma^2} \\approx g\\,\\delta(x-x_0)',
+            'periodic_potential': 'V(x) = A \\cos\\left(\\frac{2\\pi x}{\\lambda}\\right)',
+            'pathintegralmc': 'Z = \\int \\mathcal{D}x\\; e^{-S_E[x]/\\hbar}',
+            'wignerg': 'W(x,p) < 0 \\;\\Longrightarrow\\; \\text{non-classical state}',
         }
-        if name in formulas:
-            print(f'\n  {name}:\n    {formulas[name]}\n')
+        if name in formulas_latex:
+            print(f'\n  ═══ {name} ═══')
+            self._render_formula(formulas_latex[name])
         else:
-            print(f'  No formula reference for: {name}')
-            print(f'  Try: {", ".join(sorted(formulas.keys())[:10])}...')
+            print(f'\n  No formula reference for: {name}')
+            keys = sorted(formulas_latex.keys())
+            print(f'  Try: {", ".join(keys[:12])}...')
 
     def _help(self):
         print("""
