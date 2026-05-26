@@ -772,6 +772,13 @@ Type 'help' for commands, 'demo' to see examples.
             'scalarfield': 'φ̂(x) = ∫ d³k (â_k e^{-ikx} + â†_k e^{ikx}) / √(2ω_k)',
             'latticephi4': 'H = Σ [½π² + ½(∇φ)² + ½m²φ² + λφ⁴/4!]    exact diag',
             'pathintegralmc': 'Z = ∫ Dx e^{-S_E[x]/ħ}    Metropolis sampling, β → ∞ = ground state',
+            'double_well': 'V(x)=V₀[(x/a)²-1]²/2    quantum tunneling between wells',
+            'delta_barrier': 'V(x)=g/√(πσ) e^{-(x-x₀)²/σ²}    narrow Gaussian ≈ δ(x-x₀)',
+            'periodic_potential': 'V(x)=A cos(2πx/λ)    optical lattice / Bloch waves',
+            'step_potential': 'V(x)=V₀·θ(x-x₀)    scattering: transmission/reflection',
+            'finite_well': 'V(x)=-V₀ (|x-x₀|<w/2)    bound states, discrete spectrum',
+            'fidelity': 'F=|⟨ψ₁|ψ₂⟩|²    state overlap, F∈[0,1]',
+            'purity': 'P=Tr[ρ²]    P=1 pure, P<1 mixed',
         }
         if name in formulas:
             print(f'\n  {name}:\n    {formulas[name]}\n')
