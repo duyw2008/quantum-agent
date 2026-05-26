@@ -18,6 +18,10 @@
 
 2. [因果关系在量子力学中的表现](#2-因果关系在量子力学中的表现)
 
+**第三卷：量子相空间**
+
+3. [为什么需要 Wigner 函数](#3-为什么需要-wigner-函数)
+
 ---
 
 ## 0. 为什么需要 Fock 空间
@@ -425,10 +429,130 @@ amp = feynman_amplitude_phi4_2to2(s=10, t=-2, u=-8, coupling=1.0)
 
 ---
 
+## 3. 为什么需要 Wigner 函数
+
+### 3.1 经典相空间的缺失
+
+经典力学：粒子在相空间 `(x, p)` 中有一个确定的点，概率分布 `ρ(x,p)` 描述统计系综。你可以同时知道位置和动量。
+
+量子力学：不确定性原理禁止同时精确确定 `x` 和 `p`。不存在 `P(x,p)` ——不存在一个同时给出 `x` 和 `p` 的正定概率分布。
+
+**核心问题**：
+
+```
+经典:  ρ(x,p) ≥ 0,  ∫∫ ρ dx dp = 1       (合法概率)
+量子:  不存在同时的 x-p 概率分布             (不确定性原理)
+```
+
+那还能不能在相空间中"看"量子态？
+
+### 3.2 Wigner 函数的定义
+
+Wigner (1932) 找到了最接近的答案——准概率分布：
+
+```
+W(x,p) = 1/(πħ) ∫_{-∞}^{∞} ⟨x+y|ρ̂|x-y⟩ e^{-2ipy/ħ} dy
+```
+
+对密度矩阵做傅里叶变换，映射到相空间 `(x, p)` 平面。
+
+**性质**：
+
+| 性质 | 公式 | 意义 |
+|------|------|------|
+| 归一化 | `∬ W dx dp = 1` | 总概率为 1 |
+| 实值 | `W ∈ ℝ` | 可解释 |
+| 边缘分布 | `∫ W dp = ⟨x|ρ̂|x⟩` | 积掉 p 得位置概率 |
+| 边缘分布 | `∫ W dx = ⟨p|ρ̂|p⟩` | 积掉 x 得动量概率 |
+| 期望值 | `⟨Â⟩ = ∬ W(x,p) A_W dx dp` | Weyl 对应 |
+| 范围 | `-2/πħ ≤ W ≤ +2/πħ` | 有界 |
+
+### 3.3 负值——Wigner 函数的核心
+
+`W(x,p)` 可以取负值。这不是 bug，是 feature——它是区分经典和量子的标志。
+
+```
+相干态:   W(x,p) ≥ 0  处处为正   (最"经典"的量子态)
+真空:     W(x,p) ≥ 0  原点高斯峰
+Fock |1⟩: W(0,0) < 0  原点负值！  (纯量子效应)
+猫态:     W 有正负交替的干涉条纹   (非经典性的标志)
+```
+
+> 负值 = 非经典性的充分（非必要）标志
+
+负值意味着不能把 `W(x,p)` 解释为经典概率——正是这个"不合法"暴露了量子力学的本质。
+
+### 3.4 Wigner 函数回答的问题
+
+| 问题 | Wigner 的回答 |
+|------|------|
+| 量子态在相空间中"长什么样"？ | `W(x,p)` 给出一张完整的图 |
+| 这个态是经典的还是量子的？ | 有负值 = 非经典 |
+| 态经历了什么动力学？ | 时间演化 `W(x,p,t)` 可视化 |
+| 退相干如何发生？ | 干涉条纹逐渐消失 → 负值消失 |
+| 压缩在哪里？ | `W(x,p)` 椭圆直接显示压缩方向和幅度 |
+
+### 3.5 与其他相空间表示对比
+
+Wigner 不是唯一的准概率分布。三种最常见：
+
+```
+P 函数 (Glauber-Sudarshan)
+  最接近经典——相干态 P = δ 函数
+  但高度奇异，非经典态 P 比 δ 更奇异
+
+Wigner 函数
+  居中——负值可见，始终有限，光滑
+  最常用的相空间可视化工具
+
+Q 函数 (Husimi)
+  恒正（反卷积了 Wigner）
+  丢失了干涉细节——最"模糊"
+```
+
+| 表示 | 正定性 | 奇异性 | 适用场景 |
+|------|:---:|:---:|------|
+| P | ✗ | 高度奇异 | 理论分析 |
+| **Wigner** | ✗ (有负值) | ✓ 有限 | **可视化首选** |
+| Q | ✓ (恒正) | ✓ 光滑 | 实验层析 |
+
+### 3.6 在 Quantum Agent 中使用
+
+```python
+from src.qm import cat, fock, coherent
+from src.viz import wigner, plot_wigner
+
+# 猫态 Wigner 函数——双峰 + 干涉条纹 (负值!)
+psi_cat = cat(30, alpha=2.0, phi=0)
+x, p, W = wigner(psi_cat, N_grid=61, xlim=(-4, 4), ylim=(-4, 4))
+
+W.min()   # -0.43 ← 负值 = 非经典性
+W.max()   # +0.64
+
+plot_wigner(x, p, W, save='cat_wigner.png')
+
+# 对比相干态——全正
+psi_coh = coherent(30, alpha=2.0)
+x2, p2, W2 = wigner(psi_coh, N_grid=61)
+W2.min()   # ~0 ← 无负值，最经典
+```
+
+**Agent 交互模式**：
+
+```
+⚛ > psi = cat(30, 2.0, 0)
+⚛ > x, p, W = wigner(psi)
+⚛ > plot_wigner(x, p, W)
+⚛ > W.min()           → -0.43
+```
+
+---
+
 ## 附录：参考
 
 - Peskin & Schroeder, *An Introduction to Quantum Field Theory*
 - Weinberg, *The Quantum Theory of Fields*, Vol. 1
 - Pearl, *Causality* (经典因果推断)
 - Chiribella et al., *Quantum computations without definite causal structure* (量子 switch)
+- Wigner, E. P., *On the Quantum Correction for Thermodynamic Equilibrium*, Phys. Rev. 40, 749 (1932)
 - Quantum Agent 源码: `src/qm/`, `src/qft/`
