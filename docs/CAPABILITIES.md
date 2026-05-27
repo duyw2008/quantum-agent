@@ -15,18 +15,54 @@
 内置 90+ LaTeX→Unicode 映射：希腊字母、数学算符、hat、上下标、积分、梯度、梯度平方等。
 PNG 文件同步保存到 `output/formulas/` 作为高精度备份。
 
-## 特色势函数
+## PotentialBuilder — 链式势函数构造器
 
-6 种特征势函数，用于波函数动力学研究：
+通过方法链组合任意复杂势函数：
 
-| 函数 | 物理 | 公式 |
-|------|------|------|
-| `double_well(grid, a, depth, separation)` | 双阱隧穿 | V₀[(x/a)²-1]²/2 |
-| `periodic_potential(grid, amplitude, period)` | 余弦光晶格 | A cos(2πx/λ) |
-| `delta_barrier(grid, x0, strength)` | δ 势垒 (窄高斯近似) | g/√(πσ) e^{-(x-x₀)²/σ²} |
-| `finite_well(grid, x0, width, depth)` | 有限深方阱 | -V₀ (|x-x₀|<w/2) |
-| `harmonic_oscillator_potential(grid, omega, mass)` | 谐振子势 | ½mω²x² |
-| `step_potential(grid, x0, height)` | 阶跃势 | V₀ (x>x₀) |
+```python
+V = (PotentialBuilder(grid)
+     .harmonic(omega=0.5)                 # 谐振子底
+     .barrier(x0=0, height=6, width=0.8)  # 中心势垒
+     .gaussian(x0=-5, height=-4, sigma=1.5)  # 高斯阱
+     .periodic(amplitude=1.5, period=4,   # 光晶格+包络
+               envelope_sigma=7)
+     .delta(x0=-8, strength=3)            # δ 杂质
+     .build())
+```
+
+### 基本构建块
+
+| 方法 | 势函数 |
+|------|--------|
+| `.harmonic(omega, mass)` | ½ m ω² x² |
+| `.barrier(x0, height, width)` | h (|x-x₀| < w/2) |
+| `.well(x0, depth, width)` | -d (|x-x₀| < w/2) |
+| `.gaussian(x0, height, sigma)` | h exp(-(x-x₀)²/2σ²) |
+| `.periodic(amplitude, period, envelope)` | A cos(2πx/λ) + 可选高斯包络 |
+| `.delta(x0, strength)` | g δ(x-x₀) 窄高斯近似 |
+| `.step(x0, height)` | h (x > x₀) |
+| `.linear(slope)` | s·x |
+| `.custom(func, name)` | f(x) 自定义 |
+
+### 快捷组合
+
+| 方法 | 说明 |
+|------|------|
+| `.double_well(separation, depth, barrier_width)` | 双阱 + 中间势垒 |
+| `.tunnel_junction(gap, height)` | 薄势垒隧穿结 |
+| `.optical_lattice(amplitude, n_sites, envelope)` | n 个周期的余弦光晶格 |
+
+### 代数操作 & 输出
+
+| 方法 | 说明 |
+|------|------|
+| `.add(other)` | 叠加另一个势或数组 |
+| `.multiply(factor)` | 整体缩放 |
+| `.offset(shift)` | 整体平移 |
+| `.build()` | 输出可调用函数 |
+| `.plot(xlim, save)` | matplotlib 可视化 |
+| `.summary()` | 打印组件清单 + 数值范围 |
+| `.to_qms(path)` | 导出 .qms 脚本片段 |
 
 ## .qms 量子脚本
 

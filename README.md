@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-交互式量子力学平台：Fock 基量子光学、波函数动力学、格点量子场论、.qms 脚本批量执行。
+交互式量子力学平台：Fock 基量子光学 × 波函数动力学 × QFT × 链式势函数构造 × .qms 脚本。
 
 ## 快速开始
 
@@ -49,6 +49,7 @@ python agent.py --run  scripts/harmonic.qms   # 执行量子脚本 (.qms)
 | 量子擦除 | 相干 vs 非相干 | `python demos/quantum_eraser.py` |
 | 标量场 | φ̂(x), 对易子, 传播子 | `python demos/qft_scalar_field.py` |
 | 格点 φ⁴ | 基态能量, 关联函数 | `python demos/qft_lattice.py` |
+| PotentialBuilder | 链式组合 7 种势函数 | `python agent.py --run scripts/potential_builder_demo.qms` |
 | Feynman 图 | Wick 定理, 截面 | `python demos/qft_scattering.py` |
 
 ## 模块架构
@@ -57,7 +58,7 @@ python agent.py --run  scripts/harmonic.qms   # 执行量子脚本 (.qms)
 quantum_agent/
 ├── agent.py              # CLI (表达式、readline、tab补全、公式终端显示)
 ├── src/
-│   ├── qm/               # 量子力学 (FockBasis, states, dynamics, wave)
+│   ├── qm/               # 量子力学 (FockBasis, states, dynamics, wave, PotentialBuilder)
 │   ├── viz/              # Wigner, Qfunc, 光子分布
 │   └── qft/              # 量子场论 (ScalarField, LatticePhi4, scattering)
 ├── demos/                # 10 个物理动画

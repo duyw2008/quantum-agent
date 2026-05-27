@@ -427,6 +427,29 @@ psi0 = gaussian_wavepacket(grid, x0=-3, p0=1.5, sigma=0.8)
 result = evolve_ssfm(psi0, grid, V_func=lambda g: V, dt=0.005, t_max=20)
 ```
 
+### PotentialBuilder — 构造复杂势函数
+
+```python
+# Python 模式
+from src.qm import WaveGrid, PotentialBuilder
+
+grid = WaveGrid(-20, 20, 1024)
+V = (PotentialBuilder(grid)
+     .harmonic(omega=0.5)                    # 谐振子底
+     .well(x0=-4, depth=5, width=2)          # 左侧势阱
+     .well(x0=+4, depth=5, width=2)          # 右侧势阱
+     .barrier(x0=0, height=3, width=1)       # 中间势垒
+     .periodic(amplitude=1, period=4, envelope_sigma=8)  # 光晶格+包络
+     .build())
+
+V.plot()       # 可视化预览
+V.summary()    # 组件清单
+
+result = evolve_ssfm(psi0, grid, V_func=V, dt=0.005, t_max=20)
+```
+
+Agent 模式同样语法，函数预加载无需 import。
+
 ---
 
 ## 7. 时间演化 (Fock 空间)

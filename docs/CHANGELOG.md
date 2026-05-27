@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.7.0] — 2026-05-27
+
+### Added
+- `PotentialBuilder` — 链式势函数构造器
+  - 11 个基本块: harmonic/barrier/well/gaussian/periodic/delta/step/linear/custom
+  - 3 个快捷组合: double_well/tunnel_junction/optical_lattice
+  - 代数操作: add/multiply/offset
+  - 可视化: plot()/summary()/to_qms()
+  - 7 组件 demo: potential_builder_demo.qms (837KB 动画)
+- 21 个 `help <function>` 物理公式，LaTeX 引擎渲染
+
+### Changed
+- help 命令支持函数物理公式查询 (Unicode + PNG 双输出)
+- LaTeX→Unicode 转换增强: 智能上下标、复杂指数保留
+
 ## [2.6.0] — 2026-05-26
 
 ### Added
