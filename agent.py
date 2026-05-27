@@ -58,10 +58,10 @@ Type 'help' for commands, 'demo' to see examples.
             'FockBasis', 'coherent', 'coherent_dm', 'squeezed', 'thermal_dm',
             'cat', 'fock', 'fock_dm', 'expect', 'variance', 'g2', 'mandel_q',
             'mean_photon', 'commutator', 'sesolve', 'mesolve', 'steadystate',
-            'wigner', 'qfunc', 'plot_wigner', 'plot_photon_dist',
+            'qfunc', 'plot_wigner', 'plot_photon_dist',
             'WaveGrid', 'PotentialBuilder', 'gaussian_wavepacket', 'evolve_ssfm', 'animate_wave', 'double_well', 'periodic_potential', 'delta_barrier', 'finite_well',
             'fidelity', 'purity', 'photon_dist', 'np',
-            'ScalarField', 'LatticePhi4',
+            'ScalarField', 'LatticePhi4', 'PotentialBuilder',
         ]
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>?')
         readline.set_completer(self._completer)
