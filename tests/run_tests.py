@@ -124,6 +124,53 @@ V_vals = V(grid.x)
 check('potential has min', V_vals.min() < -2)
 check('potential has max', V_vals.max() > -1)
 
+# ── Spin ──
+print("\n── Spin ──")
+from src.qm.spin import (
+    sigma_x, sigma_y, sigma_z, pauli,
+    qubit_state, bloch_vector_to_dm, dm_to_bloch_vector, bloch_length,
+    rotation_x, rotation_y, rotation_z, rotation, hadamard, cnot, measure,
+)
+
+sx, sy, sz = pauli()
+check('σₓ ² = I', np.allclose(sx @ sx, np.eye(2)))
+check('σ_y·σ_z = iσₓ', np.allclose(sy @ sz, 1j * sx))
+check('[σₓ,σ_y] = 2iσ_z', np.allclose(sx@sy - sy@sx, 2j*sz))
+
+psi_q = qubit_state(np.pi/4, 0)
+check('qubit norm', abs(np.linalg.norm(psi_q) - 1) < 1e-12)
+
+rho = bloch_vector_to_dm(0.6, 0, 0.8)
+check('bloch length ≈ 1', abs(bloch_length(rho) - 1.0) < 1e-10)
+r = dm_to_bloch_vector(rho)
+check('bloch roundtrip', abs(r[0] - 0.6) < 1e-10)
+
+H = hadamard()
+check('H|0⟩ = |+⟩', np.allclose(H @ [1,0], [1,1]/np.sqrt(2)))
+
+CNOT = cnot()
+check('CNOT|00⟩ = |00⟩', np.allclose(CNOT @ [1,0,0,0], [1,0,0,0]))
+check('CNOT|10⟩ = |11⟩', np.allclose(CNOT @ [0,0,1,0], [0,0,0,1]))
+
+Rx = rotation_x(np.pi/2)
+check('R_x(π/2) unitary', np.allclose(Rx.conj().T @ Rx, np.eye(2)))
+
+# ── 2D Wavefunction ──
+print("\n── 2D Wavefunction ──")
+from src.qm.wave2d import WaveGrid2D, gaussian_beam, evolve_ssfm_2d, double_slit_potential
+
+grid2d = WaveGrid2D(xlim=(-10, 10), ylim=(-5, 5), N=(64, 32))
+psi0 = gaussian_beam(grid2d, x0=-5, px=5, sigma=1.0)
+check('2D beam norm', abs(np.trapezoid(np.trapezoid(np.abs(psi0)**2, grid2d.x, axis=0), grid2d.y) - 1) < 1e-2)
+
+V = double_slit_potential(grid2d, slit_width=0.8, slit_sep=3)
+check('2D slit has barrier', V.max() > 10)
+check('2D slit has opening', V.min() < 1e-10)
+
+res = evolve_ssfm_2d(psi0, grid2d, V_func=lambda x,y: V, dt=0.02, t_max=0.1, snapshots=3)
+check('2D ssfm shape', res['prob'][0].shape == (64, 32))
+check('2D energy cons', abs(res['energy'][0] - res['energy'][-1]) < 0.1)
+
 # ── 结果 ──
 print(f"\n{'='*55}")
 total = passed + failed

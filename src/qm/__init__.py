@@ -37,6 +37,12 @@ from .dynamics import (
 )
 from .potential_builder import PotentialBuilder
 from .multipartite import tensor, partial_trace, entropy_vn, concurrence, bell_states
+from .spin import (
+    sigma_x, sigma_y, sigma_z, pauli,
+    qubit_state, bloch_vector_to_dm, dm_to_bloch_vector, bloch_length,
+    rotation_x, rotation_y, rotation_z, rotation, hadamard, cnot, measure,
+)
+from .wave2d import WaveGrid2D, gaussian_beam, evolve_ssfm_2d, double_slit_potential, harmonic_2d
 from .wave import (
     WaveGrid, gaussian_wavepacket, evolve_ssfm, animate_wave,
     double_well, periodic_potential, delta_barrier, finite_well,
@@ -53,6 +59,11 @@ __all__ = [
     'is_hermitian', 'is_unitary',
     'sesolve', 'mesolve', 'steadystate', 'lindblad_rhs',
     'PotentialBuilder', 'tensor', 'partial_trace', 'entropy_vn', 'concurrence', 'bell_states',
+    'sigma_x', 'sigma_y', 'sigma_z', 'pauli', 'qubit_state',
+    'bloch_vector_to_dm', 'dm_to_bloch_vector', 'bloch_length',
+    'rotation_x', 'rotation_y', 'rotation_z', 'rotation', 'hadamard', 'cnot', 'measure',
+    'WaveGrid2D', 'gaussian_beam', 'evolve_ssfm_2d',
+    'double_slit_potential', 'harmonic_2d',
     'WaveGrid', 'gaussian_wavepacket', 'evolve_ssfm', 'animate_wave',
     'double_well', 'periodic_potential', 'delta_barrier', 'finite_well',
     'harmonic_oscillator_potential', 'step_potential',
