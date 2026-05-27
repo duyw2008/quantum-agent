@@ -1,0 +1,71 @@
+# PotentialBuilder 演示 — 复杂势函数的链式构造
+# 制造一个"量子集成电路"势: 谐振子底 + 双阱 + 周期光晶格 + δ 杂质
+
+formula V(x) = \frac12 m\omega^2 x^2 + \text{double-well} + \text{lattice} + \delta\text{-impurity}
+
+# 网格
+grid = WaveGrid(x_min=-15, x_max=15, N=1024)
+
+# 链式构造
+V = (PotentialBuilder(grid)
+     .harmonic(omega=0.5)                      # 弱谐振子底势
+     .barrier(x0=0, height=6, width=0.8)       # 中心势垒
+     .gaussian(x0=-5, height=-4, sigma=1.5)    # 左侧高斯阱
+     .gaussian(x0=+5, height=-4, sigma=1.5)    # 右侧高斯阱
+     .periodic(amplitude=1.5, period=4,         # 光晶格 (带包络)
+               envelope_sigma=7)
+     .delta(x0=-8, strength=3)                  # δ 杂质 (左侧)
+     .delta(x0=+8, strength=3)                  # δ 杂质 (右侧)
+     .build())
+
+# 可视化
+V.plot(save='output/potential_builder_demo.png')
+V.summary()
+
+# 波包演化 — 放在左阱中
+psi0 = gaussian_wavepacket(grid, x0=-5.0, p0=1.0, sigma=0.8)
+psi0 = psi0 / np.sqrt(np.trapezoid(np.abs(psi0)**2, grid.x))
+
+result = evolve_ssfm(psi0, grid, V_func=V, dt=0.005, t_max=15.0, snapshots=150)
+
+# 动画
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import os
+
+times = np.array(result['times'])
+all_probs = np.array(result['prob'])
+V_vals = V(grid.x)
+v_scaled = V_vals / np.max(np.abs(V_vals)) * 0.3 * max(p.max() for p in all_probs)
+
+fig, ax = plt.subplots(figsize=(14, 5), facecolor='#0d1117')
+ax.set_facecolor('#0d1117')
+ax.fill_between(grid.x, 0, v_scaled, alpha=0.3, color='#f0883e')
+fill = ax.fill_between(grid.x, 0, all_probs[0], alpha=0.5, color='#79c0ff')
+line_p, = ax.plot(grid.x, all_probs[0], color='#79c0ff', linewidth=1.5)
+ax.set_xlabel('x', color='#e6edf3', fontsize=12)
+ax.set_ylabel('|ψ|² + V(x)', color='#e6edf3', fontsize=12)
+ax.tick_params(colors='#e6edf3')
+ax.grid(True, alpha=0.1, color='#30363d')
+title = ax.set_title('', color='#e6edf3', fontsize=14)
+for spine in ax.spines.values():
+    spine.set_color('#30363d')
+
+fill_ref = [fill]
+def update(i):
+    fill_ref[0].remove()
+    fill_ref[0] = ax.fill_between(grid.x, 0, all_probs[i], alpha=0.5, color='#79c0ff')
+    line_p.set_ydata(all_probs[i])
+    title.set_text(f't = {times[i]:.2f}')
+
+ani = animation.FuncAnimation(fig, update, frames=len(times), interval=30, blit=False)
+os.makedirs('output/animations', exist_ok=True)
+try:
+    ani.save('output/animations/potential_builder_demo.mp4', writer=animation.FFMpegWriter(fps=25, bitrate=2000), dpi=150)
+except:
+    ani.save('output/animations/potential_builder_demo.gif', writer=animation.PillowWriter(fps=25), dpi=150)
+plt.close(fig)
+
+formula \text{7-component potential — all built in one chain!}

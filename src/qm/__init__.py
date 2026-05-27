@@ -35,6 +35,7 @@ from .dynamics import (
     sesolve, mesolve, steadystate,
     lindblad_rhs,
 )
+from .potential_builder import PotentialBuilder
 from .wave import (
     WaveGrid, gaussian_wavepacket, evolve_ssfm, animate_wave,
     double_well, periodic_potential, delta_barrier, finite_well,
@@ -50,7 +51,7 @@ __all__ = [
     'mean_photon', 'g2', 'mandel_q',
     'is_hermitian', 'is_unitary',
     'sesolve', 'mesolve', 'steadystate', 'lindblad_rhs',
-    'WaveGrid', 'gaussian_wavepacket', 'evolve_ssfm', 'animate_wave',
+    'PotentialBuilder', 'WaveGrid', 'gaussian_wavepacket', 'evolve_ssfm', 'animate_wave',
     'double_well', 'periodic_potential', 'delta_barrier', 'finite_well',
     'harmonic_oscillator_potential', 'step_potential',
 ]
