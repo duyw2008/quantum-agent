@@ -1,69 +1,135 @@
 # Quantum Agent 教程
 
-## 快速开始
+> 30 分钟从零到第一个量子动画
+
+---
+
+## 第 1 步：启动 Agent
 
 ```bash
-pip install numpy scipy matplotlib
-python agent.py          # 交互模式
-python agent.py --demo   # Fock 基演示
-python agent.py --test   # 自检
+cd ~/quantum_agent
+python agent.py
 ```
 
-## 交互式使用
-
 ```
-⚛ > calc psi = coherent(20, 2.0)     # 创建相干态
-⚛ > calc g2(psi)                      # g²(0) = 1.0
-⚛ > calc x, p, W = wigner(psi)        # Wigner 函数
-⚛ > calc plot_wigner(x, p, W)         # 绘图
-
-⚛ > calc g = WaveGrid(-30, 30, 512)   # 波函数网格
-⚛ > calc psi0 = gaussian_wavepacket(g, 0, 2, 1)
-⚛ > calc r = evolve_ssfm(psi0, g, t_max=8)
-⚛ > calc animate_wave(r, save_path='wave.gif')
+⚛ ~/quantum_agent > 
 ```
 
-## Demo 动画
+直接输入 Python 表达式，函数已预加载。
+
+---
+
+## 第 2 步：第一个量子态
+
+```python
+# 相干态
+⚛ > psi = coherent(30, 2.0)
+⚛ > mean_photon(psi)
+4.0                    # ⟨n⟩ = |α|²
+
+# 查公式
+⚛ > help coherent
+  ═══ coherent ═══
+  |α⟩ = e-|α|²/2 ∑ₙ (αⁿ)/(√(n!)) |n⟩
+```
+
+---
+
+## 第 3 步：对易子验证
+
+```python
+⚛ > C = commutator(fb.x, fb.p)
+⚛ > np.linalg.norm(C[:10,:10] - 1j*np.eye(10), 'fro')
+4.2e-15                # [x̂,p̂] = iħ ✓
+```
+
+---
+
+## 第 4 步：光子统计
+
+```python
+⚛ > g2(psi)             # 相干态 Poisson
+1.0
+
+⚛ > rho = thermal_dm(30, 1.5)
+⚛ > g2(rho)             # 热态聚束
+2.0
+```
+
+---
+
+## 第 5 步：Wigner 函数
+
+```python
+⚛ > x, p, W = wigner(psi, N_grid=61)
+⚛ > plot_wigner(x, p, W)
+⚛ > W.min()             # 相干态 W>0
+~0
+```
+
+试试猫态——有负值：
+```python
+⚛ > cat_even = cat(30, 2.0, 0)
+⚛ > x2, p2, W2 = wigner(cat_even)
+⚛ > W2.min()            # 负值 = 非经典！
+-0.43
+```
+
+---
+
+## 第 6 步：波函数动画
+
+```python
+⚛ > grid = WaveGrid(-30, 30, 1024)
+⚛ > psi0 = gaussian_wavepacket(grid, x0=-8, p0=2.0, sigma=1.5)
+⚛ > res = evolve_ssfm(psi0, grid, dt=0.01, t_max=8.0, snapshots=200)
+⚛ > animate res output/wave.mp4
+```
+
+打开 `output/wave.mp4` — 波包弥散动画。
+
+---
+
+## 第 7 步：复杂势函数
+
+用 PotentialBuilder 链式组合：
+
+```python
+⚛ > V = (PotentialBuilder(grid)
+...      .harmonic(0.3)
+...      .barrier(0, 5, 1.5)
+...      .gaussian(-5, -3, 1.5)
+...      .gaussian(5, -3, 1.5)
+...      .build())
+⚛ > V.plot()           # 预览
+⚛ > V.summary()         # 组件清单
+```
+
+---
+
+## 第 8 步：运行脚本
+
+已有 10 个预制脚本：
 
 ```bash
-python demos/heisenberg_uncertainty.py   # 不确定性原理
-python demos/measurement_collapse.py     # 位置坍缩
-python demos/momentum_collapse.py        # 动量坍缩
-python demos/energy_collapse.py          # 能量坍缩
-python demos/double_slit.py              # 双缝干涉
-python demos/quantum_eraser.py           # 量子擦除
-python demos/free_particle.py            # 自由弥散
+python agent.py --run scripts/heisenberg_uncertainty.qms
 ```
 
-## Python API
-
-```python
-from src.qm import *
-import numpy as np
-
-fb = FockBasis(30)
-psi = coherent(30, 2.0)
-print(f"⟨n⟩={mean_photon(psi, fb):.2f}, g²={g2(psi, fb):.3f}")
-
-# 衰减
-H = fb.hamiltonian()
-rho0 = coherent_dm(30, 3.0)
-t = np.linspace(0, 5, 50)
-r = mesolve(H, rho0, t, c_ops=[np.sqrt(0.3)*fb.a], e_ops=[fb.n_op])
+```
+⚛ > run scripts/double_well.qms      # Tab 补全可用
 ```
 
-## 常用工作流
+---
 
-**光子统计对比**:
-```python
-for state in [coherent(30,2), thermal_dm(30,2), fock(30,4)]:
-    print(g2(state))
-# → 1.0, 2.0, 0.75
+## 下一步
+
+- 读 [USER_GUIDE.md](USER_GUIDE.md) 完整函数参考
+- 读 [KNOWLEDGE_HANDBOOK.md](KNOWLEDGE_HANDBOOK.md) 五卷深度物理
+- 写自己的 `.qms` 脚本
+
 ```
-
-**Wigner 函数**:
-```python
-rho = coherent_dm(20, 1+0.5j)
-x, p, W = wigner(rho, N_grid=61)
-plot_wigner(x, p, W, save='coh_wigner.png')
+⚛ > help           命令列表
+⚛ > help wigner    24 个函数的物理公式
+⚛ > demo           Fock 基演示
+⚛ > test           自检
 ```
