@@ -15,7 +15,11 @@ from typing import List, Optional, Callable
 
 
 # ============================================================
-# Schrödinger 方程
+    """Schrödinger 方程演化
+
+    方法: 精确对角化。H = UΛU†, |ψ(t)⟩ = U e^{-iΛt/ħ} U†|ψ(0)⟩
+    能量守恒到机器精度 ~10^{-15}
+    限制: 仅支持不含时 H, 详见 docs/NUMERICAL_METHODS.md §2
 # ============================================================
 
 def sesolve(H: np.ndarray, psi0: np.ndarray, tlist: np.ndarray,

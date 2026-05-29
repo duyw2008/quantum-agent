@@ -40,6 +40,11 @@ def evolve_ssfm(psi0: np.ndarray, grid: WaveGrid, V_func=None,
                 snapshots=200):
     """Split-Step Fourier 时间演化
 
+    数值方法: 对称 Strang 拆分
+        e^{-iHΔt/ħ} ≈ e^{-iVΔt/2ħ} · e^{-iTΔt/ħ} · e^{-iVΔt/2ħ}
+    每步: V/2 → FFT → T → IFFT → V/2, 误差 O(Δt³)
+    详见 docs/NUMERICAL_METHODS.md §1
+
     返回:
         result = {'times': [...], 'psi': [...], 'prob': [...], 'x_exp': [...], ...}
     """

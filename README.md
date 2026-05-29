@@ -71,6 +71,7 @@ quantum_agent/
 ## 文档
 
 - [MATHEMATICS.md](docs/MATHEMATICS.md) — 完整数学模型
+- [NUMERICAL_METHODS.md](docs/NUMERICAL_METHODS.md) — 数值方法详解 (SSFM/对角化/RK4/Wigner/PIMC)
 - [USER_GUIDE.md](docs/USER_GUIDE.md) — 函数参考 + 实例
 - [PHYSICS.md](docs/PHYSICS.md) — 物理基础
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) — 系统架构

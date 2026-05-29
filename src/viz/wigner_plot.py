@@ -25,6 +25,10 @@ def wigner(state: np.ndarray,
            fb: FockBasis = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Wigner 准概率分布 W(x, p)
 
+    公式: W(α)=(2/π)Tr[ρD(α)ΠD†(α)], D=位移算符, Π=(-1)^N
+    有限 Fock 截断在相空间边缘产生数值伪影
+    详见 docs/NUMERICAL_METHODS.md §4
+
     参数:
         state:  纯态向量 (N,) 或密度矩阵 (N,N)
         xvec:   x 坐标网格

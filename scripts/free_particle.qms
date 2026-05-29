@@ -3,7 +3,7 @@
 
 formula \Delta x(t) = \sigma\sqrt{1 + (t/\tau)^2}, \quad \tau = \frac{2m\sigma^2}{\hbar}
 
-sigma = 1.0
+sigma = 3.0
 x0, p0 = 0.0, 2.0
 grid = WaveGrid(x_min=-30, x_max=30, N=1024)
 
