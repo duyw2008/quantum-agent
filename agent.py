@@ -707,6 +707,11 @@ r'\\sqrt\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
             except SyntaxError:
                 try:
                     exec(expr, ns)
+                    # Track new variables (def statements etc.)
+                    for k, v in ns.items():
+                        if k not in ('np', 'numpy', 'qm', 'fb', '__builtins__') and not k.startswith('_'):
+                            if k not in self._calc_ns or self._calc_ns.get(k) is not v:
+                                self._calc_ns[k] = v
                 except Exception as e2:
                     print(f"Error: {e2}")
             except Exception as e:

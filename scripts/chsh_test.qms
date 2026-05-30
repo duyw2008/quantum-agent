@@ -1,0 +1,132 @@
+# CHSH Inequality — Bell 不等式验证
+# 证明定域实在论与量子力学不相容
+
+formula S = E(a_1,b_1) + E(a_1,b_2) + E(a_2,b_1) - E(a_2,b_2), \quad |S| \leq 2 \text{ (classical)}
+
+# === 1. 测量算符 ===
+# Alice 测方向 a: σ(a) = cos(a)σ_z + sin(a)σ_x
+# Bob 测方向 b: σ(b) = cos(b)σ_z + sin(b)σ_x
+
+def measure_obs(angle):
+    """返回沿 angle 方向的单量子比特可观测量"""
+    return np.cos(angle) * PauliZ + np.sin(angle) * PauliX
+
+# === 2. 最优 CHSH 角度 ===
+import numpy as np
+a1, a2 = 0, np.pi/2          # Alice: 0°, 90°
+b1, b2 = np.pi/4, -np.pi/4   # Bob:   45°, -45°
+
+formula \theta_A = \{0^\circ, 90^\circ\}, \quad \theta_B = \{45^\circ, -45^\circ\}
+
+# === 3. 量子关联计算 ===
+# 对 Bell 态 Φ⁺, E(a,b) = ⟨Φ⁺|σ(a)⊗σ(b)|Φ⁺⟩ = -cos(a-b)
+
+def quantum_correlation(psi, angle_a, angle_b):
+    """计算量子关联 E(a,b) = ⟨ψ|σ(a)⊗σ(b)|ψ⟩"""
+    A = measure_obs(angle_a)
+    B = measure_obs(angle_b)
+    AB = tensor(A, B)
+    return np.real(np.conj(psi) @ AB @ psi)
+
+psi = bell_states()['Ψ⁻']   # anti-correlated: E(a,b) = -cos(a-b)
+
+E11 = quantum_correlation(psi, a1, b1)
+E12 = quantum_correlation(psi, a1, b2)
+E21 = quantum_correlation(psi, a2, b1)
+E22 = quantum_correlation(psi, a2, b2)
+
+S_quantum = E11 + E12 + E21 - E22
+
+formula E(a_1,b_1)
+E11
+formula E(a_1,b_2)
+E12
+formula E(a_2,b_1)
+E21
+formula E(a_2,b_2)
+E22
+
+formula S_{\rm quantum} = |S|
+S_quantum
+
+formula \text{Classical bound: } |S| \leq 2
+formula \text{Quantum value: } |S| = 2\sqrt{2} \approx 2.828
+
+# === 4. 结果 ===
+best_S = abs(S_quantum)
+# 理论最大值: |S| = 2√2
+
+# Quick scan to confirm
+test_angles = np.linspace(0, np.pi/2, 10)
+best_S = 0
+best_angles = None
+for a1_t in test_angles:
+    for a2_t in test_angles:
+        if a2_t <= a1_t: continue
+        for b1_t in test_angles:
+            for b2_t in test_angles:
+                if b2_t <= b1_t: continue
+                e11 = quantum_correlation(psi, a1_t, b1_t)
+                e12 = quantum_correlation(psi, a1_t, b2_t)
+                e21 = quantum_correlation(psi, a2_t, b1_t)
+                e22 = quantum_correlation(psi, a2_t, b2_t)
+                s = abs(e11 + e12 + e21 - e22)
+                if s > best_S:
+                    best_S = s
+                    best_angles = (a1_t, a2_t, b1_t, b2_t)
+
+formula \\text{Theory: } |S| = 2\\sqrt{2} \\approx 2.828
+best_S
+
+# === 5. 可视化 ===
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import os
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5), facecolor='#0d1117')
+
+# Left: 各关联值
+ax1.set_facecolor('#0d1117')
+pairs = [('a1,b1', E11), ('a1,b2', E12), ('a2,b1', E21), ('a2,b2', E22)]
+colors_pairs = ['#79c0ff', '#79c0ff', '#ff7b72', '#ff7b72']
+for i, (label, val) in enumerate(pairs):
+    ax1.bar(i, val, color=colors_pairs[i], width=0.6, alpha=0.8)
+    ax1.text(i, val + 0.02*np.sign(val), f'{val:.3f}', ha='center', color='#e6edf3', fontsize=10)
+ax1.set_xticks(range(4))
+ax1.set_xticklabels([p[0] for p in pairs], color='#e6edf3')
+ax1.set_ylabel('E(a,b)', color='#e6edf3', fontsize=12)
+ax1.set_title('Quantum Correlations', color='#e6edf3', fontsize=13, fontweight='bold')
+ax1.tick_params(colors='#e6edf3')
+ax1.grid(True, alpha=0.1, color='#30363d')
+for spine in ax1.spines.values():
+    spine.set_color('#30363d')
+ax1.axhline(0, color='#30363d', linewidth=0.5)
+
+# Right: S value vs classical bound
+ax2.set_facecolor('#0d1117')
+S_labels = ['Classical\nBound', 'Quantum']
+S_vals = [2, abs(S_quantum)]
+S_colors = ['#30363d', '#f0883e']
+bars = ax2.bar(S_labels, S_vals, color=S_colors, width=0.5)
+ax2.bar_label(bars, fmt='%.3f', color='#e6edf3', fontsize=12, fontweight='bold')
+ax2.set_ylabel('|S|', color='#e6edf3', fontsize=12)
+ax2.set_title('CHSH Violation', color='#e6edf3', fontsize=13, fontweight='bold')
+ax2.tick_params(colors='#e6edf3')
+ax2.grid(True, alpha=0.1, color='#30363d')
+for spine in ax2.spines.values():
+    spine.set_color('#30363d')
+ax2.axhline(2, color='#ff7b72', linewidth=2, linestyle='--', alpha=0.6)
+ax2.text(0.5, 2.05, 'Classical limit |S| ≤ 2', color='#ff7b72', fontsize=9, ha='center')
+ax2.fill_between([-0.5, 1.5], 2, max(S_vals)*1.15, alpha=0.1, color='#f0883e')
+ax2.text(0.5, (2+max(S_vals)*1.15)/2, 'FORBIDDEN\nBY LOCALITY', color='#ff7b72', fontsize=9, ha='center', alpha=0.6)
+ax2.set_ylim(0, max(S_vals)*1.15)
+
+fig.suptitle('Bell-CHSH Inequality Test  |  |S| = ' + f'{abs(S_quantum):.3f}' + '  >  2', color='#e6edf3', fontsize=15, fontweight='bold', y=1.01)
+plt.tight_layout()
+os.makedirs('output', exist_ok=True)
+plt.savefig('output/chsh_violation.png', dpi=150, bbox_inches='tight', facecolor='#0d1117')
+plt.close()
+
+formula \text{CHSH test complete. Quantum mechanics violates Bell inequality!}
+formula |S| = 2\sqrt{2} \approx 2.828 > 2
