@@ -58,8 +58,15 @@ def partial_trace(rho, dims, keep=0):
     rho_t = rho.reshape(dims + dims)
     trace_out = sorted([i for i in range(n) if i not in keep], reverse=True)
 
+    # Trace from highest index to preserve lower indices
+    # Row axes: 0..n-1, Col axes: n..2n-1
+    # For each subsystem i: pair axis i with axis i+n
+    # After each trace, col axes shift down by 1
+    shifted = 0
     for i in trace_out:
-        rho_t = np.trace(rho_t, axis1=i, axis2=i + len(dims) - len(trace_out))
+        col_ax = i + n - shifted
+        rho_t = np.trace(rho_t, axis1=i, axis2=col_ax)
+        shifted += 1
 
     kd = int(np.prod([dims[i] for i in keep]))
     return rho_t.reshape(kd, kd)
