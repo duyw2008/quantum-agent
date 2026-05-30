@@ -112,6 +112,7 @@ def entropy_vn(rho):
 
 
 def concurrence(psi):
+    psi = np.asarray(psi)
     """Wootters 并发度 — 两量子比特纠缠度量
 
     对两体纯态 |ψ⟩ = α|00⟩ + β|01⟩ + γ|10⟩ + δ|11⟩:
