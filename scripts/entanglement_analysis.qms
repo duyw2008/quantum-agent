@@ -1,0 +1,83 @@
+# Entanglement Analysis — 纠缠分析全流程
+# 从 Bell 态到手造纠缠，验证并发度、熵、偏迹
+
+formula \text{Entanglement Analysis Pipeline}
+
+# === 1. Hadamard + CNOT → 手造 Bell 态 ===
+formula |\Phi^+\rangle = \text{CNOT}(H|0\rangle \otimes |0\rangle)
+
+psi_H = hadamard() @ [1, 0]         # H|0⟩ = |+⟩
+psi_00 = tensor([1, 0], [1, 0])     # |0⟩⊗|0⟩ = |00⟩
+
+# 注意: tensor 作用于两个态向量
+bell_manual = cnot() @ tensor(psi_H, [1, 0])
+formula C(|\Phi^+\rangle_{\rm manual})
+concurrence(bell_manual)
+
+# === 2. 预制 Bell 态检查 ===
+bells = bell_states()
+formula \text{All four Bell states:}
+for name in ['Φ⁺', 'Φ⁻', 'Ψ⁺', 'Ψ⁻']:
+    C = concurrence(bells[name])
+    print(f'  C({name}) = {C:.1f}')
+
+# === 3. 密度矩阵 + 约化态 ===
+# Bell 态 Φ⁺ 的密度矩阵 ρ_AB
+rho_AB = np.outer(bells['Φ⁺'], bells['Φ⁺'].conj())
+formula \rho_{AB} = |\Phi^+\rangle\langle\Phi^+|
+
+# 偏迹 → 子系统约化密度矩阵
+rho_A = partial_trace(rho_AB, dims=(2, 2), keep=0)
+rho_B = partial_trace(rho_AB, dims=(2, 2), keep=1)
+
+formula \rho_A = \text{Tr}_B[\rho_{AB}] = I/2
+rho_A
+rho_B
+
+# === 4. 纠缠熵 ===
+S_A = entropy_vn(rho_A)
+S_B = entropy_vn(rho_B)
+formula S(\rho_A) = S(\rho_B) = 1 \text{ bit (maximally entangled)}
+S_A
+S_B
+
+# === 5. 可分离态对比 ===
+rho_sep = tensor(np.array([[1,0],[0,0]]), np.array([[0.5,0.5],[0.5,0.5]]))
+# |0⟩⟨0| ⊗ |+⟩⟨+|
+rho_A_sep = partial_trace(rho_sep, dims=(2, 2), keep=0)
+S_sep = entropy_vn(rho_A_sep)
+formula \text{Separable: } S(\rho_A) = 0
+S_sep
+
+# === 6. 可视化 ===
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import os
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8), facecolor='#0d1117')
+
+states = ['Φ⁺', 'Φ⁻', 'Ψ⁺', 'Ψ⁻']
+for idx, name in enumerate(states):
+    ax = axes[idx // 2, idx % 2]
+    ax.set_facecolor('#0d1117')
+    psi = bells[name]
+    prob = np.abs(psi)**2
+    bars = ax.bar(['00', '01', '10', '11'], prob, color=['#79c0ff', '#30363d', '#30363d', '#ff7b72'])
+    bars[np.argmax(prob)].set_color('#f0883e')
+    C = concurrence(psi)
+    ax.set_title(f'{name}  C = {C:.1f}', color='#e6edf3', fontsize=13, fontweight='bold')
+    ax.set_ylabel('Probability', color='#e6edf3', fontsize=10)
+    ax.tick_params(colors='#e6edf3')
+    ax.grid(True, alpha=0.1, color='#30363d')
+    for spine in ax.spines.values():
+        spine.set_color('#30363d')
+    ax.set_ylim(0, 0.7)
+
+fig.suptitle('Bell States — Probability Distribution', color='#e6edf3', fontsize=16, fontweight='bold', y=0.99)
+plt.tight_layout()
+os.makedirs('output', exist_ok=True)
+plt.savefig('output/bell_states.png', dpi=150, bbox_inches='tight', facecolor='#0d1117')
+plt.close()
+
+formula \text{Entanglement analysis complete. } C=1 \text{ for all Bell states.}

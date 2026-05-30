@@ -38,58 +38,33 @@ def tensor(*args):
 def partial_trace(rho, dims, keep=0):
     """偏迹 — 对部分子系统求迹
 
-    Tr_keep[rho] 保留 keep 指定的子系统。
+    Tr_keep[rho] — 保留 keep 子系统, 对其余求迹.
 
     Parameters
     ----------
     rho : np.ndarray
-        复合系统密度矩阵 (d1*d2 × d1*d2)
+        复合密度矩阵 (d1*d2*... × d1*d2*...)
     dims : tuple
         各子系统维度 (d1, d2, ...)
     keep : int or tuple
         保留的子系统索引 (从 0 开始)
-
-    Returns
-    -------
-    np.ndarray
-        约化密度矩阵
-
-    Examples
-    --------
-    >>> rho_A = partial_trace(rho_AB, dims=(2, 2), keep=0)  # 对 B 求迹
-    >>> rho_B = partial_trace(rho_AB, dims=(2, 2), keep=1)  # 对 A 求迹
     """
-    dims = tuple(dims)
+    rho = np.asarray(rho)
+    dims = list(dims)
     n = len(dims)
-
     if isinstance(keep, int):
         keep = (keep,)
 
-    # Use numpy's einsum for partial trace (robust)
-    # Label system copies: row indices a,b,c,... and col indices A,B,C,...
-    row_labels = [chr(ord('a') + i) for i in range(n)]
-    col_labels = [chr(ord('A') + i) for i in range(n)]
+    rho_t = rho.reshape(dims + dims)
+    trace_out = sorted([i for i in range(n) if i not in keep], reverse=True)
 
-    # Reshape to multi-index tensor
-    rho_tensor = rho.reshape(dims + dims)
+    for i in trace_out:
+        rho_t = np.trace(rho_t, axis1=i, axis2=i + len(dims) - len(trace_out))
 
-    # Build einsum subscripts
-    in_labels = row_labels + col_labels
-    out_labels = [row_labels[i] + col_labels[i] for i in keep]
-    # Sum over traced-out indices
-    subscripts = ''.join(in_labels) + '->' + ''.join(''.join(p) for p in out_labels)
-
-    result = np.einsum(subscripts, rho_tensor)
-
-    # Reshape back to matrix
-    keep_dims = [dims[i] for i in keep]
-    d = np.prod(keep_dims, dtype=int)
-    return result.reshape(d, d)
+    kd = int(np.prod([dims[i] for i in keep]))
+    return rho_t.reshape(kd, kd)
 
 
-# ═══════════════════════════════════════════════════════════
-# 纠缠度量
-# ═══════════════════════════════════════════════════════════
 
 def entropy_vn(rho):
     """冯·诺依曼熵: S(ρ) = -Tr[ρ log₂ ρ]
@@ -107,8 +82,10 @@ def entropy_vn(rho):
         熵值 (以 bit 为单位)
     """
     eigenvals = np.linalg.eigvalsh(rho)
-    eigenvals = eigenvals[eigenvals > 1e-15]  # 去掉数值零
-    return -np.sum(eigenvals * np.log2(eigenvals))
+    eigenvals = eigenvals[eigenvals > 1e-15]
+    if len(eigenvals) == 0:
+        return 0.0
+    return float(-np.sum(eigenvals * np.log2(eigenvals)))
 
 
 def concurrence(psi):
