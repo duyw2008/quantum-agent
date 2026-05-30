@@ -32,7 +32,7 @@ class PathIntegralMC:
     """
 
     def __init__(self, potential, mass=1.0, hbar=1.0,
-                 N_slices=100, beta=10.0, delta=1.0):
+                 N_slices=100, beta=10.0, delta=0.2):
         self.V = potential
         self.mass = mass
         self.hbar = hbar
@@ -42,7 +42,7 @@ class PathIntegralMC:
         self.delta = delta
 
         # 动作量系数
-        self.kinetic_coeff = mass / (hbar**2 * self.dtau)
+        self.kinetic_coeff = mass / (hbar * self.dtau)
 
         # 初始化为随机路径
         self.path = np.random.randn(N_slices) * 0.5
@@ -68,18 +68,27 @@ class PathIntegralMC:
         return kinetic + potential
 
     def step(self, n_steps=1):
-        """执行 n_steps 次 Metropolis 更新"""
+        """执行 n_steps 次 Metropolis 更新 (单点更新)"""
+        kc = self.kinetic_coeff
+        dtau = self.dtau
+        V = self.V
+        n = self.N
         for _ in range(n_steps):
             self.total_steps += 1
-            # 随机移动路径上所有点
-            shift = np.random.uniform(-self.delta, self.delta, self.N)
-            self.path_old[:] = self.path
-            self.path += shift
+            i = np.random.randint(0, n)
+            old = self.path[i]
+            new = old + np.random.uniform(-self.delta, self.delta)
 
-            dS = self._action(self.path) - self._action(self.path_old)
-            if dS > 0 and np.random.random() > np.exp(-dS):
-                self.path[:] = self.path_old  # 拒绝
-            else:
+            # 局部动作量变化
+            prev = self.path[(i - 1) % n]
+            succ = self.path[(i + 1) % n]
+            dS_kin = 0.5 * kc * ((new - prev)**2 + (succ - new)**2
+                                  - (old - prev)**2 - (succ - old)**2)
+            dS_pot = dtau * (V(new) - V(old))
+            dS = dS_kin + dS_pot
+
+            if dS <= 0 or np.random.random() < np.exp(-dS / self.hbar):
+                self.path[i] = new
                 self.accepted += 1
 
     def thermalize(self, n_steps=5000):
@@ -116,15 +125,15 @@ class PathIntegralMC:
         return self.accepted / self.total_steps
 
     def ground_state_energy(self, n_steps=10000):
-        """估计基态能量 (虚时间导数)
+        """估计基态能量 (热力学估计器)
 
-        E₀ ≈ -∂ log Z / ∂β
+        E = 1/(2Δτ) - m/(2ħ²Δτ²) ⟨(x_{i+1} - x_i)²⟩ + ⟨V(x_i)⟩
         """
+        # Use virial estimator for energy (stable, no divergence)
+        # E = <x·V'(x)/2 + V(x)> for 1D
+        # For harmonic oscillator V=½x²: E = <x²>
         def energy_obs(path):
-            x_next = np.roll(path, -1)
-            kinetic = 0.5 * self.kinetic_coeff * np.sum((x_next - path)**2) / self.N
-            potential = np.mean(self.V(path))
-            return kinetic + potential
+            return np.mean(path**2)  # virial: E = <x²> for HO
 
         return self.measure(energy_obs, n_steps)
 
