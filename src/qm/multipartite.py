@@ -134,7 +134,7 @@ def concurrence(psi):
         # 纯态: C = 2|αδ - βγ|
         if len(psi) != 4:
             raise ValueError("Concurrence for 2-qubit systems only (dim=4)")
-        return 2 * abs(psi[0] * psi[3] - psi[1] * psi[2])
+        return float(2 * abs(psi[0] * psi[3] - psi[1] * psi[2]))
 
     # 混合态: Wootters 公式
     if psi.shape != (4, 4):
@@ -143,7 +143,7 @@ def concurrence(psi):
     sigma_y = np.array([[0, -1j], [1j, 0]])
     R = psi @ tensor(sigma_y, sigma_y) @ psi.conj() @ tensor(sigma_y, sigma_y)
     eigenvals = np.sqrt(np.maximum(np.sort(np.real(np.linalg.eigvals(R)))[::-1], 0))
-    return max(0, eigenvals[0] - eigenvals[1] - eigenvals[2] - eigenvals[3])
+    return float(max(0, eigenvals[0] - eigenvals[1] - eigenvals[2] - eigenvals[3]))
 
 
 def bell_states():
