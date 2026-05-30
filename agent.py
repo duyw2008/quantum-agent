@@ -159,7 +159,7 @@ Type 'help' for commands, 'demo' to see examples.
             r'\prod': '∏', r'\infty': '∞', r'\approx': '≈', r'\propto': '∝',
             r'\sim': '~', r'\simeq': '≃', r'\times': '×', r'\cdot': '·',
             r'\otimes': '⊗', r'\oplus': '⊕', r'\ominus': '⊖',
-            r'\langle': '⟨', r'\rangle': '⟩', r'\bra': '⟨', r'\ket': '|',
+            r'\langle': '⟨', r'\rangle': '⟩', r'rangle': '⟩', r'langle': '⟨', r'\bra': '⟨', r'\ket': '|',
             r'\equiv': '≡', r'\neq': '≠', r'\pm': '±', r'\mp': '∓',
             r'\leq': '≤', r'\geq': '≥', r'\ll': '≪', r'\gg': '≫',
             r'\rightarrow': '→', r'\Rightarrow': '⇒', r'\leftarrow': '←',
@@ -191,6 +191,10 @@ Type 'help' for commands, 'demo' to see examples.
         # Longest patterns first
         for k, v in sorted(_LATEX_MAP.items(), key=lambda x: -len(x[0])):
             s = s.replace(k, v)
+
+        # \frac12 — bare fraction (no braces)
+        s = re.sub(r'\\frac(\d)(\d)', r'\1/\2', s)
+        s = re.sub(r'\\frac(\d)\{([^}]+)\}', r'\1/\2', s)
 
         # \\frac{num}{den}
         def frac_repl(m):

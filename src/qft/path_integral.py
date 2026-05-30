@@ -32,7 +32,7 @@ class PathIntegralMC:
     """
 
     def __init__(self, potential, mass=1.0, hbar=1.0,
-                 N_slices=100, beta=10.0, delta=0.2):
+                 N_slices=200, beta=20.0, delta=0.3):
         self.V = potential
         self.mass = mass
         self.hbar = hbar
@@ -91,31 +91,30 @@ class PathIntegralMC:
                 self.path[i] = new
                 self.accepted += 1
 
-    def thermalize(self, n_steps=5000):
-        """热化: 丢弃初始的 n_steps 步"""
-        self.step(n_steps)
+    def thermalize(self, n_sweeps=500):
+        """热化: n_sweeps 个完整路径扫描"""
+        self.step(n_sweeps * self.N)
         self.accepted = 0
         self.total_steps = 0
 
-    def measure(self, observable, n_steps=10000, n_corr=5):
+    def measure(self, observable, n_sweeps=500, n_corr=3):
         """测量可观测量的期望值
 
-        每 n_corr 步采样一次, 以减少自相关。
+        n_sweeps 个完整路径扫描, 每扫描采样一次。
 
         Parameters
         ----------
         observable : callable
-            O(x) — 可观测函数 (接受路径数组, 返回标量)
-        n_steps : int
-            总 Metropolis 步数
+            O(x) — 可观测函数
+        n_sweeps : int
+            采样数
         n_corr : int
-            采样间隔 (自相关时间)
+            扫描间隔 (减少自相关)
         """
         samples = []
-        for _ in range(n_steps):
-            self.step(1)
-            if self.total_steps % n_corr == 0:
-                samples.append(observable(self.path))
+        for _ in range(n_sweeps):
+            self.step(self.N * n_corr)
+            samples.append(observable(self.path))
         return np.mean(samples), np.std(samples) / np.sqrt(len(samples))
 
     def acceptance_rate(self):
@@ -124,7 +123,7 @@ class PathIntegralMC:
             return 0
         return self.accepted / self.total_steps
 
-    def ground_state_energy(self, n_steps=10000):
+    def ground_state_energy(self, n_sweeps=500):
         """估计基态能量 (热力学估计器)
 
         E = 1/(2Δτ) - m/(2ħ²Δτ²) ⟨(x_{i+1} - x_i)²⟩ + ⟨V(x_i)⟩
@@ -135,19 +134,18 @@ class PathIntegralMC:
         def energy_obs(path):
             return np.mean(path**2)  # virial: E = <x²> for HO
 
-        return self.measure(energy_obs, n_steps)
+        return self.measure(energy_obs, n_sweeps)
 
-    def wavefunction_density(self, n_steps=20000, n_bins=100, x_range=(-3, 3)):
+    def wavefunction_density(self, n_sweeps=500, n_bins=100, x_range=(-3, 3)):
         """估计基态波函数的概率密度 |ψ₀(x)|²
 
         在虚时间中间 τ=β/2 处采样路径位置。
         """
         mid = self.N // 2
         positions = []
-        for _ in range(n_steps):
-            self.step(1)
-            if self.total_steps % 5 == 0:
-                positions.append(self.path[mid])
+        for _ in range(n_sweeps):
+            self.step(self.N)
+            positions.append(self.path[mid])
 
         hist, edges = np.histogram(positions, bins=n_bins, range=x_range,
                                    density=True)
