@@ -271,32 +271,8 @@ r'\\sqrt\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
         unicode_version = self._latex_to_unicode(latex)
         print(f'\n  {unicode_version}\n')
 
-        # 渲染 PNG 保存
-        try:
-            import matplotlib
-            matplotlib.use('Agg')
-            import matplotlib.pyplot as plt
-            import time
-
-            fig, ax = plt.subplots(figsize=(10, 1.0), facecolor='#ffffff')
-            ax.axis('off')
-            try:
-                ax.text(0.5, 0.5, f'${latex}$', transform=ax.transAxes,
-                        fontsize=30, ha='center', va='center', color='#1f2328')
-            except Exception:
-                ax.text(0.5, 0.5, latex, transform=ax.transAxes,
-                        fontsize=16, ha='center', va='center', color='#1f2328',
-                        fontfamily='monospace')
-
-            save_dir = os.path.join(os.path.dirname(__file__), 'output', 'formulas')
-            os.makedirs(save_dir, exist_ok=True)
-            ts = time.strftime('%H%M%S')
-            save_path = os.path.join(save_dir, f'formula_{ts}.png')
-            fig.savefig(save_path, dpi=150, bbox_inches='tight', facecolor='#ffffff')
-            plt.close(fig)
-            print(f'  PNG: {save_path}')
-        except Exception:
-            pass  # PNG save is best-effort
+        # PNG rendering disabled — terminal Unicode display only
+        pass
 
     # ================================================================
     # run — 执行脚本 (.qms 文件)
