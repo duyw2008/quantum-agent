@@ -14,20 +14,17 @@ import numpy as np
 from typing import List, Optional, Callable
 
 
-# ============================================================
-    """Schrödinger 方程演化
-
-    方法: 精确对角化。H = UΛU†, |ψ(t)⟩ = U e^{-iΛt/ħ} U†|ψ(0)⟩
-    能量守恒到机器精度 ~10^{-15}
-    限制: 仅支持不含时 H, 详见 docs/NUMERICAL_METHODS.md §2
-# ============================================================
-
 def sesolve(H: np.ndarray, psi0: np.ndarray, tlist: np.ndarray,
             e_ops: List[np.ndarray] = None,
             hbar: float = 1.0) -> dict:
-    """Schrödinger 方程求解 (矩阵指数法)
+    """Schrödinger 方程求解 (精确对角化)
 
-    |ψ(t)⟩ = exp(-iHt/ℏ) |ψ(0)⟩
+    方法: H = UΛU† → |ψ(t)⟩ = U e^{-iΛt/ħ} U†|ψ(0)⟩
+    能量守恒到机器精度 ~10^{-15}
+    限制: 仅支持不含时 H
+    详见 docs/NUMERICAL_METHODS.md §2
+    
+    |ψ(t)⟩ = exp(-iHt/ħ) |ψ(0)⟩
 
     参数:
         H:     哈密顿量 (N, N)
