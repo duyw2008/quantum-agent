@@ -171,9 +171,9 @@ g2(psi_coh, fb)                      # g²(0) = 1.0 (Poisson)
 
 **定义**
 
-```
-$|\alpha\rangle = e^{-|\alpha|^2/2} \sum_{n=0}^{\infty} \alpha^n/\sqrt{n!} |n\rangle$
-```
+$$
+|\alpha\rangle = e^{-|\alpha|^2/2} \sum_{n=0}^{\infty} \frac{\alpha^n}{\sqrt{n!}} |n\rangle
+$$
 
 $\alpha$ 是复数，编码振幅和相位：$\alpha = |\alpha| e^{i\theta}$。$|\alpha|^2$ 是平均光子数 $\langle n\rangle$。相角 $\theta$ 是光场的经典相位。
 
@@ -192,53 +192,57 @@ $\alpha$ 是复数，编码振幅和相位：$\alpha = |\alpha| e^{i\theta}$。$
 
 **为什么湮灭掉一个光子态不变？**
 
-这是相干态最具标志性的性质。对于任意光子态 |\psi\rangle，测到一个光子后态变为 \hat{a}|\psi\rangle（归一化后）。对相干态：
+这是相干态最具标志性的性质。对于任意光子态 $|\psi\rangle$，测到一个光子后态变为 $\hat{a}|\psi\rangle$（归一化后）。对相干态：
 
-```
-â|α⟩ = e^{-|α|²/2} Σ αⁿ/√(n!) â|n⟩
-     = e^{-|α|²/2} Σ αⁿ/√(n!) √n |n-1⟩
-     = e^{-|α|²/2} Σ_{m=0}^{∞} α^{m+1}/√(m!) |m⟩    (令 m=n-1)
-     = α · e^{-|α|²/2} Σ α^m/√(m!) |m⟩
-     = α |α⟩
-```
+$$
+\begin{aligned}
+\hat{a}|\alpha\rangle &= e^{-|\alpha|^2/2} \sum \frac{\alpha^n}{\sqrt{n!}} \hat{a}|n\rangle \\
+&= e^{-|\alpha|^2/2} \sum \frac{\alpha^n}{\sqrt{n!}} \sqrt{n} |n-1\rangle \\
+&= e^{-|\alpha|^2/2} \sum_{m=0}^{\infty} \frac{\alpha^{m+1}}{\sqrt{m!}} |m\rangle \quad (\text{令 } m=n-1) \\
+&= \alpha \cdot e^{-|\alpha|^2/2} \sum \frac{\alpha^m}{\sqrt{m!}} |m\rangle \\
+&= \alpha |\alpha\rangle
+\end{aligned}
+$$
 
-拿走一个光子 \rightarrow 态除了乘以 \alpha 外完全不变。光子数分布维持 Poisson。这意味着你无法通过"偷看"光子来改变相干态的统计性质——它是没有反作用的测量。
+拿走一个光子 $\rightarrow$ 态除了乘以 $\alpha$ 外完全不变。光子数分布维持 Poisson。这意味着你无法通过"偷看"光子来改变相干态的统计性质——它是没有反作用的测量。
 
 **光子统计详析**
 
 相干态的光子数概率服从 Poisson：
 
-```
-P(n) = |⟨n|α⟩|² = e^{-|α|²} |α|^{2n} / n!
-     = e^{-⟨n⟩} ⟨n⟩ⁿ / n!
-```
+$$
+P(n) = |\langle n|\alpha\rangle|^2 = e^{-|\alpha|^2} \frac{|\alpha|^{2n}}{n!}
+     = e^{-\langle n\rangle} \frac{\langle n\rangle^n}{n!}
+$$
 
-均值和方差相等：\langle n\rangle = Var(n) = |\alpha|^2。Mandel Q 参数定义：
+均值和方差相等：$\langle n\rangle = \mathrm{Var}(n) = |\alpha|^2$。Mandel Q 参数定义：
 
-```
-Q = Var(n)/⟨n⟩ - 1
-```
+$$
+Q = \frac{\mathrm{Var}(n)}{\langle n\rangle} - 1
+$$
 
-- Q = 0: Poisson（相干态）
-- Q = -1: 无涨落（Fock 态 |n\rangle）
-- Q > 0: 超 Poisson（热态/混沌光）
+- $Q = 0$: Poisson（相干态）
+- $Q = -1$: 无涨落（Fock 态 $|n\rangle$）
+- $Q > 0$: 超 Poisson（热态/混沌光）
 
-经典激光在远高于阈值时输出 Poisson 光子统计 \rightarrow 相干态是激光的量子描述。
+经典激光在远高于阈值时输出 Poisson 光子统计 $\rightarrow$ 相干态是激光的量子描述。
 
 **相干态不正交**
 
-不同 \alpha 的相干态不正交：
+不同 $\alpha$ 的相干态不正交：
 
-```
-⟨β|α⟩ = e^{-|α|²/2 - |β|²/2 + β*α}
-|⟨β|α⟩|² = e^{-|α-β|²}
-```
+$$
+\langle\beta|\alpha\rangle = e^{-|\alpha|^2/2 - |\beta|^2/2 + \beta^*\alpha}
+\qquad
+|\langle\beta|\alpha\rangle|^2 = e^{-|\alpha-\beta|^2}
+$$
 
 它们形成一个**过完备基**（overcomplete basis）。任何态可以用相干态展开，但展开系数不唯一。关键关系：
 
-```
-(1/π) ∫ d²α |α⟩⟨α| = Î    (单位算符，d²α = d(Re α) d(Im α))
-```
+$$
+\frac{1}{\pi} \int d^2\alpha \; |\alpha\rangle\langle\alpha| = \hat{I}
+\quad (d^2\alpha = d\,\mathrm{Re}\,\alpha \; d\,\mathrm{Im}\,\alpha)
+$$
 
 这是 Glauber-Sudarshan P 表象的基础。
 
@@ -246,23 +250,25 @@ Q = Var(n)/⟨n⟩ - 1
 
 相干态可以从真空通过位移产生：
 
-```
-|α⟩ = D̂(α) |0⟩
-D̂(α) = exp(α â† - α* â)    (幺正算符)
-```
+$$
+|\alpha\rangle = \hat{D}(\alpha) |0\rangle, \qquad
+\hat{D}(\alpha) = \exp(\alpha \hat{a}^\dagger - \alpha^* \hat{a}) \quad \text{(幺正算符)}
+$$
 
-\hat{D} 将真空在相空间平移 |\alpha| 并在相位 \theta 方向旋转。这也是相干态是"位移后的真空"说法的来源。
+$\hat{D}$ 将真空在相空间平移 $|\alpha|$ 并在相位 $\theta$ 方向旋转。这也是相干态是"位移后的真空"说法的来源。
 
 **Wigner 函数**
 
 相干态的 Wigner 函数是一个高斯：
 
-```
-W_α(x, p) = (1/πħ) exp[-(x-x₀)²/2σ² - (p-p₀)²/(2σ_p²)]
-x₀ = √(2ħ) Re(α), p₀ = √(2ħ) Im(α)
-```
+$$
+\begin{aligned}
+W_\alpha(x, p) &= \frac{1}{\pi\hbar} \exp\!\left[-\frac{(x-x_0)^2}{2\sigma^2} - \frac{(p-p_0)^2}{2\sigma_p^2}\right] \\
+x_0 &= \sqrt{2\hbar}\,\mathrm{Re}(\alpha), \quad p_0 = \sqrt{2\hbar}\,\mathrm{Im}(\alpha)
+\end{aligned}
+$$
 
-纯量子态中唯一 Wigner 处处 \geq 0 的态——所有其他纯态（Fock、压缩、猫态）都有负值区域。这赋予了相干态"最经典"的地位：Wigner 的非负性意味着它可以用经典概率分布完美描述（尽管量子干涉仍然存在）。
+纯量子态中唯一 Wigner 处处 $\geq 0$ 的态——所有其他纯态（Fock、压缩、猫态）都有负值区域。这赋予了相干态"最经典"的地位：Wigner 的非负性意味着它可以用经典概率分布完美描述（尽管量子干涉仍然存在）。
 
 **在实验室生成**
 
