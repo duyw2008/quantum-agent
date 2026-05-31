@@ -1783,5 +1783,5 @@ Lindblad 补上这个缺口——让量子力学可以描述"系统+环境"中�
 - Chiribella et al., *Quantum computations without definite causal structure* (量子 switch)
 - Zurek, W. H., *Decoherence, einselection, and the quantum origins of the classical*, Rev. Mod. Phys. 75, 715 (2003)
 - Joos, E. et al., *Decoherence and the Appearance of a Classical World in Quantum Theory*
-- Wigner, E. P., *On the Quantum Correction for Thermodynamic Equilibrium*, Phys. Rev. 40, 749 (1932}
+- Wigner, E. P., *On the Quantum Correction for Thermodynamic Equilibrium*, Phys. Rev. 40, 749 (1932)
 - Quantum Agent 源码: `src/qm/`, `src/qft/`
