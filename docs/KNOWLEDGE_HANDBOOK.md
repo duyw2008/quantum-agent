@@ -52,9 +52,9 @@
 
 | 现象 | 过程 |
 |------|------|
-| 光子发射/吸收 | 原子 \|e\rangle \rightarrow \|g\rangle + \gamma |
-| 粒子-反粒子产生 | \gamma \rightarrow e^+ + e^- |
-| Cooper 对形成 | 2e^- \rightarrow 一对 |
+| 光子发射/吸收 |$原子 \$|$e\rangle \rightarrow \$|$g\rangle + \gamma$|
+| 粒子-反粒子产生 |$\gamma \rightarrow e^+ + e^-$|
+| Cooper 对形成 |$2e^- \rightarrow 一对$|
 | 声子激发 | 晶格振动量子数的增减 |
 
 这些过程的始态和终态粒子数不同——不能写在同一个固定维度的矩阵里。
@@ -138,10 +138,10 @@ $$
 | 问题 | 固定 N 的 QM | Fock 空间 |
 |------|:---:|:---:|
 | 粒子数变化 | ✗ 不同 N 需要不同空间 | ✓ 所有 N 在一个空间 |
-| 产生/湮灭 | ✗ 没有这俩算符 | ✓ \hat{a}†/\hat{a} |
+| 产生/湮灭 | ✗ 没有这俩算符 |$✓ \hat{a}†/\hat{a}$|
 | 不可区分性 | 手动对称化 | 自动由交换关系保证 |
 | 二次量子化 | 需要手动构造 | 自然框架 |
-| 真空涨落 | 不存在 | \langle0\|\hat{\phi}^2\|0\rangle \neq 0 |
+| 真空涨落 | 不存在 |$\langle0\$|$\hat{\phi}^2\$|$0\rangle \neq 0$|
 
 ### 0.6 在 Quantum Agent 中的验证
 
@@ -181,13 +181,13 @@ $$
 
 | 性质 | 相干态 | 对比 |
 |------|:------:|------|
-| 光子数分布 | Poisson，均值/方差 = |\alpha|^2 | 热态：Bose-Einstein（超 Poisson） |
+| 光子数分布 | Poisson，均值/方差 = |$\alpha$|^2 | 热态：Bose-Einstein（超 Poisson） |
 | g^2(0) | 1.0 | Fock 态：0 (反聚束); 热态：2 (聚束) |
 | Mandel Q | 0 | Q<0 亚 Poisson; Q>0 超 Poisson |
-| \Delta x\cdot\Delta p | \hbar/2 | **最小不确定态** — 等于基态 |
-| Wigner | 处处 \geq 0 | 纯态中唯一全正的 — 最"经典" |
-| \hat{a}|\alpha\rangle = \alpha|\alpha\rangle | 湮灭算符本征态 | 拿走一个光子态不变 |
-| 损耗后 | 仍是相干态 | 只是 |\alpha|^2 衰减 — 保持相干性 |
+|$\Delta x\cdot\Delta p$|$\hbar/2$| **最小不确定态** — 等于基态 |
+| Wigner |$处处 \geq 0$| 纯态中唯一全正的 — 最"经典" |
+|$\hat{a}$|$\alpha\rangle = \alpha$|$\alpha\rangle$| 湮灭算符本征态 | 拿走一个光子态不变 |
+| 损耗后 | 仍是相干态 | 只是 |$\alpha$|^2 衰减 — 保持相干性 |
 | 相位噪声 | 标准量子极限 (SQL) | 压缩态可突破 SQL |
 
 **为什么湮灭掉一个光子态不变？**
@@ -195,10 +195,10 @@ $$
 这是相干态最具标志性的性质。对于任意光子态 |\psi\rangle，测到一个光子后态变为 \hat{a}|\psi\rangle（归一化后）。对相干态：
 
 $$
-\hat{a}|\alpha\rangle = e^{-|\alpha|^2/2} \Sigma \alpha^n/\sqrt{n!} \hat{a}|n\rangle
-     = e^{-|\alpha|^2/2} \Sigma \alpha^n/\sqrt{n!} \sqrt n |n-1\rangle
-     = e^{-|\alpha|^2/2} \sum_{m=0}^{\infty} \alpha^{m+1}/\sqrt{m!) |m\rangle    (令 m=n-1}
-     = \alpha \cdot e^{-|\alpha|^2/2} \Sigma \alpha^m/\sqrt{m!) |m\rangle
+\hat{a}|\alpha\rangle = e^{-|\alpha|^2/2} \sum \alpha^n/\sqrt{n!} \hat{a}|n\rangle
+     = e^{-|\alpha|^2/2} \sum \alpha^n/\sqrt{n!} \sqrt n |n-1\rangle
+     = e^{-|\alpha|^2/2} \sum_{m=0}^{\infty} \alpha^{m+1}/\sqrt{m!} |m\rangle    (令 m=n-1}
+     = \alpha \cdot e^{-|\alpha|^2/2} \sum \alpha^m/\sqrt{m!} |m\rangle
      = \alpha |\alpha\rangle
 $$
 
@@ -259,7 +259,7 @@ $$
 
 $$
 W_\alpha(x, p) = (1/\pi\hbar) exp[-(x-x_0)^2/2\sigma^2 - (p-p_0)^2/(2\sigma_p^2)]
-x_0 = \sqrt{2\hbar) Re(\alpha), p_0 = \sqrt{2\hbar) Im(\alpha}
+x_0 = \sqrt{2\hbar} Re(\alpha), p_0 = \sqrt{2\hbar} Im(\alpha)
 $$
 
 纯量子态中唯一 Wigner 处处 \geq 0 的态——所有其他纯态（Fock、压缩、猫态）都有负值区域。这赋予了相干态"最经典"的地位：Wigner 的非负性意味着它可以用经典概率分布完美描述（尽管量子干涉仍然存在）。
@@ -274,10 +274,10 @@ $$
 
 | | 相干态 | 压缩真空 | 压缩相干态 |
 |---|:---:|:---:|:---:|
-| \Delta x | \sigma | \sigma e^{-r} | \sigma e^{-r} |
-| \Delta p | \sigma | \sigma e^{+r} | \sigma e^{+r} |
-| \Delta x\cdot\Delta p | \hbar/2 | \hbar/2 | \hbar/2 |
-| \langle n\rangle | |\alpha|^2 | sinh^2 r | > |\alpha|^2 |
+|$\Delta x$|$\sigma$|$\sigma e^{-r}$|$\sigma e^{-r}$|
+|$\Delta p$|$\sigma$|$\sigma e^{+r}$|$\sigma e^{+r}$|
+|$\Delta x\cdot\Delta p$|$\hbar/2$|$\hbar/2$|$\hbar/2$|
+|$\langle n\rangle$| |$\alpha$|^2 | sinh^2 r | > |$\alpha$|^2 |
 | g^2(0) | 1 | > 1 (偶光子) | 非平凡 |
 
 压缩态仍然满足最小不确定度，但将噪声从一个正交分量"挤压"到另一个——用于增强引力波探测（LIGO）的灵敏度。
@@ -301,10 +301,10 @@ coherent(N=50, alpha=2.0+0.5j)
 
 | 实验 | 式子 | 期待值 |
 |------|------|:---:|
-| 平均光子 | \langle n\rangle = \langle\psi|\hat{a}†\hat{a}|\psi\rangle | |\alpha|^2 |
-| 方差 | \Delta n^2 = \langle n^2\rangle - \langle n\rangle^2 | |\alpha|^2 |
-| g^2(0) | \langle\hat{a}†^2\hat{a}^2\rangle / \langle\hat{a}†\hat{a}\rangle^2 | 1.0 |
-| 湮灭不变 | ‖\hat{a}|\psi\rangle/‖\hat{a}|\psi\rangle‖ − |\psi\rangle‖ | \approx 0 |
+| 平均光子 |$\langle n\rangle = \langle\psi$|$\hat{a}†\hat{a}$|$\psi\rangle$| |$\alpha$|^2 |
+| 方差 |$\Delta n^2 = \langle n^2\rangle - \langle n\rangle^2$| |$\alpha$|^2 |
+| g^2(0) |$\langle\hat{a}†^2\hat{a}^2\rangle / \langle\hat{a}†\hat{a}\rangle^2$| 1.0 |
+| 湮灭不变 |$‖\hat{a}$|$\psi\rangle/‖\hat{a}$|$\psi\rangle‖ −$|$\psi\rangle‖$|$\approx 0$|
 | Wigner 最小值 | min(W) | > 0（全正）|
 
 ---
@@ -327,7 +327,7 @@ $$
 经典实标量场 \phi(x,t) 满足 Klein-Gordon 方程 (□ + m^2)\phi = 0。Fourier 按平面波展开：
 
 $$
-\phi(x,t) = \int d^3k/(2\pi)^3 \cdot 1/\sqrt{2\omega_k) \cdot [a(k) e^-ikx + a*(k) e^+ikx]
+\phi(x,t) = \int d^3k/(2\pi)^3 \cdot 1/\sqrt{2\omega_k} \cdot [a(k) e^-ikx + a*(k) e^+ikx]
 
 其中: kx = \omega_k t - k\cdot x,   \omega_k = \sqrt{k^2 + m^2}
 $$
@@ -377,10 +377,10 @@ $$
 
 | 态 | 物理意义 |
 |---|---|
-| |0\rangle = |0, 0, 0, ...\rangle | 真空——所有模式基态 |
-| \hat{a}†(k_1)|0\rangle = |1, 0, 0, ...\rangle | 一个动量为 k_1 的粒子 |
-| \hat{a}†(k_1)\hat{a}†(k_2)|0\rangle | 两个粒子，动量 k_1 和 k_2 |
-| (\hat{a}†(k))^n/\sqrt{n!}|0\rangle | n 个动量相同的玻色子 |
+| |$0\rangle =$|$0, 0, 0, ...\rangle$| 真空——所有模式基态 |
+|$\hat{a}†(k_1)$|$0\rangle =$|$1, 0, 0, ...\rangle$| 一个动量为 k_1 的粒子 |
+|$\hat{a}†(k_1)\hat{a}†(k_2)$|$0\rangle$| 两个粒子，动量 k_1 和 k_2 |
+|$(\hat{a}†(k))^n/\sqrt{n!}$|$0\rangle$| n 个动量相同的玻色子 |
 
 **粒子数算符**：
 
@@ -437,12 +437,12 @@ $$
 
 | 概念 | 闵氏侧 | Fock 侧 |
 |------|:------:|:------:|
-| 基本对象 | 时空坐标 x = (t, x) | 粒子数态 \|n_1, n_2, ...\rangle |
+| 基本对象 | 时空坐标 x = (t, x) |$粒子数态 \$|$n_1, n_2, ...\rangle$|
 | 动力学量 | k (波矢/动量) | n_k (占据数) |
-| 观测 | \hat{\phi}(x)——在 x 处测量场 | \langle N̂\rangle——统计粒子数 |
-| 传播 | 传播子 \langle\hat{\phi}(x)\hat{\phi}(y)\rangle | 产生\rightarrow湮灭振幅 |
-| 因果性 | (x-y)^2 > 0 \rightarrow 类空间隔 | [\hat{\phi}(x), \hat{\phi}(y)] = 0 |
-| 真空 | — | \|0\rangle (基点) |
+| 观测 |$\hat{\phi}(x)——在 x 处测量场$|$\langle N̂\rangle——统计粒子数$|
+| 传播 |$传播子 \langle\hat{\phi}(x)\hat{\phi}(y)\rangle$|$产生\rightarrow湮灭振幅$|
+| 因果性 |$(x-y)^2 > 0 \rightarrow 类空间隔$|$[\hat{\phi}(x), \hat{\phi}(y)] = 0$|
+| 真空 | — |$\$|$0\rangle (基点)$|
 
 > **闵氏空间告诉你"在哪里"，Fock 空间告诉你"有多少"。**
 > **场算符 \hat{\phi}(x) 同时理解两种语言。**
@@ -581,10 +581,10 @@ $$
 
 | 层次 | 因果的表现 | 核心数学 |
 |---|---|---|
-| Schrödinger 演化 | 严格决定论，比经典更因果 | i\hbar \partial\psi/\partial t = \hat{H}\psi |
-| 测量坍缩 | 因果断裂——相同因不同果 | Born 规则 P = |\langle k|\psi\rangle|^2 |
-| 纠缠 | 相关 \neq 因果 | Bell 态 + CHSH 不等式 |
-| QFT 对易子 | 微观因果性作为定理 | [\hat{\phi}(x), \hat{\phi}(y)] = 0 on spacelike |
+| Schrödinger 演化 | 严格决定论，比经典更因果 |$i\hbar \partial\psi/\partial t = \hat{H}\psi$|
+| 测量坍缩 | 因果断裂——相同因不同果 | Born 规则 P = |$\langle k$|$\psi\rangle$|^2 |
+| 纠缠 |$相关 \neq 因果$| Bell 态 + CHSH 不等式 |
+| QFT 对易子 | 微观因果性作为定理 |$[\hat{\phi}(x), \hat{\phi}(y)] = 0 on spacelike$|
 | 量子因果推断 | 因果序可以叠加 | process matrix / quantum switch |
 
 ### 2.7 Bell 不等式与定域实在论
@@ -629,7 +629,7 @@ S = E(a1,b1) + E(a1,b2) + E(a2,b1) - E(a2,b2)
 
 | 实验结果 | 结论 |
 |:---:|------|
-| |S| \leq 2 | 定域实在论成立，量子力学错了 |
+| |S|$\leq 2$| 定域实在论成立，量子力学错了 |
 | |S| > 2 | 至少放弃一个：定域性或实在性 |
 
 所有实验得 |S| \approx 2.83——定域实在论被排除。
@@ -782,10 +782,10 @@ $$
 |------|------|------|
 | 归一化 | ∬ W dx dp = 1 | 总概率为 1 |
 | 实值 | `W ∈ ℝ` | 可解释 |
-| 边缘分布 | \int W dp = \langle x|\rhô|x\rangle | 积掉 p 得位置概率 |
-| 边缘分布 | \int W dx = \langle p|\rhô|p\rangle | 积掉 x 得动量概率 |
-| 期望值 | \langle\hat{A}\rangle = ∬ W(x,p) A_W dx dp | Weyl 对应 |
-| 范围 | -2/\pi\hbar \leq W \leq +2/\pi\hbar | 有界 |
+| 边缘分布 |$\int W dp = \langle x$|$\rhô$|$x\rangle$| 积掉 p 得位置概率 |
+| 边缘分布 |$\int W dx = \langle p$|$\rhô$|$p\rangle$| 积掉 x 得动量概率 |
+| 期望值 |$\langle\hat{A}\rangle = ∬ W(x,p) A_W dx dp$| Weyl 对应 |
+| 范围 |$-2/\pi\hbar \leq W \leq +2/\pi\hbar$| 有界 |
 
 ### 4.3 负值——Wigner 函数的核心
 
@@ -809,7 +809,7 @@ $$
 | 量子态在相空间中"长什么样"？ | W(x,p) 给出一张完整的图 |
 | 这个态是经典的还是量子的？ | 有负值 = 非经典 |
 | 态经历了什么动力学？ | 时间演化 W(x,p,t) 可视化 |
-| 退相干如何发生？ | 干涉条纹逐渐消失 \rightarrow 负值消失 |
+| 退相干如何发生？ |$干涉条纹逐渐消失 \rightarrow 负值消失$|
 | 压缩在哪里？ | W(x,p) 椭圆直接显示压缩方向和幅度 |
 
 ### 4.5 与其他相空间表示对比
@@ -928,7 +928,7 @@ $$
 \Delta x      = |x - x'| = 叠加态两个分支的空间分离
 $$
 
-| 系统 | \Delta x | \tau_dec |
+| 系统 |$\Delta x$|$\tau_dec$|
 |------|:---:|:---:|
 | 电子 (原子尺度) | ~10^-^1^0 m | ~10^6 年 |
 | 分子 (介观) | ~10^-^6 m | ~10^-^3 秒 |
@@ -1077,10 +1077,10 @@ $$
 
 | 对称性 | 守恒流 | 守恒荷 Q |
 |--------|--------|---------|
-| 时间平移 t\rightarrow t+\epsilon | 能量-动量张量 T^0^\mu | **能量 E** |
-| 空间平移 x\rightarrow x+\epsilon | T^i^\mu | **动量 p** |
-| 空间旋转 | 角动量张量 M^\mu\nu | **角动量 L** |
-| U(1) 规范 \psi\rightarrow e^{i\alpha}\psi | j^\mu = \psī\gamma^\mu\psi | **电荷** |
+|$时间平移 t\rightarrow t+\epsilon$|$能量-动量张量 T^0^\mu$| **能量 E** |
+|$空间平移 x\rightarrow x+\epsilon$|$T^i^\mu$| **动量 p** |
+| 空间旋转 |$角动量张量 M^\mu\nu$| **角动量 L** |
+|$U(1) 规范 \psi\rightarrow e^{i\alpha}\psi$|$j^\mu = \psī\gamma^\mu\psi$| **电荷** |
 | SU(3) 色规范 | 8 个胶子流 | **色荷** |
 
 ### 6.3 为什么美
@@ -1113,9 +1113,9 @@ $$
 
 | 类型 | 机制 | 例子 |
 |------|------|------|
-| 显式破缺 | Lagrangian 本身不对称 | 加了外势 \rightarrow 动量不守恒 |
+| 显式破缺 | Lagrangian 本身不对称 |$加了外势 \rightarrow 动量不守恒$|
 | 自发破缺 | Lagrangian 对称，基态不对称 | Higgs 机制、超导 |
-| 反常 | 经典对称，量子上破坏 | 轴矢流反常 (\pi^0 \rightarrow \gamma\gamma) |
+| 反常 | 经典对称，量子上破坏 |$轴矢流反常 (\pi^0 \rightarrow \gamma\gamma)$|
 
 **自发破缺 + Noether = Goldstone 定理**：每个自发破缺的连续对称性产生一个无质量玻色子。
 
@@ -1166,12 +1166,12 @@ $$
 
 **物理直觉**
 
-| 态 | \rho | j |
+| 态 |$\rho$| j |
 |---|------|------|
-| 静止高斯波包 | 包络 | j \approx 0 |
-| 运动波包 e^{ipx} | 包络 | j = (\hbar k/m) \rho = v\cdot\rho |
+| 静止高斯波包 | 包络 |$j \approx 0$|
+| 运动波包 e^{ipx} | 包络 |$j = (\hbar k/m) \rho = v\cdot\rho$|
 | 驻波 cos(kx) | 振荡 | j = 0 (无净流动) |
-| 平面波 e^{ikx} | 常数 | j = \hbar k/m (均匀流) |
+| 平面波 e^{ikx} | 常数 |$j = \hbar k/m (均匀流)$|
 
 概率流 = "概率往哪走"的矢量场。和水流、电流完全相同的数学结构。
 
@@ -1255,10 +1255,10 @@ $$
 
 | 性质 | 表现 | 原因 |
 |------|------|------|
-| 能量守恒 | \sigma_E ~ 10^-^1^5 | 对角化是恒等式，无近似 |
+| 能量守恒 |$\sigma_E ~ 10^-^1^5$| 对角化是恒等式，无近似 |
 | 不含时 H | 完美演化 | exp(-iHt) 精确 |
 | 含时 H | 不支持 | 矩阵指数不交换 |
-| 空间坐标 | 不存在 | 基底是 {|n\rangle} 不是 {|x\rangle} |
+| 空间坐标 | 不存在 | 基底是 {|$n\rangle} 不是 {$|$x\rangle}$|
 
 **算法剖析 — 对角化即精确解:**
 
@@ -1356,7 +1356,7 @@ $$
 自由粒子的扩散公式:
 
 $$
-\Delta x(t) = (\sigma/\sqrt2) \sqrt{1 + \hbar^2t^2/m^2\sigma^4)    \leftarrow 波包必然扩散
+\Delta x(t) = (\sigma/\sqrt2) \sqrt{1 + \hbar^2t^2/m^2\sigma^4}    \leftarrow 波包必然扩散
 $$
 
 扩散的根本原因: 波包包含着不同动量的叠加——每个 k 以不同速度移动。初始 \Delta x\cdot\Delta p \geq \hbar/2 意味着动量有分布，而位置扩散是动量分布的必然结果。
@@ -1409,7 +1409,7 @@ $$
 | 粒子从势垒隧穿的概率？ | evolve_ssfm | 需要坐标空间，N~2048 |
 | 密度矩阵退相干动力学？ | mesolve | Lindblad 主方程 |
 | 基态能量？ | PIMC | 路径积分 Monte Carlo |
-| 自旋在磁场中进动？ | sesolve | 2\times2 矩阵，秒出 |
+| 自旋在磁场中进动？ | sesolve |$2\times2 矩阵，秒出$|
 | 双缝干涉条纹形成？ | evolve_ssfm | 2D SSFM |
 | 能量本征谱？ | 对角化 H | 直接本征值问题 |
 
@@ -1435,13 +1435,13 @@ N 限制              ~100                       ~10^4
 | 问题类型 | 实例 | 为什么 |
 |----------|------|--------|
 | 光子统计 | g^2(0), Mandel Q, 光子数分布 | Fock 基是光子数的自然语言——a†a 是对角的，g^2 表达式在 Fock 基下最简 |
-| 能谱分析 | 本征值 En, 能隙 \Delta E, 简并度 | 对角化 H 直接输出本征值——这就是能谱 |
-| 量子态保真度 | \langle\psi_1|\psi_2\rangle, 态距离, 正交性 | 内积在离散基下是向量点积，天然 |
-| 相空间准概率 | Wigner(\alpha), Husimi Q, Glauber P | 三种表象都在 Fock 基下通过移位算符 \hat{D}(\alpha) 自然定义 |
-| 自旋/量子比特 | Bloch 球, 纠缠, 量子门 | 2\times2 或 2^n\times2^n 矩阵——小维度对角化瞬时完成 |
-| 量子光学 | JC 模型, Rabi 振荡, 光子阻塞 | 原子+腔场=复合 Hilbert 空间，对角化求本征态\rightarrow Rabi 频率 |
+| 能谱分析 |$本征值 En, 能隙 \Delta E, 简并度$| 对角化 H 直接输出本征值——这就是能谱 |
+| 量子态保真度 |$\langle\psi_1$|$\psi_2\rangle, 态距离, 正交性$| 内积在离散基下是向量点积，天然 |
+| 相空间准概率 |$Wigner(\alpha), Husimi Q, Glauber P$|$三种表象都在 Fock 基下通过移位算符 \hat{D}(\alpha) 自然定义$|
+| 自旋/量子比特 | Bloch 球, 纠缠, 量子门 |$2\times2 或 2^n\times2^n 矩阵——小维度对角化瞬时完成$|
+| 量子光学 | JC 模型, Rabi 振荡, 光子阻塞 |$原子+腔场=复合 Hilbert 空间，对角化求本征态\rightarrow Rabi 频率$|
 | 对称性分析 | CASIMIR 算符, 不可约表示 | 群论在离散基底上自然——表示矩阵 |
-| 微扰论 | 能级移动 \delta E, 跃迁振幅 \langle m|V|n\rangle | 矩阵元在 Fock 基下是清晰的数，对角化前或后都可算 |
+| 微扰论 |$能级移动 \delta E, 跃迁振幅 \langle m$|V|$n\rangle$| 矩阵元在 Fock 基下是清晰的数，对角化前或后都可算 |
 
 **共性:** 这些问题的物理量**不依赖空间坐标 x**。光子数、自旋投影、能级、纠缠度——都是"内部自由度"，在 Fock/自旋基下即为对角或稀疏矩阵。
 
@@ -1451,15 +1451,15 @@ N 限制              ~100                       ~10^4
 
 | 问题类型 | 实例 | 为什么 |
 |----------|------|--------|
-| 散射 | 势垒隧穿, 透射率/反射率 vs E | 需要 \psi(x) 在坐标空间分成入射/反射/透射三区——坐标自然 |
-| 干涉 | 双缝, Aharonov-Bohm, 量子擦除 | 干涉条纹在屏幕上——本质是 |\psi(x)|^2 的空间结构 |
+| 散射 | 势垒隧穿, 透射率/反射率 vs E |$需要 \psi(x) 在坐标空间分成入射/反射/透射三区——坐标自然$|
+| 干涉 | 双缝, Aharonov-Bohm, 量子擦除 | 干涉条纹在屏幕上——本质是 |$\psi(x)$|^2 的空间结构 |
 | 束缚态 | 有限深势阱的波函数形状 | 能量可能连续也可能离散——对角化只能出离散谱 |
-| 波包动力学 | 自由扩散, 谐振子振荡, 势阱捕获 | \langle x\rangle(t), \Delta x(t), 概率流 j(x,t)——全部在坐标基下定义 |
-| 隧穿时间 | Hartman 效应, 粒子在势垒内多久 | 需要追踪波包的 \langle x\rangle(t) 穿过势垒——坐标演化必需 |
+| 波包动力学 | 自由扩散, 谐振子振荡, 势阱捕获 |$\langle x\rangle(t), \Delta x(t), 概率流 j(x,t)——全部在坐标基下定义$|
+| 隧穿时间 | Hartman 效应, 粒子在势垒内多久 |$需要追踪波包的 \langle x\rangle(t) 穿过势垒——坐标演化必需$|
 | 量子混沌 | Sinai 台球, 能级统计 | 需要边界条件——复杂几何只能上网格 |
 | 开放系统 | 波导, 量子点接触, 透射本征道 | 边界条件(入射/出射)在坐标空间最自然 |
 | 含时驱动 | Floquet 态, 周期驱动下的隧穿 | 含时 V(x,t) 在 Fock 基下根本不是矩阵——只能 SSFM 逐时步 |
-| 非线性 QM | Gross-Pitaevskii 方程 (BEC) | 非线性项 g|\psi|^2 在坐标空间是乘法——对角化完全失效 |
+| 非线性 QM | Gross-Pitaevskii 方程 (BEC) | 非线性项 g|$\psi$|^2 在坐标空间是乘法——对角化完全失效 |
 
 **共性:** 这些问题的物理量**依赖空间坐标 x**。波包位置、干涉条纹、隧穿概率——都是"外部自由度"，坐标基下即为直接可观测量。
 
@@ -1469,10 +1469,10 @@ N 限制              ~100                       ~10^4
 
 | 系统 | 矩阵力学角度 | 波动力学角度 |
 |------|-------------|-------------|
-| 谐振子 | 对角化 H=\omega(a†a+½): 本征谱精确, 光子统计天然 | SSFM(V=½m\omega^2x^2): 波包振荡可视化, revival 动态 |
+| 谐振子 |$对角化 H=\omega(a†a+½): 本征谱精确, 光子统计天然$|$SSFM(V=½m\omega^2x^2): 波包振荡可视化, revival 动态$|
 | 势垒 | 转移矩阵法: 透射率 T(E) 解析 | SSFM: T(E) 数值, 含时隧穿过程动画 |
 | 量子 Walk | 硬币态+位置 = 直积空间, 对角化演化 | SSFM 等效连续极限, 大尺度扩散 |
-| 双阱 | 对称/反对称能级差 = 隧穿频率 | SSFM: 波包在两个阱之间振荡 \rightarrow 视觉直观 |
+| 双阱 | 对称/反对称能级差 = 隧穿频率 |$SSFM: 波包在两个阱之间振荡 \rightarrow 视觉直观$|
 
 **决策树:**
 
@@ -1531,11 +1531,11 @@ $$
 
 | 问题 | 坐标基为何别扭 | Fock/离散基为何自然 |
 |------|---------------|-------------------|
-| 光子统计 g^2(0) | 需算 \langle\psi|a†^2a^2|\psi\rangle——坐标基要反推回 Fock，绕远路 | Fock 基下是向量点积，一行 |
-| 自旋/量子比特 | 自旋没有 x 坐标——"自旋在哪儿？"无意义 | 2\times2 或 2^n\times2^n 矩阵，原生 |
-| 纠缠度 concurrence | 坐标空间需两粒子联合概率密度 \int\int|\psi(x_1,x_2)|^2，算部分迹极繁琐 | 直积空间部分迹，einsum 秒出 |
-| Wigner 函数 | W(x,p) = (1/\pi\hbar)\int\langle x+y|\rho|x-y\rangle e^{-2ipy/\hbar}dy——每个 (x,p) 点都要积分 | Fock 基下位移算符公式，高效得多 |
-| 能谱 | 坐标基需解微分方程 -\hbar^2/2m \psi''+V\psi=E\psi 逐本征值 \rightarrow 边值问题 | 对角化 H 一次返回全部本征值 |
+| 光子统计 g^2(0) |$需算 \langle\psi$|a†^2a^2|$\psi\rangle——坐标基要反推回 Fock，绕远路$| Fock 基下是向量点积，一行 |
+| 自旋/量子比特 | 自旋没有 x 坐标——"自旋在哪儿？"无意义 |$2\times2 或 2^n\times2^n 矩阵，原生$|
+| 纠缠度 concurrence |$坐标空间需两粒子联合概率密度 \int\int$|$\psi(x_1,x_2)$|^2，算部分迹极繁琐 | 直积空间部分迹，einsum 秒出 |
+| Wigner 函数 |$W(x,p) = (1/\pi\hbar)\int\langle x+y$|$\rho$|$x-y\rangle e^{-2ipy/\hbar}dy——每个 (x,p) 点都要积分$| Fock 基下位移算符公式，高效得多 |
+| 能谱 |$坐标基需解微分方程 -\hbar^2/2m \psi''+V\psi=E\psi 逐本征值 \rightarrow 边值问题$| 对角化 H 一次返回全部本征值 |
 
 **根本原因 — 每一种基底都有它的"舒适区"**
 
@@ -1711,7 +1711,7 @@ L_k \rho L_k†     : "量子跳跃" — 环境测量了系统
 
 | 通道 | L | 物理过程 | 效应 |
 |------|---|---------|------|
-| 振幅阻尼 | a (湮灭算符) | 自发辐射，能量弛豫 | \|1⟩→\|0⟩，T₁ |
+| 振幅阻尼 | a (湮灭算符) | 自发辐射，能量弛豫 |$\$|$1⟩→\$|0⟩，T₁ |
 | 相位阻尼 | a†a (粒子数算符) | 弹性散射，无能量损失 | 相干消失，T₂ |
 | 热耗散 | √γ̄ a†, √γ a | 与热库热平衡 | → ρ_th |
 
@@ -1783,5 +1783,5 @@ Lindblad 补上这个缺口——让量子力学可以描述"系统+环境"中�
 - Chiribella et al., *Quantum computations without definite causal structure* (量子 switch)
 - Zurek, W. H., *Decoherence, einselection, and the quantum origins of the classical*, Rev. Mod. Phys. 75, 715 (2003)
 - Joos, E. et al., *Decoherence and the Appearance of a Classical World in Quantum Theory*
-- Wigner, E. P., *On the Quantum Correction for Thermodynamic Equilibrium*, Phys. Rev. 40, 749 (1932)
+- Wigner, E. P., *On the Quantum Correction for Thermodynamic Equilibrium*, Phys. Rev. 40, 749 (1932}
 - Quantum Agent 源码: `src/qm/`, `src/qft/`
