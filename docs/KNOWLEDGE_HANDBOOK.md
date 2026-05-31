@@ -100,25 +100,25 @@ $$
 
 **玻色子**：
 $$
-[\hat{a}, \hat{a}†] = 1
+[\hat{a}, \hat{a}^\dagger] = 1
 
 \hat{a}|n\rangle   = \sqrt n \cdot |n-1\rangle      湮灭
-\hat{a}†|n\rangle  = \sqrt{n+1} \cdot |n+1\rangle  产生
+\hat{a}^\dagger|n\rangle  = \sqrt{n+1} \cdot |n+1\rangle  产生
 $$
 
 **费米子**：
 $$
-{ĉ, ĉ†} = 1,   ĉ^2 = 0
+{ĉ, \hat{c}^\dagger} = 1,   ĉ^2 = 0
 
 ĉ|0\rangle = 0,  ĉ|1\rangle = |0\rangle
-ĉ†|0\rangle = |1\rangle,  ĉ†|1\rangle = 0  (Pauli 不相容)
+\hat{c}^\dagger|0\rangle = |1\rangle,  \hat{c}^\dagger|1\rangle = 0  (Pauli 不相容)
 $$
 
 产生和湮灭算符把不同 N 的子空间连接起来，是 Fock 空间的"桥梁算符"。
 
 ### 0.4 为什么恰好是谐振子代数
 
-玻色子产生/湮灭算符的对易关系 [\hat{a}, \hat{a}†] = 1 和量子谐振子的升降算符**一模一样**。这不是巧合——本质原因：
+玻色子产生/湮灭算符的对易关系 [\hat{a}, \hat{a}^\dagger] = 1 和量子谐振子的升降算符**一模一样**。这不是巧合——本质原因：
 
 $$
 量子谐振子能级:       |0\rangle, |1\rangle, |2\rangle, ...
@@ -138,7 +138,7 @@ $$
 | 问题 | 固定 N 的 QM | Fock 空间 |
 |------|:---:|:---:|
 | 粒子数变化 | ✗ 不同 N 需要不同空间 | ✓ 所有 N 在一个空间 |
-| 产生/湮灭 | ✗ 没有这俩算符 |$✓ \hat{a}†/\hat{a}$|
+| 产生/湮灭 | ✗ 没有这俩算符 |$✓ \hat{a}^\dagger/\hat{a}$|
 | 不可区分性 | 手动对称化 | 自动由交换关系保证 |
 | 二次量子化 | 需要手动构造 | 自然框架 |
 | 真空涨落 | 不存在 |$\langle0\$|$\hat{\phi}^2\$|$0\rangle \neq 0$|
@@ -248,7 +248,7 @@ $$
 
 $$
 |\alpha\rangle = \hat{D}(\alpha) |0\rangle
-\hat{D}(\alpha) = exp(\alpha \hat{a}† - \alpha* \hat{a})    (幺正算符)
+\hat{D}(\alpha) = exp(\alpha \hat{a}^\dagger - \alpha* \hat{a})    (幺正算符)
 $$
 
 \hat{D} 将真空在相空间平移 |\alpha| 并在相位 \theta 方向旋转。这也是相干态是"位移后的真空"说法的来源。
@@ -301,9 +301,9 @@ coherent(N=50, alpha=2.0+0.5j)
 
 | 实验 | 式子 | 期待值 |
 |------|------|:---:|
-| 平均光子 |$\langle n\rangle = \langle\psi$|$\hat{a}†\hat{a}$|$\psi\rangle$| |$\alpha$|^2 |
+| 平均光子 |$\langle n\rangle = \langle\psi$|$\hat{a}^\dagger\hat{a}$|$\psi\rangle$| |$\alpha$|^2 |
 | 方差 |$\Delta n^2 = \langle n^2\rangle - \langle n\rangle^2$| |$\alpha$|^2 |
-| g^2(0) |$\langle\hat{a}†^2\hat{a}^2\rangle / \langle\hat{a}†\hat{a}\rangle^2$| 1.0 |
+| g^2(0) |$\langle\hat{a}^\dagger^2\hat{a}^2\rangle / \langle\hat{a}^\dagger\hat{a}\rangle^2$| 1.0 |
 | 湮灭不变 |$‖\hat{a}$|$\psi\rangle/‖\hat{a}$|$\psi\rangle‖ −$|$\psi\rangle‖$|$\approx 0$|
 | Wigner 最小值 | min(W) | > 0（全正）|
 
@@ -355,11 +355,11 @@ $$
 |n_k\rangle  =  第 k 模式有 n_k 个量子激发
 
 \hat{a}(k)|n_k\rangle   = \sqrt n_k \cdot |n_k - 1\rangle
-\hat{a}†(k)|n_k\rangle  = \sqrt{n_k + 1} \cdot |n_k + 1\rangle
+\hat{a}^\dagger(k)|n_k\rangle  = \sqrt{n_k + 1} \cdot |n_k + 1\rangle
 $$
 
 **物理意义**：
-- \hat{a}†(k) 产生一个动量为 `k`、能量为 \omega_k 的粒子
+- \hat{a}^\dagger(k) 产生一个动量为 `k`、能量为 \omega_k 的粒子
 - \hat{a}(k) 湮灭一个这样的粒子
 - 粒子是场的量子激发——不是独立的实体
 
@@ -378,15 +378,15 @@ $$
 | 态 | 物理意义 |
 |---|---|
 | |$0\rangle =$|$0, 0, 0, ...\rangle$| 真空——所有模式基态 |
-|$\hat{a}†(k_1)$|$0\rangle =$|$1, 0, 0, ...\rangle$| 一个动量为 k_1 的粒子 |
-|$\hat{a}†(k_1)\hat{a}†(k_2)$|$0\rangle$| 两个粒子，动量 k_1 和 k_2 |
-|$(\hat{a}†(k))^n/\sqrt{n!}$|$0\rangle$| n 个动量相同的玻色子 |
+|$\hat{a}^\dagger(k_1)$|$0\rangle =$|$1, 0, 0, ...\rangle$| 一个动量为 k_1 的粒子 |
+|$\hat{a}^\dagger(k_1)\hat{a}^\dagger(k_2)$|$0\rangle$| 两个粒子，动量 k_1 和 k_2 |
+|$(\hat{a}^\dagger(k))^n/\sqrt{n!}$|$0\rangle$| n 个动量相同的玻色子 |
 
 **粒子数算符**：
 
 $$
-N̂ = \int d^3k \cdot \hat{a}†(k)\hat{a}(k)      总粒子数（所有模式求和）
-\hat{H} = \int d^3k \cdot \omega_k \cdot \hat{a}†(k)\hat{a}(k)  总能量
+N̂ = \int d^3k \cdot \hat{a}^\dagger(k)\hat{a}(k)      总粒子数（所有模式求和）
+\hat{H} = \int d^3k \cdot \omega_k \cdot \hat{a}^\dagger(k)\hat{a}(k)  总能量
 $$
 
 ### 1.5 第四步：缝合——场算符 \hat{\phi}(x)
@@ -394,11 +394,11 @@ $$
 场算符将两者统一：
 
 $$
-\hat{\phi}(x) = \int d^3k/(2\pi)^3 \cdot 1/\sqrt{2\omega_k} \cdot [\hat{a}(k) e^-ikx + \hat{a}†(k) e^+ikx]
+\hat{\phi}(x) = \int d^3k/(2\pi)^3 \cdot 1/\sqrt{2\omega_k} \cdot [\hat{a}(k) e^-ikx + \hat{a}^\dagger(k) e^+ikx]
 $$
 
 - **x = (t, x)** 是闵氏坐标——算符的**参数**
-- **\hat{a}(k), \hat{a}†(k)** 作用在 Fock 空间——算符的**算符部分**
+- **\hat{a}(k), \hat{a}^\dagger(k)** 作用在 Fock 空间——算符的**算符部分**
 
 \hat{\phi}(x) 就是缝合线。
 
@@ -425,7 +425,7 @@ $$
 $$
 闵可夫斯基空间 M^4                       Fock 空间 F
                                               │
-经典场 \phi(x,t)  ──Fourier──\rightarrow  {k 模式}  ──量子化──\rightarrow  \hat{a}(k), \hat{a}†(k)
+经典场 \phi(x,t)  ──Fourier──\rightarrow  {k 模式}  ──量子化──\rightarrow  \hat{a}(k), \hat{a}^\dagger(k)
                                               │
                                               ├──\rightarrow  |n_k\rangle  (单模式 Fock 态)
                                               │
@@ -1196,7 +1196,7 @@ Heisenberg 1925, Schrödinger 1926, Feynman 1948 — 量子力学有三种完全
 $$
 方程:       i\hbar d|\psi\rangle/dt = H|\psi\rangle             抽象态矢量
 解:         |\psi(t)\rangle = exp(-iHt/\hbar) |\psi(0)\rangle
-计算:       H = U\Lambda U† \rightarrow |\psi(t)\rangle = U e^{-i\Lambda t/\hbar} U†|\psi(0)\rangle
+计算:       H = U\Lambda U^\dagger \rightarrow |\psi(t)\rangle = U e^{-i\Lambda t/\hbar} U^\dagger|\psi(0)\rangle
 $$
 
 **物理脉络:**
@@ -1214,30 +1214,30 @@ for t in tlist:
     U_diag = np.exp(-1j * eigvals * t / hbar)       # e^{-iλₙt/ℏ}
     psi_t = eigvecs @ (U_diag * (eigvecs.conj().T @ psi0))
     #           ^^^^^^^^   ^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^
-    #              U       diag(...)        U† |ψ₀⟩
+    #              U       diag(...)        U^\dagger |ψ₀⟩
 ```
 
 **对角化推导 — Taylor 展开全过程**
 
-从 H = U\Lambda U† 到 |\psi(t)\rangle = U e^{-i\Lambda t/\hbar} U†|\psi(0)\rangle，每一步都是恒等式：
+从 H = U\Lambda U^\dagger 到 |\psi(t)\rangle = U e^{-i\Lambda t/\hbar} U^\dagger|\psi(0)\rangle，每一步都是恒等式：
 
 $$
 ① 形式解:  |\psi(t)\rangle = e^{-iHt/\hbar} |\psi(0)\rangle              薛定谔方程的形式积分
 
-② 对角化:  H = U\Lambda U†                                   Hermitian \rightarrow 存在幺正对角化
+② 对角化:  H = U\Lambda U^\dagger                                   Hermitian \rightarrow 存在幺正对角化
 
 ③ Taylor:  e^{-iHt/\hbar} = \sum_n (-it/\hbar)^n H^n / n!        矩阵指数的定义
 
-④ 代入 H=U\Lambda U†, 利用 U†U=I:
-           H^n = (U\Lambda U†)^n = U \Lambda^n U†                  中间的 U†U 全部消掉
-           证明: (U\Lambda U†)^2 = U\Lambda U†U\Lambda U† = U\Lambda^2U†
-                (U\Lambda U†)^3 = U\Lambda^2U†U\Lambda U† = U\Lambda^3U†
+④ 代入 H=U\Lambda U^\dagger, 利用 U^\daggerU=I:
+           H^n = (U\Lambda U^\dagger)^n = U \Lambda^n U^\dagger                  中间的 U^\daggerU 全部消掉
+           证明: (U\Lambda U^\dagger)^2 = U\Lambda U^\daggerU\Lambda U^\dagger = U\Lambda^2U^\dagger
+                (U\Lambda U^\dagger)^3 = U\Lambda^2U^\daggerU\Lambda U^\dagger = U\Lambda^3U^\dagger
                 ...归纳
 
 ⑤ 代回级数:
-           \Sigma(-it/\hbar)^n H^n/n! = \Sigma(-it/\hbar)^n U\Lambda^nU†/n!
-                              = U [\Sigma(-it/\hbar)^n \Lambda^n/n!] U†
-                              = U e^{-i\Lambda t/\hbar} U†          ↑ 对角阵\rightarrow对每个对角元求指数
+           \Sigma(-it/\hbar)^n H^n/n! = \Sigma(-it/\hbar)^n U\Lambda^nU^\dagger/n!
+                              = U [\Sigma(-it/\hbar)^n \Lambda^n/n!] U^\dagger
+                              = U e^{-i\Lambda t/\hbar} U^\dagger          ↑ 对角阵\rightarrow对每个对角元求指数
 
 ⑥ 对角矩阵指数 = 逐元取指数:
            \Lambda=diag(E_1,...,E_N) \rightarrow e^{-i\Lambda t/\hbar}=diag(e^{-iE_1t/\hbar},...,e^{-iE_Nt/\hbar})
@@ -1262,7 +1262,7 @@ $$
 
 **算法剖析 — 对角化即精确解:**
 
-矩阵力学的核心洞察：exp(-iHt) = U exp(-i\Lambda t) U† 不是近似，是恒等式。对易 H 的矩阵指数等价于在本征基下每个分量独立旋转 e^{-i\lambda_nt/\hbar}。
+矩阵力学的核心洞察：exp(-iHt) = U exp(-i\Lambda t) U^\dagger 不是近似，是恒等式。对易 H 的矩阵指数等价于在本征基下每个分量独立旋转 e^{-i\lambda_nt/\hbar}。
 
 为什么是精确的？因为 U 是幺正矩阵——基变换。\Lambda 是对角矩阵——本征值。在能量本征基 {|E_n\rangle} 下，H 是对角的，演化方程退化为 N 个独立的一阶 ODE：
 
@@ -1275,7 +1275,7 @@ d cₙ/dt = -iEₙ cₙ/ℏ  →  cₙ(t) = cₙ(0) e^{-iEₙt/ℏ}
 **验证数据:**
 
 $$
-H = 2a†a, |\psi_0\rangle = |\alpha=3\rangle, N=50
+H = 2a^\dagger a, |\psi_0\rangle = |\alpha=3\rangle, N=50
 E_0 = 18.0000, \sigma_E = 1.3\times10^-^1^5           \leftarrow 能量守恒到机器精度
 t = T/4:  |\langle\psi_0|\psi(t)\rangle| = 0.000115 (理论 0.000123)
 t = T/2:  |\langle\psi_0|\psi(t)\rangle| = 0.000000 (理论 0.000000)
@@ -1396,7 +1396,7 @@ $$
 
 ```python
 # 谐振子: 两种方法应当给出相同的 ⟨x⟩(t), ⟨p⟩(t), Δx(t)
-# Fock:  sesolve(Ĥ∝a†a, |ψ₀⟩=coherent)
+# Fock:  sesolve(Ĥ∝a^\dagger a, |ψ₀⟩=coherent)
 # Wave:  evolve_ssfm(V=½mω²x², ψ₀=gaussian)
 # → 结果等价
 ```
@@ -1434,7 +1434,7 @@ N 限制              ~100                       ~10^4
 
 | 问题类型 | 实例 | 为什么 |
 |----------|------|--------|
-| 光子统计 | g^2(0), Mandel Q, 光子数分布 | Fock 基是光子数的自然语言——a†a 是对角的，g^2 表达式在 Fock 基下最简 |
+| 光子统计 | g^2(0), Mandel Q, 光子数分布 | Fock 基是光子数的自然语言——a^\dagger a 是对角的，g^2 表达式在 Fock 基下最简 |
 | 能谱分析 |$本征值 En, 能隙 \Delta E, 简并度$| 对角化 H 直接输出本征值——这就是能谱 |
 | 量子态保真度 |$\langle\psi_1$|$\psi_2\rangle, 态距离, 正交性$| 内积在离散基下是向量点积，天然 |
 | 相空间准概率 |$Wigner(\alpha), Husimi Q, Glauber P$|$三种表象都在 Fock 基下通过移位算符 \hat{D}(\alpha) 自然定义$|
@@ -1469,7 +1469,7 @@ N 限制              ~100                       ~10^4
 
 | 系统 | 矩阵力学角度 | 波动力学角度 |
 |------|-------------|-------------|
-| 谐振子 |$对角化 H=\omega(a†a+½): 本征谱精确, 光子统计天然$|$SSFM(V=½m\omega^2x^2): 波包振荡可视化, revival 动态$|
+| 谐振子 |$对角化 H=\omega(a^\dagger a+½): 本征谱精确, 光子统计天然$|$SSFM(V=½m\omega^2x^2): 波包振荡可视化, revival 动态$|
 | 势垒 | 转移矩阵法: 透射率 T(E) 解析 | SSFM: T(E) 数值, 含时隧穿过程动画 |
 | 量子 Walk | 硬币态+位置 = 直积空间, 对角化演化 | SSFM 等效连续极限, 大尺度扩散 |
 | 双阱 | 对称/反对称能级差 = 隧穿频率 |$SSFM: 波包在两个阱之间振荡 \rightarrow 视觉直观$|
@@ -1531,7 +1531,7 @@ $$
 
 | 问题 | 坐标基为何别扭 | Fock/离散基为何自然 |
 |------|---------------|-------------------|
-| 光子统计 g^2(0) |$需算 \langle\psi$|a†^2a^2|$\psi\rangle——坐标基要反推回 Fock，绕远路$| Fock 基下是向量点积，一行 |
+| 光子统计 g^2(0) |$需算 \langle\psi$|a^\dagger^2a^2|$\psi\rangle——坐标基要反推回 Fock，绕远路$| Fock 基下是向量点积，一行 |
 | 自旋/量子比特 | 自旋没有 x 坐标——"自旋在哪儿？"无意义 |$2\times2 或 2^n\times2^n 矩阵，原生$|
 | 纠缠度 concurrence |$坐标空间需两粒子联合概率密度 \int\int$|$\psi(x_1,x_2)$|^2，算部分迹极繁琐 | 直积空间部分迹，einsum 秒出 |
 | Wigner 函数 |$W(x,p) = (1/\pi\hbar)\int\langle x+y$|$\rho$|$x-y\rangle e^{-2ipy/\hbar}dy——每个 (x,p) 点都要积分$| Fock 基下位移算符公式，高效得多 |
@@ -1542,11 +1542,11 @@ $$
 $$
 基底选择 = 把哪些算符变成对角矩阵
 
-Fock 基 {|n\rangle}:  a†a 对角  \rightarrow  光子数天然  \rightarrow  能谱/统计/Wigner 自然
+Fock 基 {|n\rangle}:  a^\dagger a 对角  \rightarrow  光子数天然  \rightarrow  能谱/统计/Wigner 自然
                    \hat{x} 稠密   \rightarrow  位置信息散落在所有分量
 
 坐标基 {|x\rangle}:  V(x) 对角  \rightarrow  势能天然  \rightarrow  散射/干涉/隧穿自然
-                   a†a 稠密 \rightarrow  光子数信息散落在所有分量
+                   a^\dagger a 稠密 \rightarrow  光子数信息散落在所有分量
 
 动量基 {|k\rangle}:  \hat{p} 对角    \rightarrow  动能天然  \rightarrow  平面波散射理论自然
                    V(x) 稠密 \rightarrow  势能信息散落在所有分量
@@ -1689,7 +1689,7 @@ Lindblad 主方程:
 Gorini-Kossakowski-Sudarshan-Lindblad 定理：最一般的量子 Markov 主方程是：
 
 ```
-d\rho/dt = -i/\hbar [H, \rho] + \sum_k (L_k \rho L_k† - ½{L_k†L_k, \rho})
+d\rho/dt = -i/\hbar [H, \rho] + \sum_k (L_k \rho L_k^\dagger - ½{L_k^\daggerL_k, \rho})
        ^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
        幺正部分       耗散部分 (Lindblad 超算符)
 ```
@@ -1697,10 +1697,10 @@ d\rho/dt = -i/\hbar [H, \rho] + \sum_k (L_k \rho L_k† - ½{L_k†L_k, \rho})
 逐项解读：
 
 ```
-L_k \rho L_k†     : "量子跳跃" — 环境测量了系统
+L_k \rho L_k^\dagger     : "量子跳跃" — 环境测量了系统
                  纯态 \rightarrow 混合态，对角项保留，非对角项衰减
 
-½{L_k†L_k, \rho}  : "反作用" — 确保 Tr(\rho)=1
+½{L_k^\daggerL_k, \rho}  : "反作用" — 确保 Tr(\rho)=1
                  量子版本的细致平衡，没有它概率不守恒
 
 \sum_k            : 多个独立环境通道同时作用
@@ -1711,9 +1711,9 @@ L_k \rho L_k†     : "量子跳跃" — 环境测量了系统
 
 | 通道 | L | 物理过程 | 效应 |
 |------|---|---------|------|
-| 振幅阻尼 | a (湮灭算符) | 自发辐射，能量弛豫 |$\$|$1⟩→\$|0⟩，T₁ |
-| 相位阻尼 | a†a (粒子数算符) | 弹性散射，无能量损失 | 相干消失，T₂ |
-| 热耗散 | √γ̄ a†, √γ a | 与热库热平衡 | → ρ_th |
+| 振幅阻尼 | $a$ (湮灭算符) | 自发辐射，能量弛豫 | $|1\rangle \rightarrow |0\rangle$，$T_1$ |
+| 相位阻尼 | $a^\dagger a$ (粒子数算符) | 弹性散射，无能量损失 | 相干消失，$T_2$ |
+| 热耗散 | $\sqrt{\bar{\gamma}} a^\dagger, \sqrt{\gamma} a$ | 与热库热平衡 | $\rightarrow \rho_{th}$ |
 
 振幅阻尼：\|1⟩⟨1\| → (1-γ)\|1⟩⟨1\| + γ\|0⟩⟨0\|——激发态衰减。
 
