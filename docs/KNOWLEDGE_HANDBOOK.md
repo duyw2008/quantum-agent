@@ -181,13 +181,13 @@ $\alpha$ 是复数，编码振幅和相位：$\alpha = |\alpha| e^{i\theta}$。$
 
 | 性质 | 相干态 | 对比 |
 |------|:------:|------|
-| 光子数分布 | Poisson，均值/方差 = |\alpha|^2 | 热态：Bose-Einstein（超 Poisson） |
-| g^2(0) | 1.0 | Fock 态：0 (反聚束); 热态：2 (聚束) |
-| Mandel Q | 0 | Q<0 亚 Poisson; Q>0 超 Poisson |
-| \Deltax\cdot\Deltap | \hbar/2 | **最小不确定态** — 等于基态 |
-| Wigner | 处处 \geq 0 | 纯态中唯一全正的 — 最"经典" |
-| \hat{a}|\alpha\rangle = \alpha|\alpha\rangle | 湮灭算符本征态 | 拿走一个光子态不变 |
-| 损耗后 | 仍是相干态 | 只是 |\alpha|^2 衰减 — 保持相干性 |
+| 光子数分布 | Poisson，均值/方差 = $|\alpha|^2$ | 热态：Bose-Einstein（超 Poisson） |
+| $g^2(0)$ | 1.0 | Fock 态：0 (反聚束); 热态：2 (聚束) |
+| Mandel $Q$ | 0 | $Q<0$ 亚 Poisson; $Q>0$ 超 Poisson |
+| $\Delta x\cdot\Delta p$ | $\hbar/2$ | **最小不确定态** — 等于基态 |
+| Wigner | 处处 $\geq 0$ | 纯态中唯一全正的 — 最"经典" |
+| $\hat{a}|\alpha\rangle = \alpha|\alpha\rangle$ | 湮灭算符本征态 | 拿走一个光子态不变 |
+| 损耗后 | 仍是相干态 | 只是 $|\alpha|^2$ 衰减 — 保持相干性 |
 | 相位噪声 | 标准量子极限 (SQL) | 压缩态可突破 SQL |
 
 **为什么湮灭掉一个光子态不变？**
@@ -280,11 +280,11 @@ $$
 
 | | 相干态 | 压缩真空 | 压缩相干态 |
 |---|:---:|:---:|:---:|
-| \Deltax | \sigma | \sigma e^{-r} | \sigma e^{-r} |
-| \Deltap | \sigma | \sigma e^{+r} | \sigma e^{+r} |
-| \Deltax\cdot\Deltap | \hbar/2 | \hbar/2 | \hbar/2 |
-| \langle n\rangle | |\alpha|^2 | sinh^2 r | > |\alpha|^2 |
-| g^2(0) | 1 | > 1 (偶光子) | 非平凡 |
+| $\Delta x$ | $\sigma$ | $\sigma e^{-r}$ | $\sigma e^{-r}$ |
+| $\Delta p$ | $\sigma$ | $\sigma e^{+r}$ | $\sigma e^{+r}$ |
+| $\Delta x\cdot\Delta p$ | $\hbar/2$ | $\hbar/2$ | $\hbar/2$ |
+| $\langle n\rangle$ | $|\alpha|^2$ | $\sinh^2 r$ | $> |\alpha|^2$ |
+| $g^2(0)$ | 1 | $> 1$ (偶光子) | 非平凡 |
 
 压缩态仍然满足最小不确定度，但将噪声从一个正交分量"挤压"到另一个——用于增强引力波探测（LIGO）的灵敏度。
 
@@ -307,11 +307,11 @@ coherent(N=50, alpha=2.0+0.5j)
 
 | 实验 | 式子 | 期待值 |
 |------|------|:---:|
-| 平均光子 | \langle n\rangle = \langle \psi|\hat{a}†\hat{a}|\psi\rangle | |\alpha|^2 |
-| 方差 | \Deltan^2 = \langle n^2\rangle - \langle n\rangle^2 | |\alpha|^2 |
-| g^2(0) | \langle \hat{a}†^2\hat{a}^2\rangle / \langle \hat{a}†\hat{a}\rangle^2 | 1.0 |
-| 湮灭不变 | ‖\hat{a}|\psi\rangle/‖\hat{a}|\psi\rangle‖ − |\psi\rangle‖ | \approx 0 |
-| Wigner 最小值 | min(W) | > 0（全正）|
+| 平均光子 | $\langle n\rangle = \langle\psi|\hat{a}^\dagger\hat{a}|\psi\rangle$ | $|\alpha|^2$ |
+| 方差 | $\Delta n^2 = \langle n^2\rangle - \langle n\rangle^2$ | $|\alpha|^2$ |
+| $g^2(0)$ | $\langle \hat{a}^{\dagger 2}\hat{a}^2\rangle / \langle \hat{a}^\dagger\hat{a}\rangle^2$ | 1.0 |
+| 湮灭不变 | $\|\hat{a}|\psi\rangle\|/\|\hat{a}|\psi\rangle\| - \||\psi\rangle\||$ | $\approx 0$ |
+| Wigner 最小值 | $\min(W)$ | $> 0$（全正）|
 
 ---
 
