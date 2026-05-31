@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.7.2] — 2026-05-31
+
+### Added
+- 知识手册 §7: 量子动力学 — Heisenberg vs Schrödinger 两条演化路线
+  - §7.1 Heisenberg 路线: 矩阵力学 → sesolve 对角化，能量守恒 10⁻¹⁵
+  - §7.2 Schrödinger 路线: 波动力学 → SSFM，Strang 拆分 + FFT，O(Δt³)
+  - §7.3 统一性: 同方程/不同基底，⟨x|n⟩=φ_n(x) 转换桥，选择指南
+
 ## [2.7.1] — 2026-05-31
 
 ### Added
