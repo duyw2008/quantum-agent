@@ -197,7 +197,7 @@ $$
 $$
 \hat{a}|\alpha\rangle = e^{-|\alpha|^2/2} \sum \alpha^n/\sqrt{n!} \hat{a}|n\rangle
      = e^{-|\alpha|^2/2} \sum \alpha^n/\sqrt{n!} \sqrt n |n-1\rangle
-     = e^{-|\alpha|^2/2} \sum_{m=0}^{\infty} \alpha^{m+1}/\sqrt{m!} |m\rangle    (令 m=n-1}
+     = e^{-|\alpha|^2/2} \sum_{m=0}^{\infty} \alpha^{m+1}/\sqrt{m!} |m\rangle    (令 m=n-1)
      = \alpha \cdot e^{-|\alpha|^2/2} \sum \alpha^m/\sqrt{m!} |m\rangle
      = \alpha |\alpha\rangle
 $$
@@ -209,7 +209,7 @@ $$
 相干态的光子数概率服从 Poisson：
 
 $$
-P(n} = |\langle n|\alpha\rangle|^2 = e^{-|\alpha|^2} |\alpha|^{2n} / n!
+P(n) = |\langle n|\alpha\rangle|^2 = e^{-|\alpha|^2} |\alpha|^{2n} / n!
      = e^{-\langle n\rangle} \langle n\rangle^n / n!
 $$
 
@@ -932,7 +932,7 @@ $$
 |------|:---:|:---:|
 | 电子 (原子尺度) | ~10^-^1^0 m | ~10^6 年 |
 | 分子 (介观) | ~10^-^6 m | ~10^-^3 秒 |
-| 尘埃颗粒 | ~10^-^3 m | ~10^-^2^0 秒 |
+| 尘埃颗粒 | ~10^-^3 m | ~10^{-20} 秒 |
 | 猫 (宏观) | ~0.1 m | ~10^-^4^0 秒 |
 
 > **退相干是量子-经典过渡的最快已知过程**——宏观叠加态在飞秒内消失。
@@ -1364,7 +1364,7 @@ $$
 **谐振子重生 (revival):**
 
 $$
-T = 2\pi/\omega = \pi (\omega=2}
+T = 2\pi/\omega = \pi (\omega=2)
 t = T/2:   |\langle\psi_0|\psi\rangle| = 0.999935     \leftarrow 几乎回归
 t = T:     |\langle\psi_0|\psi\rangle| = 0.999739     \leftarrow 完整重生
 t = 2T:    |\langle\psi_0|\psi\rangle| = 0.998959     \leftarrow 再重生
