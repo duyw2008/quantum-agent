@@ -301,11 +301,11 @@ coherent(N=50, alpha=2.0+0.5j)
 
 | 实验 | 式子 | 期待值 |
 |------|------|:---:|
-| 平均光子 |$\langle n\rangle = \langle\psi$|$\hat{a}^\dagger\hat{a}$|
-| 方差 |$\Delta n^2 = \langle n^2\rangle - \langle n\rangle^2$| |
-| g^2(0) |$\langle\hat{a}^\dagger^2\hat{a}^2\rangle\langle\hat{a}^\dagger\hat{a}\rangle^2$| 1.0 |
-| 湮灭不变 |$‖\hat{a}$|$\psi\rangle/‖\hat{a}$|
-| Wigner 最小值 | min(W) | > 0（全正）|
+| 平均光子 | $\langle n\rangle = \langle\psi|\hat{a}^\dagger\hat{a}|\psi\rangle$ | $|\alpha|^2$ |
+| 方差 | $\Delta n^2 = \langle n^2\rangle - \langle n\rangle^2$ | $|\alpha|^2$ |
+| $g^2(0)$ | $\langle\hat{a}^{\dagger 2}\hat{a}^2\rangle / \langle\hat{a}^\dagger\hat{a}\rangle^2$ | 1.0 |
+| 湮灭不变 | $\|\hat{a}|\psi\rangle\| - \||\psi\rangle\||$ | $\approx 0$ |
+| Wigner 最小值 | $\min(W)$ | $> 0$（全正）|
 
 ---
 
