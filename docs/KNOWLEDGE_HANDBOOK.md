@@ -87,8 +87,7 @@ F = H₀ ⊕ H₁ ⊕ H₂ ⊕ H₃ ⊕ ... ⊕ Hₙ ⊕ ...
 
 Fock 空间的任意态可以写作：
 
-
-|Ψ\rangle = c_0|0\rangle + \sum_k c_1(k)|k\rangle + \sumₖ_1,ₖ_2 c_2(k_1,k_2)|k_1,k_2\rangle + ...
+$|Ψ\rangle = c_0|0\rangle + \sum_k c_1(k)|k\rangle + \sumₖ_1,ₖ_2 c_2(k_1,k_2)|k_1,k_2\rangle + ...$
       ↑真空      ↑1粒子              ↑2粒子
 
 
@@ -100,11 +99,10 @@ Fock 空间的任意态可以写作：
 
 **玻色子**：
 
-[\hat{a}, \hat{a}^\dagger] = 1
+$[\hat{a}, \hat{a}^\dagger] = 1$
 
-\hat{a}|n\rangle   = \sqrt n \cdot |n-1\rangle      湮灭
-\hat{a}^\dagger|n\rangle  = \sqrt{n+1} \cdot |n+1\rangle  产生
-
+$\hat{a}|n\rangle   = \sqrt n \cdot |n-1\rangle$      湮灭
+$\hat{a}^\dagger|n\rangle  = \sqrt{n+1} \cdot |n+1\rangle$  产生
 
 **费米子**：
 
@@ -119,7 +117,6 @@ Fock 空间的任意态可以写作：
 ### 0.4 为什么恰好是谐振子代数
 
 玻色子产生/湮灭算符的对易关系 [$\hat{a}, \hat{a}^\dagger] = 1$ 和量子谐振子的升降算符**一模一样**。这不是巧合——本质原因：
-
 
 量子谐振子能级:       |0\rangle, |1\rangle, |2\rangle, ...
 Fock 态的粒子数:      |0\rangle, |1\rangle, |2\rangle, ...
@@ -304,7 +301,7 @@ coherent(N=50, alpha=2.0+0.5j)
 | 平均光子 | $\langle n\rangle = \langle\psi|\hat{a}^\dagger\hat{a}|\psi\rangle$ | $|\alpha|^2$ |
 | 方差 | $\Delta n^2 = \langle n^2\rangle - \langle n\rangle^2$ | $|\alpha|^2$ |
 | $g^2(0)$ | $\langle\hat{a}^{\dagger 2}\hat{a}^2\rangle / \langle\hat{a}^\dagger\hat{a}\rangle^2$ | 1.0 |
-| 湮灭不变 | $\|\hat{a}|\psi\rangle\| - \||\psi\rangle\||$ | $\approx 0$ |
+| 湮灭不变 | $\|\hat{a}|\psi\rangle\| - \||\psi\rangle\|$ | $\approx 0$ |
 | Wigner 最小值 | $\min(W)$ | $> 0$（全正）|
 
 ---
@@ -662,37 +659,54 @@ rho = (I + r.sigma)/2
 
 **纯态 = 信息完整**
 
-
+$$
 |\psi\rangle = \alpha|0\rangle + \beta|1\rangle
+$$
 
-\rho = |\psi\rangle\langle\psi| = [[|\alpha|^2,  \alpha\beta* ],
-              [\alpha*\beta,   |\beta|^2]]
+$$
+\rho = |\psi\rangle\langle\psi| = \begin{pmatrix}
+|\alpha|^2 & \alpha\beta^* \\
+\alpha^*\beta & |\beta|^2
+\end{pmatrix}
+$$
 
-\rho^2 = \rho (幂等检验)
+$\rho^2 = \rho$ (幂等检验)
 
-纯态 \neq 单个粒子。100 个粒子全部在同一个 |\psi\rangle \rightarrow 仍是纯态。
+纯态 $\neq$ 单个粒子。100 个粒子全部在同一个 $|\psi\rangle \rightarrow$ 仍是纯态。
 关键不是粒子数量，是你知不知道每个粒子在哪个态。
-
 
 **混合态 = 信息缺失**
 
+50% $|0\rangle$ + 50% $|1\rangle$ (不知道每个是哪个)
 
-50% |0\rangle + 50% |1\rangle  (不知道每个是哪个)
+$$
+\rho = 0.5|0\rangle\langle0| + 0.5|1\rangle\langle1| = \begin{pmatrix}
+0.5 & 0 \\
+0 & 0.5
+\end{pmatrix}
+$$
 
-\rho = 0.5|0\rangle\langle0| + 0.5|1\rangle\langle1| = [[0.5, 0  ],
-                                [0,   0.5]]
-
-\rho^2 \neq \rho。对角元仍是概率，非对角元消失——系综不能干涉。
-
+$\rho^2 \neq \rho$。对角元仍是概率，非对角元消失——系综不能干涉。
 
 **对角元相同 $\neq$ 态相同**
 
-纯态 |+\rangle:        \rho = [[0.5, 0.5],    非对角元 \neq 0, \rho^2 = \rho
-                      [0.5, 0.5]]
+纯态 $|+\rangle$:
+$$
+\rho = \begin{pmatrix}
+0.5 & 0.5 \\
+0.5 & 0.5
+\end{pmatrix}
+\quad \text{非对角元} \neq 0,\; \rho^2 = \rho
+$$
 
-混合 50/50:      \rho = [[0.5, 0  ],    非对角元 = 0, \rho^2 \neq \rho
-                      [0,   0.5]]
-
+混合 50/50:
+$$
+\rho = \begin{pmatrix}
+0.5 & 0 \\
+0 & 0.5
+\end{pmatrix}
+\quad \text{非对角元} = 0,\; \rho^2 \neq \rho
+$$
 
 测到 $|0\rangle$ 的概率都是 0.5——对角元看不出来。非对角元是量子相干的指纹。
 
@@ -700,22 +714,33 @@ rho = (I + r.sigma)/2
 
 纯态的概率来自量子测量（单个粒子），混合态的概率来自经典无知（系综）：
 
+纯态 $|+\rangle$: 一个粒子在 $(|0\rangle+|1\rangle)/\sqrt{2}$
+测到 $|0\rangle$ 概率 0.5 $\leftarrow$ 量子不确定性
+$$
+\rho = \begin{pmatrix}
+0.5 & 0.5 \\
+0.5 & 0.5
+\end{pmatrix}
+\quad \text{非对角元 = 量子相干}
+$$
 
-纯态 |+\rangle:     一个粒子在 (|0\rangle+|1\rangle)/\sqrt2
-              测到 |0\rangle 概率 0.5 \leftarrow 量子不确定性
-              \rho = [[0.5, 0.5], [0.5, 0.5]]   非对角元 = 量子相干
-
-混合:         100个粒子, 50在|0\rangle, 50在|1\rangle
-              随机抽一个测到 |0\rangle 概率 0.5 \leftarrow 经典无知
-              \rho = [[0.5, 0], [0, 0.5]]   非对角元 = 0
-
+混合: 100个粒子, 50在 $|0\rangle$, 50在 $|1\rangle$
+随机抽一个测到 $|0\rangle$ 概率 0.5 $\leftarrow$ 经典无知
+$$
+\rho = \begin{pmatrix}
+0.5 & 0 \\
+0 & 0.5
+\end{pmatrix}
+\quad \text{非对角元 = 0}
+$$
 
 对角元相同看不出区别——非对角元才是两者的分界线。
 
 **Bloch 表示**
 
-
-\rho = (I + r\cdot\sigma)/2
+$$
+\rho = \frac{I + \mathbf{r}\cdot\boldsymbol{\sigma}}{2}
+$$
 
 |r| = 1 \rightarrow 纯态 (在球面上)
 |r| < 1 \rightarrow 混合态 (在球内)
