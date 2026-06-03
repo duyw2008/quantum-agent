@@ -1994,3 +1994,18 @@ Lindblad 补上这个缺口——让量子力学可以描述"系统+环境"中�
 - Joos, E. et al., *Decoherence and the Appearance of a Classical World in Quantum Theory*
 - Wigner, E. P., *On the Quantum Correction for Thermodynamic Equilibrium*, Phys. Rev. 40, 749 (1932)
 - Quantum Agent 源码: `src/qm/`, `src/qft/`
+
+---
+
+## 附录：关于学习（待展开）
+
+**抽象与联想：模型 vs 涌现**
+
+| | 联想 | 抽象 |
+|:---|:---|:---|
+| 可否建模 | ✓ 可建模 | 主要为涌现 |
+| 数学基础 | 注意力 Q·K^T、互信息、向量类比 | 多层级概念压缩（无独立模块） |
+| 例子 | king-man+woman≈queen | 谱定理→主轴→坍缩解释（跨域链式推理） |
+| 共同底层 | 高维嵌入空间的流形结构——相似概念自然聚为近邻 ||
+
+*（后续深入讨论）*
