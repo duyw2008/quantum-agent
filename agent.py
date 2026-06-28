@@ -28,8 +28,16 @@ except ImportError:
 class QuantumAgent:
     """量子力学智能体"""
 
+    # ANSI color helpers
+    _GREEN = '\033[32m'
+    _RED = '\033[31m'
+    _YELLOW = '\033[33m'
+    _BOLD = '\033[1m'
+    _RESET = '\033[0m'
+
     def __init__(self):
         self._calc_ns = {}   # calc 持久化变量
+        self._expr_history = []  # (expr, result_str/error_str, ok:bool)
         self._init_readline()
         self._welcome()
 
@@ -53,7 +61,7 @@ Type 'help' for commands, 'demo' to see examples.
             pass
         # Tab 补全: 命令 + 智能文件路径
         self._completions = [
-            'calc', 'demo', 'test', 'help', 'quit', 'vars',
+            'calc', 'demo', 'test', 'help', 'quit', 'vars', 'history',
             'cd', 'pwd', 'ls', 'run', 'animate', 'plot', 'wigner', 'formula',
             'FockBasis', 'coherent', 'coherent_dm', 'squeezed', 'thermal_dm',
             'cat', 'fock', 'fock_dm', 'expect', 'variance', 'g2', 'mandel_q',
@@ -502,6 +510,8 @@ r'\\sqrt\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
             print(os.getcwd())
         elif cmd == 'ls':
             self._ls()
+        elif cmd == 'history':
+            self._show_history(args)
         elif cmd in ('calc', '=', 'eval'):
             self.calc(' '.join(args))
         elif cmd == 'test':
@@ -677,13 +687,19 @@ r'\\sqrt\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
                 vname = expr.split('=')[0].strip()
                 if vname in self._calc_ns:
                     self._show(self._calc_ns[vname], prefix=f"  {vname} = ")
+                    self._expr_history.append((expr, f"{vname} = ...", True))
+                else:
+                    self._expr_history.append((expr, "", True))
             except Exception as e:
-                print(f"Error: {e}")
+                err = f"Error: {e}"
+                print(err)
+                self._expr_history.append((expr, err, False))
         else:
             # Try eval first, fall back to exec for statements (for, if, etc.)
             try:
                 result = eval(expr, ns)
                 self._show(result)
+                self._expr_history.append((expr, "", True))
             except SyntaxError:
                 try:
                     exec(expr, ns)
@@ -692,10 +708,48 @@ r'\\sqrt\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
                         if k not in ('np', 'numpy', 'qm', 'fb', '__builtins__') and not k.startswith('_'):
                             if k not in self._calc_ns or self._calc_ns.get(k) is not v:
                                 self._calc_ns[k] = v
+                    self._expr_history.append((expr, "", True))
                 except Exception as e2:
-                    print(f"Error: {e2}")
+                    err2 = f"Error: {e2}"
+                    print(err2)
+                    self._expr_history.append((expr, err2, False))
             except Exception as e:
-                print(f"Error: {e}")
+                err = f"Error: {e}"
+                print(err)
+                self._expr_history.append((expr, err, False))
+
+    def _show_history(self, args):
+        """显示表达式历史"""
+        n = 20
+        if args:
+            a = args[0].lower()
+            if a == 'all':
+                n = len(self._expr_history)
+            elif a == 'clear':
+                self._expr_history.clear()
+                print(f"{self._GREEN}  History cleared.{self._RESET}")
+                return
+            else:
+                try:
+                    n = int(a)
+                except ValueError:
+                    print(f"  history: expected number, 'all', or 'clear', got '{a}'")
+                    return
+        if not self._expr_history:
+            print("  (no history)")
+            return
+        recent = self._expr_history[-n:]
+        for i, (expr, result, ok) in enumerate(recent):
+            idx = len(self._expr_history) - len(recent) + i + 1
+            color = self._GREEN if ok else self._RED
+            # Truncate long expressions
+            show_expr = expr[:80] + ('…' if len(expr) > 80 else '')
+            print(f"  {color}[{idx}]{self._RESET} {show_expr}")
+            if result:
+                for line in result.split('\n')[:3]:
+                    print(f"       {line}")
+            if not ok:
+                print()
 
     def _show(self, val, prefix=""):
         if isinstance(val, np.ndarray):
@@ -833,6 +887,7 @@ Commands:
   run <script.qms>    Execute quantum script file
   demo                Run Fock-basis demonstration
   test                Run self-tests
+  history [N|all|clear] Show expression history (default 20)
   help                This help
   quit                Exit
 
