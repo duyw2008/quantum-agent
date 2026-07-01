@@ -90,7 +90,7 @@ def step1_setup(fig):
         (1, 1.8, '关联: E(a,b) = ∫ A(a,λ)B(b,λ) ρ(λ) dλ', '#c9d1d9'),
     ]
     for x, y, text, color in lines:
-        ax_r.text(x, y, text, color=color, fontsize=12, fontfamily='monospace',
+        ax_r.text(x, y, text, color=color, fontsize=12,
                   va='center', fontweight='bold' if y in [8.5, 5.8, 3.1, 1.8] else 'normal')
 
     return fig
@@ -117,7 +117,7 @@ def step2_derive(fig):
         (4.0, 2.2, '⇒ |S_CHSH| ≤ 2   Q.E.D.', '#3fb950'),
     ]
     for x, y, text, color in derivation:
-        ax.text(x, y, text, color=color, fontsize=12, fontfamily='monospace', va='center')
+        ax.text(x, y, text, color=color, fontsize=12, va='center')
 
     return fig
 
@@ -143,7 +143,7 @@ def step3_quantum(fig):
     ]
     for x, y, text, color in qm_text:
         fs = 15 if '|Ψ⁻⟩' in text else 13 if 'E(a,b)' in text else 11
-        ax_l.text(x, y, text, color=color, fontsize=fs, fontfamily='monospace', va='center')
+        ax_l.text(x, y, text, color=color, fontsize=fs, va='center')
 
     # Right: correlation curve
     theta = np.linspace(0, np.pi, 200)
@@ -193,7 +193,7 @@ def step4_plug_in(fig):
     ]
     for x, y, text, color in steps:
         fs = 14 if '2.828' in text else 12
-        ax.text(x, y, text, color=color, fontsize=fs, fontfamily='monospace', va='center')
+        ax.text(x, y, text, color=color, fontsize=fs, va='center')
 
     return fig
 
@@ -236,7 +236,7 @@ def step5_conclusion(fig):
     ]
     for x, y, text, color in conclusion:
         fs = 14 if '结论' in text else 13
-        ax_bot.text(x, y, text, color=color, fontsize=fs, fontfamily='monospace',
+        ax_bot.text(x, y, text, color=color, fontsize=fs,
                     va='center', fontweight='bold' if '结论' in text else 'normal')
 
     return fig
