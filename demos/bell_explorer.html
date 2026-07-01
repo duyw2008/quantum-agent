@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bell-CHSH Inequality Explorer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 20px; }
+h1 { font-size: 20px; margin-bottom: 5px; color: #f0883e; }
+.subtitle { color: #8b949e; font-size: 13px; margin-bottom: 15px; }
+.main { display: flex; gap: 20px; flex-wrap: wrap; }
+.canvas-panel { flex: 1; min-width: 600px; }
+.canvas-panel canvas { border-radius: 8px; background: #161b22; }
+.control-panel { width: 300px; }
+.slider-group { margin-bottom: 15px; background: #161b22; border-radius: 8px; padding: 12px; }
+.slider-group h3 { font-size: 13px; margin-bottom: 8px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+.slider-row { display: flex; align-items: center; margin-bottom: 8px; }
+.slider-row label { width: 28px; font-size: 12px; font-family: monospace; }
+.slider-row label.alice { color: #79c0ff; }
+.slider-row label.bob { color: #ff7b72; }
+.slider-row input[type=range] { flex: 1; accent-color: #f0883e; }
+.slider-row .val { width: 50px; font-size: 11px; text-align: right; font-family: monospace; color: #8b949e; }
+.result-box { background: #161b22; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+.result-box h3 { font-size: 13px; margin-bottom: 10px; color: #8b949e; text-transform: uppercase; }
+.s-value { font-size: 48px; font-weight: bold; text-align: center; font-family: monospace; }
+.s-value.violates { color: #f0883e; }
+.s-value.ok { color: #3fb950; }
+.s-label { text-align: center; font-size: 12px; color: #8b949e; margin-top: 3px; }
+.terms { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
+.term { font-family: monospace; font-size: 11px; padding: 4px 8px; background: #0d1117; border-radius: 4px; text-align: center; }
+.term.plus { color: #79c0ff; }
+.term.minus { color: #ff7b72; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
+.btn { padding: 6px 14px; border: 1px solid #30363d; background: #21262d; color: #c9d1d9; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+.btn:hover { background: #30363d; border-color: #f0883e; }
+.btn.active { background: #f0883e20; border-color: #f0883e; color: #f0883e; }
+.legend { font-size: 11px; color: #8b949e; margin-top: 15px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<h1>Bell-CHSH Inequality Explorer</h1>
+<p class="subtitle">拖动 Alice 和 Bob 的测量角度，观察量子关联如何突破经典上界 |S| ≤ 2</p>
+
+<div class="main">
+  <div class="canvas-panel">
+    <canvas id="cvs" width="700" height="500"></canvas>
+  </div>
+  <div class="control-panel">
+    <div class="btn-row">
+      <button class="btn active" id="btn-optimal">最优角度 (2√2)</button>
+      <button class="btn" id="btn-local">经典极限 (S=2)</button>
+      <button class="btn" id="btn-null">零关联 (S=0)</button>
+    </div>
+
+    <div class="slider-group">
+      <h3>Alice 测量角</h3>
+      <div class="slider-row">
+        <label class="alice">a₁</label>
+        <input type="range" id="a1" min="0" max="360" value="0" step="1">
+        <span class="val" id="a1v">0°</span>
+      </div>
+      <div class="slider-row">
+        <label class="alice">a₂</label>
+        <input type="range" id="a2" min="0" max="360" value="90" step="1">
+        <span class="val" id="a2v">90°</span>
+      </div>
+    </div>
+
+    <div class="slider-group">
+      <h3>Bob 测量角</h3>
+      <div class="slider-row">
+        <label class="bob">b₁</label>
+        <input type="range" id="b1" min="0" max="360" value="45" step="1">
+        <span class="val" id="b1v">45°</span>
+      </div>
+      <div class="slider-row">
+        <label class="bob">b₂</label>
+        <input type="range" id="b2" min="0" max="360" value="135" step="1">
+        <span class="val" id="b2v">135°</span>
+      </div>
+    </div>
+
+    <div class="result-box">
+      <h3>CHSH |S| 值</h3>
+      <div class="s-value violates" id="s-val">2.828</div>
+      <div class="s-label" id="s-label">⚠ 违反贝尔不等式! (|S| > 2)</div>
+      <div class="terms">
+        <div class="term plus" id="t11">E(a₁,b₁)</div>
+        <div class="term plus" id="t12">E(a₁,b₂)</div>
+        <div class="term plus" id="t21">E(a₂,b₁)</div>
+        <div class="term minus" id="t22">−E(a₂,b₂)</div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <b>公式</b><br>
+      S = E(a₁,b₁) + E(a₁,b₂) + E(a₂,b₁) − E(a₂,b₂)<br>
+      E(θ) = −cos(θ) (量子, Ψ⁻)<br>
+      经典定域隐变量: |S| ≤ 2<br>
+      量子力学: |S| ≤ 2√2 ≈ 2.828
+    </div>
+  </div>
+</div>
+
+<script>
+const cvs = document.getElementById('cvs');
+const ctx = cvs.getContext('2d');
+const W = cvs.width, H = cvs.height;
+
+// Plot margins
+const MX = 80, MY = 50, PW = W - MX - 50, PH = H - MY - 40;
+
+function toRad(deg) { return deg * Math.PI / 180; }
+function toDeg(rad) { return rad * 180 / Math.PI; }
+
+// Current angles (degrees)
+let angles = { a1: 0, a2: 90, b1: 45, b2: 135 };
+
+function E(angleDiffRad) {
+  return -Math.cos(angleDiffRad);
+}
+
+function updatePresets(activeId) {
+  document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(activeId);
+  if (btn) btn.classList.add('active');
+}
+
+function setAngles(a1, a2, b1, b2, presetId) {
+  angles.a1 = a1; angles.a2 = a2; angles.b1 = b1; angles.b2 = b2;
+  document.getElementById('a1').value = a1;
+  document.getElementById('a2').value = a2;
+  document.getElementById('b1').value = b1;
+  document.getElementById('b2').value = b2;
+  updatePresets(presetId);
+  redraw();
+}
+
+document.getElementById('btn-optimal').onclick = () => setAngles(0, 90, 45, 135, 'btn-optimal');
+document.getElementById('btn-local').onclick = () => setAngles(0, 30, 15, 45, 'btn-local');
+document.getElementById('btn-null').onclick = () => setAngles(0, 0, 0, 0, 'btn-null');
+
+['a1','a2','b1','b2'].forEach(id => {
+  const sl = document.getElementById(id);
+  sl.oninput = () => {
+    angles[id] = parseInt(sl.value);
+    updatePresets('');
+    redraw();
+  };
+});
+
+function redraw() {
+  const a1r = toRad(angles.a1), a2r = toRad(angles.a2);
+  const b1r = toRad(angles.b1), b2r = toRad(angles.b2);
+
+  const d11 = a1r - b1r, d12 = a1r - b2r, d21 = a2r - b1r, d22 = a2r - b2r;
+  const e11 = E(d11), e12 = E(d12), e21 = E(d21), e22 = E(d22);
+  const S = e11 + e12 + e21 - e22;
+  const absS = Math.abs(S);
+
+  // Update display
+  document.getElementById('a1v').textContent = angles.a1 + '°';
+  document.getElementById('a2v').textContent = angles.a2 + '°';
+  document.getElementById('b1v').textContent = angles.b1 + '°';
+  document.getElementById('b2v').textContent = angles.b2 + '°';
+
+  const sv = document.getElementById('s-val');
+  const sl = document.getElementById('s-label');
+  sv.textContent = absS.toFixed(3);
+  if (absS > 2) {
+    sv.className = 's-value violates';
+    sl.textContent = '⚠ 违反贝尔不等式! (|S| > 2)';
+    sl.style.color = '#f0883e';
+  } else {
+    sv.className = 's-value ok';
+    sl.textContent = '✓ 符合经典上界 (|S| ≤ 2)';
+    sl.style.color = '#3fb950';
+  }
+
+  document.getElementById('t11').textContent = 'E(a₁,b₁) = ' + e11.toFixed(3);
+  document.getElementById('t12').textContent = 'E(a₁,b₂) = ' + e12.toFixed(3);
+  document.getElementById('t21').textContent = 'E(a₂,b₁) = ' + e21.toFixed(3);
+  document.getElementById('t22').textContent = '−E(a₂,b₂) = ' + (-e22).toFixed(3);
+
+  // Draw
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#161b22';
+  ctx.fillRect(0, 0, W, H);
+
+  drawAxes();
+  drawCurve();
+  drawMarkers(d11, e11, d12, e12, d21, e21, d22, e22);
+  drawClassicalZone();
+}
+
+function drawAxes() {
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 1;
+
+  // x-axis at y=0
+  const y0 = MY + PH/2;
+  ctx.beginPath(); ctx.moveTo(MX, y0); ctx.lineTo(MX + PW, y0); ctx.stroke();
+  // y-axis at x=MX
+  ctx.beginPath(); ctx.moveTo(MX, MY); ctx.lineTo(MX, MY + PH); ctx.stroke();
+
+  // x ticks (angle in degrees)
+  ctx.fillStyle = '#8b949e';
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  for (let d = 0; d <= 180; d += 45) {
+    const x = MX + (d / 180) * PW;
+    ctx.fillText(d + '°', x, y0 + 16);
+  }
+
+  // y ticks
+  ctx.textAlign = 'right';
+  for (let yv = -1; yv <= 1; yv += 0.5) {
+    const y = y0 - (yv / 1) * (PH/2);
+    ctx.fillText(yv.toFixed(1), MX - 8, y + 4);
+  }
+
+  // Labels
+  ctx.fillStyle = '#c9d1d9';
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('角度差 θ = |a − b|', MX + PW/2, H - 8);
+  ctx.save();
+  ctx.translate(15, MY + PH/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.textAlign = 'center';
+  ctx.fillText('E(θ)', 0, 0);
+  ctx.restore();
+}
+
+function drawCurve() {
+  ctx.strokeStyle = '#79c0ff';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  const y0 = MY + PH/2;
+  for (let px = 0; px <= PW; px += 1) {
+    const theta = (px / PW) * Math.PI;
+    const e = -Math.cos(theta);
+    const py = y0 - (e / 1) * (PH/2);
+    if (px === 0) ctx.moveTo(MX + px, py);
+    else ctx.lineTo(MX + px, py);
+  }
+  ctx.stroke();
+}
+
+function drawClassicalZone() {
+  // Classical: E_cl(θ) = 1 - 2θ/π (optimal local hidden variable)
+  // This is the straight line from (0,1) to (π,-1)
+  // Actually for visualization purposes, draw the straight line
+  ctx.strokeStyle = '#ff7b72';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  const y0 = MY + PH/2;
+  ctx.moveTo(MX, y0 - (PH/2));  // θ=0, E=1
+  ctx.lineTo(MX + PW, y0 + (PH/2));  // θ=π, E=-1
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawMarkers(d11, e11, d12, e12, d21, e21, d22, e22) {
+  const markers = [
+    { diff: d11, e: e11, color: '#79c0ff', label: '(a₁,b₁)' },
+    { diff: d12, e: e12, color: '#a5d6ff', label: '(a₁,b₂)' },
+    { diff: d21, e: e21, color: '#79c0ff', label: '(a₂,b₁)' },
+    { diff: d22, e: e22, color: '#ff7b72', label: '(a₂,b₂) ※' },
+  ];
+
+  const y0 = MY + PH/2;
+
+  markers.forEach(m => {
+    // Normalize diff to [0, π]
+    let diff = m.diff % (2 * Math.PI);
+    if (diff < 0) diff += 2 * Math.PI;
+    if (diff > Math.PI) diff = 2 * Math.PI - diff;
+    const x = MX + (diff / Math.PI) * PW;
+    const y = y0 - (m.e / 1) * (PH/2);
+
+    // Vertical line
+    ctx.strokeStyle = m.color + '40';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, y0);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    // Dot
+    ctx.fillStyle = m.color;
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#161b22';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = m.color;
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'left';
+    const lx = x + 10;
+    const ly = y - 8;
+    ctx.fillText(m.label, lx, ly);
+    ctx.fillText('(' + (diff * 180 / Math.PI).toFixed(0) + '°, ' + m.e.toFixed(2) + ')', lx, ly + 14);
+  });
+}
+
+// Init
+redraw();
+</script>
+</body>
+</html>
