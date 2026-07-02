@@ -182,7 +182,8 @@ Type 'help' for commands, 'demo' to see examples.
             r'\sinh': 'sinh', r'\cosh': 'cosh', r'\tanh': 'tanh',
             # Hatted operators (precomposed chars for better terminal support)
             r'\hat{H}': 'Ĥ', r'\hat H': 'Ĥ', r'\hat{x}': 'x̂', r'\hat{p}': 'p̂', r'\hat\rho': 'ρ̂',
-            r'\hat{a}': 'â', r'\hat{N}': 'N̂', r'\hat{\rho}': 'ρ̂',
+            r'\hat{a}': 'â', r'\hat{N}': 'N̂', r'\hat{\rho}': 'ρ̂', r'\hat{n}': 'n̂',
+            r'\hat{C}': 'Ĉ', r'\hat{P}': 'P̂', r'\hat{S}': 'Ŝ',
             # Superscripts
             r'^{(0)}': '⁽⁰⁾', r'^0': '⁰', r'^1': '¹', r'^2': '²',
             r'^3': '³', r'^4': '⁴', r'^5': '⁵', r'^6': '⁶',
@@ -199,6 +200,21 @@ Type 'help' for commands, 'demo' to see examples.
         # Longest patterns first
         for k, v in sorted(_LATEX_MAP.items(), key=lambda x: -len(x[0])):
             s = s.replace(k, v)
+
+        # Generic \hat{X} → X̂ (combining circumflex) for remaining unmatched
+        # Use simple string ops to avoid regex escape hell
+        while r'\hat{' in s:
+            start = s.find(r'\hat{')
+            end = s.find('}', start)
+            if end < 0:
+                break
+            inner = s[start+5:end]
+            s = s[:start] + inner + '\u0302' + s[end+1:]
+        while r'\hat ' in s:
+            start = s.find(r'\hat ')
+            end = start + 6  # \hat X (6 chars: backslash, h, a, t, space, X)
+            if end <= len(s):
+                s = s[:start] + s[end-1] + '\u0302' + s[end:]
 
         # \frac12 — bare fraction (no braces)
         s = re.sub(r'\\frac(\d)(\d)', r'\1/\2', s)
