@@ -217,6 +217,10 @@ Type 'help' for commands, 'demo' to see examples.
 r'\\frac\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
             frac_repl, s)
 
+        # \text{...} — strip to plain text content
+        s = re.sub(r'\\text\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
+                   lambda m: m.group(1), s)
+
         # \\sqrt{...}
         s = re.sub(
 r'\\sqrt\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
