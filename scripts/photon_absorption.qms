@@ -1,0 +1,181 @@
+# Photon Absorption Demo — 光子吸收过程演示
+# =============================================
+# 演示 Fock 基上的光子吸收:
+#   |g, n=1⟩ → |e, n=0⟩
+# 包括湮灭算符作用、偶极矩阵元、能级图、选择定则。
+
+formula \text{Photon Absorption: } |g\rangle|1_\omega\rangle \rightarrow |e\rangle|0\rangle
+
+# === 1. Fock 基设置 ===
+formula \text{Fock basis for photon: } N=5 \text{ (max 5 photons)}
+fb5 = FockBasis(5)
+
+# === 2. 湮灭算符 â ===
+a = fb5.a           # 湮灭算符矩阵 (N×N), 已是 ndarray 不是方法
+formula \hat{a}|n\rangle = \sqrt{n}|n-1\rangle
+
+# 验证基本性质
+formula \hat{a}|0\rangle = 0 \text{ (真空湮灭为零)}
+vac = fock(5, 0)    # |0⟩
+av = a @ vac
+formula \hat{a}|0\rangle
+np.linalg.norm(av)
+
+formula \hat{a}|1\rangle = |0\rangle \text{ (单光子湮灭)}
+psi_1 = fock(5, 1)  # |1⟩
+psi_0 = a @ psi_1   # |0⟩
+formula |\langle0|\hat{a}|1\rangle|^2
+abs(np.vdot(fock(5, 0), psi_0))**2
+
+formula \hat{a}|2\rangle = \sqrt{2}|1\rangle \text{ (两光子湮灭, 概率×2)}
+psi_2_to_1 = a @ fock(5, 2)
+proj = abs(np.vdot(fock(5, 1), psi_2_to_1))**2
+proj
+
+# === 3. 光子数算符验证 ===
+n_op = a.T @ a       # â†â = 光子数算符
+formula \hat{n} = \hat{a}^\dagger\hat{a}
+
+formula \langle1|\hat{n}|1\rangle = 1
+expect(n_op, psi_1)
+
+formula \langle0|\hat{n}|0\rangle = 0
+expect(n_op, psi_0)
+
+# === 4. 二能级原子模型 ===
+# 基态 |g⟩ ↔ 激发态 |e⟩
+# 在二能级截断下:
+import numpy as np
+
+g = np.array([1, 0])  # |g⟩ = (1,0)
+e = np.array([0, 1])  # |e⟩ = (0,1)
+
+# 原子升降算符
+sigma_minus = np.array([[0, 0], [1, 0]])  # σ⁻ = |g⟩⟨e|
+sigma_plus  = np.array([[0, 1], [0, 0]])  # σ⁺ = |e⟩⟨g|
+
+formula \sigma^-|e\rangle = |g\rangle \text{ (原子下降)}
+sigma_minus @ e
+
+formula \sigma^+|g\rangle = |e\rangle \text{ (原子上升)}
+sigma_plus @ g
+
+# === 5. 光-原子相互作用 ===
+# H_int ∝ σ⁺⊗â + σ⁻⊗â†   (RWA)
+# 吸收项: σ⁺⊗â  — 原子上升 + 光子湮灭
+
+# 复合系统初态: |g⟩ ⊗ |1⟩
+psi_initial = tensor(g, psi_1)
+formula |\psi_i\rangle = |g\rangle \otimes |1\rangle \text{ (atom + photon)}
+
+# 吸收算符: σ⁺⊗â
+H_abs = tensor(sigma_plus, a)
+psi_final = H_abs @ psi_initial
+
+formula H_{\rm abs}|\psi_i\rangle \propto |e\rangle \otimes |0\rangle
+# 检查末态
+# 投影到 |e⟩⊗|0⟩
+target = tensor(e, fock(5, 0))
+overlap = abs(np.vdot(target, psi_final))
+formula |\langle e,0| H_{\rm abs} |g,1\rangle|^2
+overlap**2
+
+# 归一化: 吸收概率 (取决于耦合强度)
+norm = np.linalg.norm(psi_final)
+formula \text{Normalization factor (coupling strength)}
+norm
+
+# === 6. 选择定则: 禁戒跃迁 ===
+# 如果偶极矩阵元为零, 则吸收概率为零
+# Δl 必须 = ±1 (偶极允许)
+# Δs 必须 = 0 (自旋不变)
+formula \text{Selection rules: } \Delta l = \pm 1, \Delta s = 0, \text{parity changes}
+
+# 演示: 禁戒跃迁的矩阵元为零
+# 模拟 Δl=0 的情况 (对角元)
+dipole_forbidden = np.array([[1, 0], [0, 0]])  # 人为设为零矩阵元
+H_abs_forbidden = tensor(dipole_forbidden, a)
+psi_forbidden = H_abs_forbidden @ psi_initial
+prob_forbidden = np.linalg.norm(psi_forbidden)
+formula \text{Forbidden } (\Delta l=0): |\langle e|r|g\rangle| = 0
+prob_forbidden
+
+# === 7. 能级图 + 过程可视化 ===
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import os
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6), facecolor='#0d1117')
+
+# Left: energy level diagram
+ax1.set_facecolor('#0d1117')
+ax1.set_xlim(0, 5); ax1.set_ylim(0, 7)
+
+# Atom levels
+ax1.hlines(5.5, 0.5, 1.5, color='#f0883e', linewidth=3)
+ax1.hlines(1.5, 0.5, 1.5, color='#79c0ff', linewidth=3)
+ax1.text(1.55, 5.5, '|e⟩ (excited)', color='#f0883e', fontsize=13, va='center', fontweight='bold')
+ax1.text(1.55, 1.5, '|g⟩ (ground)', color='#79c0ff', fontsize=13, va='center', fontweight='bold')
+
+# Photon
+ax1.annotate('', xy=(0.9, 5.3), xytext=(0.9, 1.7),
+             arrowprops=dict(arrowstyle='->', color='#ffcc00', lw=3, linestyle='dashed'))
+ax1.text(1.3, 3.5, 'ℏω₀\n(photon)', color='#ffcc00', fontsize=12, ha='center', fontweight='bold')
+
+# Transition arrow
+ax1.annotate('', xy=(1.3, 5.2), xytext=(1.3, 1.8),
+             arrowprops=dict(arrowstyle='->', color='#3fb950', lw=3))
+ax1.text(2.5, 3.5, 'ABSORPTION\n|g,1⟩→|e,0⟩', color='#3fb950', fontsize=11, ha='center', fontweight='bold')
+
+ax1.set_title('Energy Level Diagram', color='#c9d1d9', fontsize=14, fontweight='bold')
+ax1.axis('off')
+
+# Right: Fock state evolution
+ax2.set_facecolor('#0d1117')
+categories = ['|g,1⟩ (initial)', '|e,0⟩ (final)']
+# Probability amplitudes
+overlaps = [1.0, overlap**2]  # initial normalized to 1, final is transition prob
+
+bars = ax2.bar(categories, overlaps, color=['#79c0ff', '#f0883e'], width=0.5, alpha=0.85)
+ax2.bar_label(bars, fmt='%.3f', color='#c9d1d9', fontsize=14, fontweight='bold')
+ax2.set_ylabel('Probability / Overlap', color='#c9d1d9', fontsize=12)
+ax2.set_title('Transition Amplitude', color='#c9d1d9', fontsize=14, fontweight='bold')
+ax2.tick_params(colors='#c9d1d9', labelsize=11)
+ax2.grid(True, alpha=0.1, color='#30363d')
+for spine in ax2.spines.values():
+    spine.set_color('#30363d')
+ax2.set_ylim(0, 1.15)
+
+fig.suptitle('Photon Absorption  |  |g⟩|1⟩ → |e⟩|0⟩  via  â·σ⁺',
+             color='#c9d1d9', fontsize=16, fontweight='bold', y=1.01)
+plt.tight_layout()
+os.makedirs('output', exist_ok=True)
+plt.savefig('output/photon_absorption.png', dpi=150, bbox_inches='tight', facecolor='#0d1117')
+plt.close()
+
+formula \text{Output saved to output/photon_absorption.png}
+
+# === 8. 受激辐射 vs 自发辐射 ===
+# 受激辐射: |e⟩|n⟩ → |g⟩|n+1⟩   ∝ n+1
+formula \text{Stimulated emission: rate} \propto n+1
+
+# 对 n=1 光子:
+H_stim = tensor(sigma_minus, a.T)  # σ⁻⊗â†
+psi_e_1 = tensor(e, psi_1)
+psi_g_2 = H_stim @ psi_e_1
+overlap_stim = abs(np.vdot(tensor(g, fock(5, 2)), psi_g_2))
+formula |\langle g,2| \sigma^-\otimes\hat{a}^\dagger |e,1\rangle|^2
+overlap_stim**2
+
+# 自发辐射: |e⟩|0⟩ → |g⟩|1⟩
+psi_e_0 = tensor(e, fock(5, 0))
+psi_spont = H_stim @ psi_e_0
+overlap_spont = abs(np.vdot(tensor(g, fock(5, 1)), psi_spont))
+formula |\langle g,1| \sigma^-\otimes\hat{a}^\dagger |e,0\rangle|^2 \text{ (spontaneous, vacuum fluctuation)}
+overlap_spont**2
+
+# === 9. 总结 ===
+formula \text{Photon absorption demonstration complete.}
+formula \hat{a}|1\rangle = |0\rangle, \quad \sigma^+|g\rangle = |e\rangle
+formula H_{\rm abs} = \sigma^+ \otimes \hat{a} \text{ couples } |g,1\rangle \leftrightarrow |e,0\rangle
