@@ -180,7 +180,7 @@ Type 'help' for commands, 'demo' to see examples.
             r'\mapsto': '↦', r'\to': '→', r'\implies': '⇒',
             r'\gg': '≫', r'\ll': '≪', r'\ggg': '⋙', r'\lll': '⋘',
             r'\mid': '∣', r'\nmid': '∤',
-            r'\sinh': 'sinh', r'\cosh': 'cosh', r'\tanh': 'tanh',
+            r'\rm ': '', r'\sinh': 'sinh', r'\cosh': 'cosh', r'\tanh': 'tanh',
             # Hatted operators (precomposed chars for better terminal support)
             r'\hat{H}': 'Ĥ', r'\hat H': 'Ĥ', r'\hat{x}': 'x̂', r'\hat{p}': 'p̂', r'\hat\rho': 'ρ̂',
             r'\hat{a}': 'â', r'\hat{N}': 'N̂', r'\hat{\rho}': 'ρ̂', r'\hat{n}': 'n̂',
