@@ -167,6 +167,7 @@ Type 'help' for commands, 'demo' to see examples.
             r'\prod': '∏', r'\infty': '∞', r'\approx': '≈', r'\propto': '∝',
             r'\sim': '~', r'\simeq': '≃', r'\times': '×', r'\cdot': '·',
             r'\otimes': '⊗', r'\oplus': '⊕', r'\ominus': '⊖',
+            r'\quad': '  ', r'\qquad': '    ', r'\;': ' ', r'\ ': ' ',
             r'\langle': '⟨', r'\rangle': '⟩', r'rangle': '⟩', r'langle': '⟨', r'\bra': '⟨', r'\ket': '|',
             r'\equiv': '≡', r'\neq': '≠', r'\pm': '±', r'\mp': '∓',
             r'\leq': '≤', r'\geq': '≥', r'\ll': '≪', r'\gg': '≫',
@@ -235,6 +236,10 @@ r'\\frac\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
 
         # \text{...} — strip to plain text content
         s = re.sub(r'\\text\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
+                   lambda m: m.group(1), s)
+
+        # \rm{...} — strip roman font markup
+        s = re.sub(r'\\rm\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
                    lambda m: m.group(1), s)
 
         # \\sqrt{...}
