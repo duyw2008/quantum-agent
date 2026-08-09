@@ -1,11 +1,13 @@
 # Quantum Agent ⚛️
 
-> 量子力学智能体 — Fock 空间 + 波函数 + 量子场论 + 公式终端显示
+# Quantum Agent ⚛️
+
+> 量子物理智能体 — QM (Fock + 波函数 + 自旋/纠缠) × QFT (自由场 → 微扰 → 格点 → 重整化 → QED) × Monte Carlo
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-交互式量子力学平台：Fock 基量子光学 × 波函数动力学 × QFT × 链式势函数构造 × .qms 脚本。
+交互式量子物理平台：Fock 基量子光学 × 波函数动力学 × QFT 全过程 (自由场→重整化→QED) × QFT 路径积分 MC × .qms 脚本。
 
 ## 快速开始
 
@@ -26,12 +28,13 @@ python agent.py --run  scripts/harmonic.qms   # 执行量子脚本 (.qms)
 ⚛ > psi = coherent(20, 2.0)
 ⚛ > g2(psi)
 1.0
-⚛ > formula i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi
-  iℏ(∂)/(∂t)Ψ = ĤΨ
-⚛ > x, p, W = wigner(psi)
-⚛ > plot_wigner(x, p, W)
 ⚛ > sf = ScalarField(mass=1.0)
 ⚛ > sf.commutator(0, 2)
+⚛ > beta = beta_function(0.5)          # β(λ) 重整化群流
+⚛ > dsigma = compton_cross_section(10, 0.5, 0.511)  # Klein-Nishina
+⚛ > gm = GammaMatrices('dirac')        # γ 矩阵
+⚛ > formula i\\hbar\\frac{\\partial}{\\partial t}\\Psi = \\hat{H}\\Psi
+  iℏ(∂)/(∂t)Ψ = ĤΨ
 ⚛ > help
 ⚛ > quit
 ```
@@ -47,10 +50,26 @@ python agent.py --run  scripts/harmonic.qms   # 执行量子脚本 (.qms)
 | 能量坍缩 | 驻波 cos(kx) | `python demos/energy_collapse.py` |
 | 双缝干涉 | 2D TDSE | `python demos/double_slit.py` |
 | 量子擦除 | 相干 vs 非相干 | `python demos/quantum_eraser.py` |
-| 标量场 | φ̂(x), 对易子, 传播子 | `python demos/qft_scalar_field.py` |
-| 格点 φ⁴ | 基态能量, 关联函数 | `python demos/qft_lattice.py` |
-| PotentialBuilder | 链式组合 7 种势函数 | `python agent.py --run scripts/potential_builder_demo.qms` |
-| Feynman 图 | Wick 定理, 截面 | `python demos/qft_scattering.py` |
+| 标量场 | φ̂(x), [φ̂,φ̂], D_F | `python demos/qft_scalar_field.py` |
+| 格点 φ⁴ | E₀(λ), 关联函数, 能隙 | `python demos/qft_lattice.py` |
+| Feynman 图 | Wick 定理, 振幅, 截面 | `python demos/qft_scattering.py` |
+| Bloch 球 | Rabi, 退相干, Larmor | `python demos/bloch_evolution.py` |
+
+## QFT 能力总览
+
+```
+层次               模块                 核心功能
+─────────────────────────────────────────────────────
+QED 散射          qed.py               Klein-Nishina, e⁺e⁻→μ⁺μ⁻, Møller
+Dirac 费米子       dirac.py              γ 矩阵, u/v 旋量, 自旋求和
+U(1) 规范场        gauge.py             A_μ, ε_μ(k,λ), Ward 恒等式
+重整化             renormalization.py    Π(p²), Γ⁴, δm, δλ, β(λ)
+微扰 φ⁴            scattering.py        Wick 定理, Feynman 振幅, Dyson 级数
+格点 φ⁴ 对角化      lattice.py           E₀(λ), 关联函数, 能隙
+自由标量场          field.py             φ̂(x), [φ̂,φ̂], D_F, 真空涨落
+有效势 + SSB        effective_potential.py  V_eff, Coleman-Weinberg
+QFT 路径积分 MC     lattice_qft.py        2D 格点采样, 有效质量, 相变
+```
 
 ## 模块架构
 
@@ -58,13 +77,13 @@ python agent.py --run  scripts/harmonic.qms   # 执行量子脚本 (.qms)
 quantum_agent/
 ├── agent.py              # CLI (表达式、readline、tab补全、公式终端显示)
 ├── src/
-│   ├── qm/               # 量子力学 (FockBasis, states, dynamics, wave, PotentialBuilder)
+│   ├── qm/               # 量子力学 (FockBasis, states, dynamics, wave, spin, multipartite)
 │   ├── viz/              # Wigner, Qfunc, 光子分布
-│   └── qft/              # 量子场论 (ScalarField, LatticePhi4, scattering)
-├── demos/                # 10 个物理动画
-├── scripts/              # 9 个 .qms 脚本
-├── scripts/              # .qms 脚本 (类 MATLAB .m)
-├── docs/                 # 9 份文档 (含知识手册)
+│   └── qft/              # 量子场论 (10 模块: field → lattice → scattering → renormalization
+│                         #         → gauge → dirac → qed → effective_potential → lattice_qft)
+├── demos/                # 11 个物理动画
+├── scripts/              # 13 个 .qms 脚本
+├── docs/                 # 10 份文档
 └── output/               # 动画、图片、公式 PNG
 ```
 

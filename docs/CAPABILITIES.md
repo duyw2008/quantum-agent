@@ -170,3 +170,97 @@ python agent.py --run scripts/harmonic_oscillator.qms   # 命令行
 | `energy_collapse.py` | 能量测量坍缩 (驻波) |
 | `double_slit.py` | 双缝干涉 (2D TDSE) |
 | `quantum_eraser.py` | 量子擦除实验 |
+| `qft_scalar_field.py` | 标量场 φ̂(x), [φ̂,φ̂], D_F |
+| `qft_lattice.py` | 格点 φ⁴ — E₀(λ), 关联函数, 能隙 |
+| `qft_scattering.py` | Wick 定理, Feynman 图, 截面 |
+
+## 量子场论 (QFT)
+
+### 自由标量场 (field.py)
+
+| 方法/属性 | 说明 |
+|-----------|------|
+| `ScalarField(mass, L, N_modes)` | 1+1D 标量场 φ̂(x) 模式展开 |
+| `sf.field_matrix(x)` | φ̂(x) 的截断 Fock 矩阵表示 |
+| `sf.commutator(x, y)` | ⟨0|[φ̂(x), φ̂(y)]|0⟩ |
+| `sf.vacuum_fluctuation(x)` | ⟨0|φ̂²|0⟩ — 平移不变真空涨落 |
+| `sf.vacuum_energy_density()` | 零点能密度 E₀/L |
+| `sf.feynman_propagator(x, y, t)` | D_F(x-y, t) — Feynman 传播子 |
+| `sf.propagator_profile(t, x_points)` | 传播子 vs 距离 |
+| `sf.number_operator(mode_idx)` | 第 mode_idx 个模式的粒子数算符 |
+
+### 格点 φ⁴ 理论 (lattice.py)
+
+| 方法/属性 | 说明 |
+|-----------|------|
+| `LatticePhi4(N_sites, mass, coupling, N_fock)` | 1+1D 格点 φ⁴, 维度 = N_fock^{N_sites} |
+| `lpt.hamiltonian(coupling)` | 完整哈密顿量矩阵 (动能+质量+φ⁴+梯度) |
+| `lpt.diagonalize(coupling)` | 精确对角化 → (本征值, 本征矢) |
+| `lpt.ground_state_energy(coupling)` | 基态能量 E₀(λ) |
+| `lpt.energy_gap(coupling)` | 能隙 Δ = E₁ - E₀ |
+| `lpt.correlation(i, j, coupling)` | 关联函数 ⟨φ_i φ_j⟩ |
+| `lpt.particle_number_distribution(coupling)` | 每格点平均粒子数 ⟨N_j⟩ |
+| `lpt.scan_coupling(couplings)` | 扫描 λ: E₀, Δ, 关联函数 |
+
+### 重整化 (renormalization.py)
+
+| 函数/类 | 说明 |
+|----------|------|
+| `self_energy_1loop(p², m, λ, Λ)` | 单圈自能 Π(p²) — ∝ λ∫d²k/(k²+m²) |
+| `mass_counterterm(m, λ, Λ)` | δm = Π(0) (on-shell) |
+| `coupling_counterterm(m, λ, Λ)` | δλ 顶点修正 (零动量 s=t=u=0) |
+| `field_renormalization(m, λ, Λ)` | Z_φ = 1 + dΠ/dp²|_{p²=m²} |
+| `beta_function(λ)` | β(λ) = 3λ²/(16π²) — 单圈重整化群流 |
+| `running_coupling(λ₀, μ₀, μ)` | λ(μ) = λ₀ / [1 - (3λ₀/16π²)ln(μ/μ₀)] |
+
+### U(1) 规范场 (gauge.py)
+
+| 函数/类 | 说明 |
+|----------|------|
+| `GaugeField` | A_μ(x) 动量空间模式展开 |
+| `polarization_vectors(k_μ, λ)` | 横模极化矢量 ε_μ(k, λ=1,2) |
+| `photon_propagator(k², ξ)` | -i[g_μν - (1-ξ)k_μk_ν/k²]/k² |
+| `ward_identity_check(amp_fn, k_μ)` | k_μ M^μ = 0 验证 |
+
+### Dirac 旋量 (dirac.py)
+
+| 函数/类 | 说明 |
+|----------|------|
+| `GammaMatrices(rep='dirac')` | γ^μ 矩阵 (Dirac / Chiral 表象) |
+| `gm.gamma5` | γ⁵ = iγ⁰γ¹γ²γ³ |
+| `gm.sigma_munu` | Σ^{μν} = (i/2)[γ^μ, γ^ν] |
+| `DiracSpinor` | u(p,s) 正粒子, v(p,s) 反粒子旋量 |
+| `dirac_slash(p_μ)` | p̸ = γ^μ p_μ |
+| `spin_sum_u(p_μ, m)` | Σ uū = p̸ + m |
+| `spin_sum_v(p_μ, m)` | Σ vv̄ = p̸ - m |
+| `bilinear(ψ̄, Γ, ψ)` | 双线性协变量 ŌΓO |
+
+### QED 散射 (qed.py)
+
+| 函数/类 | 说明 |
+|----------|------|
+| `mandelstam(p1, p2, p3, p4)` | s, t, u 不变量 |
+| `compton_cross_section(ω, θ, m_e)` | Klein-Nishina 公式 dσ/dΩ |
+| `pair_annihilation_cross_section(s, θ, m_e)` | e⁺e⁻ → μ⁺μ⁻ dσ/dΩ |
+| `moller_cross_section(s, θ, m_e)` | e⁻e⁻ → e⁻e⁻ dσ/dΩ |
+| `running_alpha(α₀, Q², m_e)` | 跑动精细结构常数 α(Q²) |
+
+### 有效势 & 对称破缺 (effective_potential.py)
+
+| 函数/类 | 说明 |
+|----------|------|
+| `OneLoopEffectivePotential(m, λ, μ)` | V_eff(φ_c) = V_0 + (ħ/64π²)V''²ln(V''/μ²) |
+| `ColemanWeinberg(λ, μ)` | m=0 极限下的有效势 |
+| `find_minimum(V_eff, φ_range)` | 找有效势最小值 φ_min |
+| `SymmetryBreaking(model)` | 序参量, Goldstone 定理, Higgs 机制 |
+
+### QFT 路径积分 Monte Carlo (lattice_qft.py)
+
+| 函数/类 | 说明 |
+|----------|------|
+| `LatticePhi4MC(N_x, N_τ, m, λ)` | 2D 格点 φ⁴ Metropolis 采样 |
+| `lqft.thermalize(n_sweeps)` | 热化 N 个完整路径扫描 |
+| `lqft.correlation_function(dx)` | 空间关联 ⟨φ(0)φ(dx)⟩ |
+| `lqft.two_point_function(τ)` | 虚时关联 ⟨φ(0)φ(τ)⟩ → 质量提取 |
+| `lqft.effective_mass(corr_2pt)` | m_eff = ln(C(τ)/C(τ+1)) |
+| `lqft.susceptibility()` | χ = ⟨(Σφ)²⟩ - ⟨Σφ⟩² (相变探测) |

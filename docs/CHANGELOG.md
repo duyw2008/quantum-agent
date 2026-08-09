@@ -1,5 +1,41 @@
 # Changelog
 
+## [3.0.0] — 2026-08-08
+
+### Added — QFT 模块全面扩展 (6 个新模块)
+
+- `src/qft/renormalization.py` — φ⁴ 单圈重整化
+  - 动量截断正规化 + on-shell 减除方案
+  - 单圈自能 Π(p²), 顶点修正 Γ⁴(0), 场重整化 Z_φ
+  - β(λ) = 3λ²/(16π²), 跑动耦合 running_coupling()
+- `src/qft/gauge.py` — U(1) 规范场
+  - A_μ 动量空间模式展开, 横模极化矢量 ε_μ(k,λ)
+  - 光子传播子 (Feynman gauge), Ward 恒等式验证
+- `src/qft/dirac.py` — Dirac 旋量
+  - γ 矩阵 (Dirac / Chiral 表象), γ⁵, Σ^{μν}
+  - 正/反粒子旋量 u(p,s)/v(p,s), 自旋求和, p̸
+  - 双线性协变量 ŌΓO
+- `src/qft/qed.py` — QED 散射过程
+  - Mandelstam 不变量 s,t,u
+  - Compton (Klein-Nishina), e⁺e⁻→μ⁺μ⁻, Møller 散射截面
+  - 跑动精细结构常数 α(Q²)
+- `src/qft/effective_potential.py` — 1PI 有效势
+  - V_eff(φ_c) 单圈公式, Coleman-Weinberg 势 (m=0)
+  - 自发对称破缺: 序参量, Goldstone 定理, Higgs 机制
+- `src/qft/lattice_qft.py` — QFT 格点路径积分 MC
+  - 2D 欧几里得 φ⁴ 场构型 Metropolis 采样
+  - 两点关联, 有效质量提取, 磁化率 (相变探针)
+
+### Changed — Agent 集成 + 文档
+
+- `agent.py`: QFT 命名空间扩展至 19 个新函数/类
+- `src/qft/__init__.py`: 导出全部 6 个新模块
+- `docs/ARCHITECTURE.md`: QFT 模块 4→10, 新增物理栈图
+- `docs/CAPABILITIES.md`: 新增完整 QFT 功能章节 (8 子模块)
+- `docs/PHYSICS.md`: 自由场/微扰/重整化/QED/有效势全面展开
+- `docs/NUMERICAL_METHODS.md`: 新增 §7 重整化 + §8 QFT MC
+- `docs/README.md`: QFT 能力总览 + Demo 列表更新
+
 ## [2.7.2] — 2026-05-31
 
 ### Added

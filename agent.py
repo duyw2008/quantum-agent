@@ -72,6 +72,13 @@ Type 'help' for commands, 'demo' to see examples.
             'WaveGrid2D', 'gaussian_beam', 'evolve_ssfm_2d', 'double_well', 'periodic_potential', 'delta_barrier', 'finite_well',
             'fidelity', 'purity', 'photon_dist', 'np', 'tensor', 'entropy_vn', 'concurrence', 'bell_states',
             'ScalarField', 'LatticePhi4', 'PotentialBuilder',
+            'Phi4FeynmanRules', 'beta_function', 'running_coupling',
+            'GaugeField', 'polarization_vectors', 'photon_propagator',
+            'GammaMatrices', 'DiracSpinor', 'spin_sum_u', 'spin_sum_v', 'dirac_slash',
+            'compton_cross_section', 'pair_annihilation_cross_section',
+            'moller_cross_section', 'mandelstam',
+            'OneLoopEffectivePotential', 'coleman_weinberg_potential', 'coleman_weinberg_minimum', 'SymmetryBreaking',
+            'LatticePhi4MC',
         ]
         readline.set_completer_delims(' \t\n`~!@#$%^&*()-=+[{]}\\|;:\'",<>?')
         readline.set_completer(self._completer)
@@ -673,6 +680,32 @@ r'\\sqrt\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
             ns['differential_cross_section'] = qft.differential_cross_section
             ns['transition_probability'] = qft.transition_probability
             ns['PathIntegralMC'] = qft.PathIntegralMC
+            # renormalization
+            ns['Phi4FeynmanRules'] = qft.Phi4FeynmanRules
+            ns['beta_function'] = qft.beta_function
+            ns['running_coupling'] = qft.running_coupling
+            # gauge
+            ns['GaugeField'] = qft.GaugeField
+            ns['polarization_vectors'] = qft.polarization_vectors
+            ns['photon_propagator'] = qft.photon_propagator
+            # dirac
+            ns['GammaMatrices'] = qft.GammaMatrices
+            ns['DiracSpinor'] = qft.DiracSpinor
+            ns['spin_sum_u'] = qft.spin_sum_u
+            ns['spin_sum_v'] = qft.spin_sum_v
+            ns['dirac_slash'] = qft.dirac_slash
+            # qed
+            ns['compton_cross_section'] = qft.compton_cross_section
+            ns['pair_annihilation_cross_section'] = qft.pair_annihilation_cross_section
+            ns['moller_cross_section'] = qft.moller_cross_section
+            ns['mandelstam'] = qft.mandelstam
+            # effective_potential
+            ns['OneLoopEffectivePotential'] = qft.OneLoopEffectivePotential
+            ns['coleman_weinberg_potential'] = qft.coleman_weinberg_potential
+            ns['coleman_weinberg_minimum'] = qft.coleman_weinberg_minimum
+            ns['SymmetryBreaking'] = qft.SymmetryBreaking
+            # lattice_qft
+            ns['LatticePhi4MC'] = qft.LatticePhi4MC
         except Exception:
             pass
         ns.update(self._calc_ns)
@@ -887,6 +920,13 @@ r'\\sqrt\{([^{}]*(?:\{[^{}]*\}[^{}]*)*?)\}',
             'tensor': r'\rho_{AB} = \rho_A \otimes \rho_B',
             'pathintegralmc': r'Z=\int\mathcal D x\,e^{-S_E[x]/\hbar}',
             'wignerg': r'W(x,p)<0\Longrightarrow\mathrm{non-classical}',
+            'beta_function': r'\beta(\lambda)=\mu\frac{d\lambda}{d\mu}=3\lambda^2/(16\pi^2)+\mathcal O(\lambda^3)',
+            'running_coupling': r'\lambda(\mu)=\frac{\lambda_0}{1-(3\lambda_0/16\pi^2)\ln(\mu/\mu_0)}',
+            'compton_cross_section': r'\frac{d\sigma}{d\Omega}=\frac{\alpha^2}{2m^2}\frac{\omega^\prime}{\omega}^2\left[\frac{\omega^\prime}{\omega}+\frac{\omega}{\omega^\prime}-\sin^2\theta\right]',
+            'dirac_slash': r'\slashed p=\gamma^\mu p_\mu',
+            'mandelstam': r's=(p_1+p_2)^2,\;t=(p_1-p_3)^2,\;u=(p_1-p_4)^2',
+            'colemanweinberg': r'V_{\mathrm{eff}}(\phi)=V_0(\phi)+\frac{\hbar}{64\pi^2}\sum_i n_i M_i^4(\phi)\left[\ln\frac{M_i^2(\phi)}{\mu^2}-\frac{3}{2}\right]',
+            'latticephi4mc': r'S=\sum_{x,\tau}\left[\frac12(\nabla\phi)^2+\frac12m^2\phi^2+\frac{\lambda}{4!}\phi^4\right]',
         }
         if name in formulas_latex:
             print(f'\n  ═══ {name} ═══')
